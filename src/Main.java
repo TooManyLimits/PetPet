@@ -11,7 +11,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        
+        count = fun(n) if n > 0 {print(n) this(n-1)}
+        count(5)
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
@@ -19,7 +20,6 @@ public class Main {
         Compiler comp = new Compiler(null);
         new Expression.BlockExpression(0, exprs).writeBytecode(comp);
         LangFunction f = comp.finish("script", 0);
-
 
         System.out.println(f.prettyBytecode());
         new Interpreter().run(f);

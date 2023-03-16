@@ -123,6 +123,7 @@ public class Lexer {
         IF("if"),
         ELSE("else"),
         WHILE("while"),
+        THIS("this"),
 
         FUN("fun"),
 

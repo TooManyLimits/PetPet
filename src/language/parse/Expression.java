@@ -149,6 +149,17 @@ public abstract class Expression {
         }
     }
 
+    public static class This extends Name {
+        public This(int startLine) {
+            super(startLine, "this");
+        }
+
+        @Override
+        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            compiler.bytecodeWithByteArg(Bytecode.LOAD_LOCAL, (byte) 0);
+        }
+    }
+
     public static class Get extends Expression {
         public final Expression left;
         public final Expression index;

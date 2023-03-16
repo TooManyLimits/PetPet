@@ -173,6 +173,7 @@ public class Parser {
     private Expression parseUnit() throws ParserException {
         return switch (peek().type()) {
             case NAME -> new Expression.Name(peek().line(), consume().getString());
+            case THIS -> new Expression.This(consume().line());
             case INT_LITERAL, FLOAT_LITERAL, DOUBLE_LITERAL, LONG_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
             case FUN -> parseFunction();
             case LEFT_PAREN -> { //Parenthesis for grouping
