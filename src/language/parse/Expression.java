@@ -83,7 +83,8 @@ public abstract class Expression {
         public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
             condition.scanForDeclarations(compiler);
             ifTrue.scanForDeclarations(compiler);
-            ifFalse.scanForDeclarations(compiler);
+            if (ifFalse != null)
+                ifFalse.scanForDeclarations(compiler);
         }
     }
 

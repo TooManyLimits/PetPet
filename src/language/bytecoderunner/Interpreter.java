@@ -41,10 +41,10 @@ public class Interpreter {
                 case MOD -> {int r = (Integer) pop(); int l = (Integer) pop(); push(l%r);}
                 case EQ -> push(Objects.equals(pop(), pop()));
                 case NEQ -> push(!Objects.equals(pop(), pop()));
-                case LT -> push((Integer) pop() >= (Integer) pop());
-                case GT -> push((Integer) pop() <= (Integer) pop());
-                case LTE -> push((Integer) pop() > (Integer) pop());
-                case GTE -> push((Integer) pop() < (Integer) pop());
+                case LT -> push((Integer) pop() > (Integer) pop());
+                case GT -> push((Integer) pop() < (Integer) pop());
+                case LTE -> push((Integer) pop() >= (Integer) pop());
+                case GTE -> push((Integer) pop() <= (Integer) pop());
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
@@ -52,7 +52,7 @@ public class Interpreter {
                     callStack.pop();
                     if (callStack.size() == 0) return; //return for real
 
-                    while (frame.fp > stack.size()) stack.remove(stack.size()-1);
+                    while (frame.fp < stack.size()) stack.remove(stack.size()-1);
                     push(result);
                     frame = callStack.peek();
                     curBytes = frame.function.chunk.bytes;

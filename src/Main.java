@@ -11,8 +11,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        count = fun(n) if n > 0 {print(n) this(n-1)}
-        count(5)
+        print((fun(x) x*x)(2))
+        
+        fib = fun(n) if n < 2 n else this(n-1) + this(n-2)
+        print(fib(35))
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
@@ -22,6 +24,9 @@ public class Main {
         LangFunction f = comp.finish("script", 0);
 
         System.out.println(f.prettyBytecode());
-        new Interpreter().run(f);
+        Interpreter i = new Interpreter();
+        long before = System.nanoTime();
+        i.run(f);
+        System.out.println((System.nanoTime() - before) / 1000000d + " ms");
     }
 }
