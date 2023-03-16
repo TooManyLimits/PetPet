@@ -1,5 +1,7 @@
 package language.compile;
 
+import language.bytecoderunner.LangFunction;
+
 import java.util.ArrayList;
 
 import static language.compile.Bytecode.*;
@@ -13,19 +15,31 @@ public class Chunk {
         this.constants = constants; this.bytes = bytes;
     }
 
-    public void printBytecode() {
-        String numFormatString = "%0" + ((int) Math.log10(bytes.length + 1)+1) + "d | ";
+    public String toString(int indent) {
+        StringBuilder result = new StringBuilder();
+        int digits = ((int) Math.log10(bytes.length + 1)+1);
+        String numFormatString = " ".repeat(indent) + "%0" + digits + "d | ";
         for (int i = 0; i < bytes.length; i++) {
-            System.out.printf(numFormatString, i);
-            System.out.print(Bytecode.NAMES[bytes[i]]);
+            result.append(String.format(numFormatString, i));
+            result.append(Bytecode.NAMES[bytes[i]]);
+            boolean dontNewLine = false;
             switch (bytes[i]) {
-                case CONSTANT,SET_GLOBAL,LOAD_GLOBAL -> System.out.print("(" + bytes[++i] + ") = '" + constants[bytes[i]] + "'");
-                case SET_LOCAL,LOAD_LOCAL -> System.out.print("(" + bytes[++i] + ")");
-                case JUMP, JUMP_IF_FALSE -> System.out.print(" by " + ((bytes[++i] << 8 | bytes[++i])+3));
+                case CONSTANT,SET_GLOBAL,LOAD_GLOBAL -> {
+                    result.append("(").append(bytes[++i]).append(") = ");
+                    if (constants[bytes[i]] instanceof LangFunction func) {
+                        result.append(func).append(":\n").append(func.chunk.toString(indent + digits + 1));
+                        dontNewLine = true;
+                    } else
+                        result.append("'").append(constants[bytes[i]]).append("'");
+                }
+                case SET_LOCAL,LOAD_LOCAL -> result.append("(").append(bytes[++i]).append(")");
+                case JUMP, JUMP_IF_FALSE -> result.append(" by ").append((bytes[++i] << 8 | bytes[++i]) + 3);
+                case CALL -> result.append(" with ").append(bytes[++i]).append(" args");
                 default -> {}
             }
-            System.out.println();
+            if (!dontNewLine) result.append("\n");
         }
+        return result.toString();
     }
 
     public static Builder builder() {return new Builder();}

@@ -4,9 +4,7 @@ import language.bytecoderunner.LangFunction;
 import language.parse.Expression;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
-import java.util.Vector;
 
 /**
  * A compiler can translate an AST structure into bytecodes!
@@ -18,22 +16,17 @@ public class Compiler {
 
     private Chunk.Builder chunkBuilder;
 
-    public LangFunction compile(List<Expression> exprs) {
-        locals.clear();
-        scopeDepth = 0;
-        chunkBuilder = Chunk.builder();
+    private final Compiler parent;
 
-        try {
-            for (Expression e : exprs) {
-                e.scanForDeclarations(this);
-                e.writeBytecode(this);
-                chunkBuilder.write(Bytecode.POP);
-            }
-        } catch (CompilationException e) {
-            throw new RuntimeException(e);
-        }
-        chunkBuilder.write(Bytecode.RETURN);
-        return new LangFunction(chunkBuilder.build(), 0);
+    public Compiler(Compiler parent) {
+        this.parent = parent;
+        chunkBuilder = Chunk.builder();
+        try {registerLocal("");} catch (Exception ignored) {}
+    }
+
+    public LangFunction finish(String name, int paramCount) {
+        bytecode(Bytecode.RETURN);
+        return new LangFunction(name, chunkBuilder.build(), paramCount);
     }
 
     public void beginScope() {
@@ -87,8 +80,10 @@ public class Compiler {
         getChunkBuilder().writeWithShortArg(code, arg);
     }
 
-    public int registerConstant(Object value) {
-        return getChunkBuilder().registerConstant(value);
+    public int registerConstant(Object value) throws CompilationException {
+        int loc = getChunkBuilder().registerConstant(value);
+        if (loc > 255) throw new CompilationException("Too many literals!");
+        return loc;
     }
 
     private Chunk.Builder getChunkBuilder() {

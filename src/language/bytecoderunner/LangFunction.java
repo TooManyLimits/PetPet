@@ -8,14 +8,22 @@ import language.compile.Chunk;
  */
 public class LangFunction {
 
+    public final String name;
     public final Chunk chunk;
     public final int argCount;
 
-    public LangFunction(Chunk chunk, int args) {
+    public LangFunction(String name, Chunk chunk, int args) {
+        this.name = name;
         this.chunk = chunk;
         argCount = args;
     }
 
 
+    public String toString() {
+        return name;
+    }
 
+    public String prettyBytecode() {
+        return chunk.toString(0);
+    }
 }

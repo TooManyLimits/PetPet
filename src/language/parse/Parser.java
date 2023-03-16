@@ -80,9 +80,9 @@ public class Parser {
         if (check(ASSIGN)) {
             int tokline = consume().line(); //consume the '='
             if (lhs instanceof Expression.Name name)
-                return new Expression.Assign(name.name, parseAssignment());
+                return new Expression.Assign(lhs.startLine, name.name, parseAssignment());
             if (lhs instanceof Expression.Get get) {
-                return new Expression.Set(get.left, get.index, parseAssignment());
+                return new Expression.Set(lhs.startLine, get.left, get.index, parseAssignment());
             }
             throw new ParserException("Invalid assign target for '=' on line " + tokline);
         }
@@ -96,8 +96,9 @@ public class Parser {
                 LESS, GREATER,
                 LESS_EQUAL, GREATER_EQUAL
         )) {
-            Expression.Binary.Op op = Expression.Binary.Op.get(consume().type());
-            lhs = new Expression.Binary(lhs, op, parseSum());
+            Token opToken = consume();
+            Expression.Binary.Op op = Expression.Binary.Op.get(opToken.type());
+            lhs = new Expression.Binary(opToken.line(), lhs, op, parseSum());
         }
         return lhs;
     }
@@ -105,8 +106,9 @@ public class Parser {
     private Expression parseSum() throws ParserException {
         Expression lhs = parseProduct();
         while (check(PLUS, MINUS)) {
-            Expression.Binary.Op op = Expression.Binary.Op.get(consume().type());
-            lhs = new Expression.Binary(lhs, op, parseProduct());
+            Token opToken = consume();
+            Expression.Binary.Op op = Expression.Binary.Op.get(opToken.type());
+            lhs = new Expression.Binary(opToken.line(), lhs, op, parseProduct());
         }
         return lhs;
     }
@@ -114,16 +116,18 @@ public class Parser {
     private Expression parseProduct() throws ParserException {
         Expression lhs = parseUnary();
         while (check(TIMES, DIVIDE, MODULO)) {
-            Expression.Binary.Op op = Expression.Binary.Op.get(consume().type());
-            lhs = new Expression.Binary(lhs, op, parseUnary());
+            Token opToken = consume();
+            Expression.Binary.Op op = Expression.Binary.Op.get(opToken.type());
+            lhs = new Expression.Binary(opToken.line(), lhs, op, parseUnary());
         }
         return lhs;
     }
 
     private Expression parseUnary() throws ParserException {
         if (check(NOT, MINUS)) {
-            Expression.Unary.Op op = Expression.Unary.Op.get(consume().type());
-            return new Expression.Unary(op, parseUnary());
+            Token opToken = consume();
+            Expression.Unary.Op op = Expression.Unary.Op.get(opToken.type());
+            return new Expression.Unary(opToken.line(), op, parseUnary());
         }
         return parseCallOrGet();
     }
@@ -131,13 +135,14 @@ public class Parser {
     private Expression parseCallOrGet() throws ParserException {
         Expression lhs = parseUnit();
         while (check(LEFT_PAREN, DOT)) {
-            if (check(LEFT_PAREN))
-                lhs = new Expression.Call(lhs, parseArguments());
-            else {
+            if (check(LEFT_PAREN)) {
+                int openParenLine = consume().line();
+                lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
+            } else {
                 int dotLine = consume().line();
                 Expression rhs = parseUnit();
                 if (rhs instanceof Expression.Name)
-                    lhs = new Expression.Get(lhs, rhs);
+                    lhs = new Expression.Get(dotLine, lhs, rhs);
                 else
                     throw new ParserException("Expected name after '.' on line " + dotLine);
             }
@@ -147,10 +152,7 @@ public class Parser {
 
     //Parse expressions and commas until we hit a closing parenthesis
     //This consumes the closing parenthesis
-    private List<Expression> parseArguments() throws ParserException {
-        if (!check(LEFT_PAREN))
-            throw new ParserException("Expected function args, did not find opening parenthesis. This indicates a bug in the parser, contact devs.");
-        int openParenLine = consume().line();
+    private List<Expression> parseArguments(int openParenLine) throws ParserException {
         List<Expression> exprs = new ArrayList<>();
         if (check(RIGHT_PAREN)) { //If we find the right paren immediately, just consume it and return
             consume();
@@ -170,8 +172,8 @@ public class Parser {
 
     private Expression parseUnit() throws ParserException {
         return switch (peek().type()) {
-            case NAME -> new Expression.Name(consume().getString());
-            case INT_LITERAL, FLOAT_LITERAL, DOUBLE_LITERAL, LONG_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(consume().value()); //Literals
+            case NAME -> new Expression.Name(peek().line(), consume().getString());
+            case INT_LITERAL, FLOAT_LITERAL, DOUBLE_LITERAL, LONG_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
             case FUN -> parseFunction();
             case LEFT_PAREN -> { //Parenthesis for grouping
                 int leftLine = consume().line(); //Consume left paren
@@ -194,7 +196,7 @@ public class Parser {
         int funLine = consume().line();
         List<String> params = parseParams(funLine);
         Expression body = parseExpression();
-        return new Expression.Function(params, body);
+        return new Expression.Function(funLine, params, body);
     }
 
     private List<String> parseParams(int funLine) throws ParserException {
@@ -234,20 +236,20 @@ public class Parser {
         if (!check(RIGHT_CURLY))
             throw new ParserException("Expected '}' to close block expression that started on line " + startLine);
         consume(); //consume right curly
-        return new Expression.BlockExpression(exprs);
+        return new Expression.BlockExpression(startLine, exprs);
     }
 
     private Expression parseIfExpression() throws ParserException {
         if (!check(IF))
             throw new ParserException("Expected if statement? Bug with the parser, contact devs");
-        consume(); //consume "if"
+        int ifLine = consume().line(); //consume "if"
         Expression condition = parseExpression();
         Expression ifTrue = parseExpression();
         if (check(ELSE)) {
             consume(); //consume "else"
-            return new Expression.IfExpression(condition, ifTrue, parseExpression());
+            return new Expression.IfExpression(ifLine, condition, ifTrue, parseExpression());
         } else {
-            return new Expression.IfExpression(condition, ifTrue, null);
+            return new Expression.IfExpression(ifLine, condition, ifTrue, null);
         }
     }
 

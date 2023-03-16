@@ -34,6 +34,17 @@ public class Bytecode {
     public static final byte EQ = 16;
 
 
+    public static final byte CALL = 17; //takes a byte arg for the number of arguments
+
+    public static final byte LT = 18;
+    public static final byte GT = 19;
+    public static final byte LTE = 20;
+    public static final byte GTE = 21;
+
+    public static final byte NEQ = 22;
+    public static final byte MOD = 23;
+
+
     //Lookup for bytecode printouts
     public static final String[] NAMES = Arrays.stream(Bytecode.class.getFields()).filter(f -> Modifier.isStatic(f.getModifiers())).filter(f -> f.getType() == byte.class)
             .sorted((a, b) -> {

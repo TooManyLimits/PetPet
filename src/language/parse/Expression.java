@@ -13,6 +13,12 @@ import static language.Lexer.TokenType.*;
 
 public abstract class Expression {
 
+    public final int startLine;
+
+    protected Expression(int startLine) {
+        this.startLine = startLine;
+    }
+
     /**
      * Temporary method for tree-walk interpreter
      */
@@ -24,7 +30,8 @@ public abstract class Expression {
 
     public static class BlockExpression extends Expression {
         public final List<Expression> exprs;
-        public BlockExpression(List<Expression> exprs) {
+        public BlockExpression(int startLine, List<Expression> exprs) {
+            super(startLine);
             this.exprs = exprs;
         }
 
@@ -43,7 +50,8 @@ public abstract class Expression {
 
     public static class IfExpression extends Expression {
         public final Expression condition, ifTrue, ifFalse;
-        public IfExpression(Expression condition, Expression ifTrue, Expression ifFalse) {
+        public IfExpression(int startLine, Expression condition, Expression ifTrue, Expression ifFalse) {
+            super(startLine);
             this.condition = condition;
             this.ifTrue = ifTrue;
             this.ifFalse = ifFalse;
@@ -81,7 +89,8 @@ public abstract class Expression {
 
     public static class Literal extends Expression {
         public final Object value;
-        public Literal(Object value) {
+        public Literal(int startLine, Object value) {
+            super(startLine);
             this.value = value;
         }
 
@@ -97,22 +106,32 @@ public abstract class Expression {
     }
 
     public static class Function extends Expression {
-        public final List<String> argNames;
+        public final List<String> paramNames;
         public final Expression body;
 
-        public Function(List<String> argNames, Expression body) {
-            this.argNames = argNames; this.body = body;
+        public Function(int startLine, List<String> argNames, Expression body) {
+            super(startLine);
+            this.paramNames = argNames; this.body = body;
         }
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            Compiler thisCompiler = new Compiler(compiler);
+            for (String param : paramNames)
+                thisCompiler.registerLocal(param);
+            body.writeBytecode(thisCompiler);
+            String name = "function (line=" + startLine + ")";
+            LangFunction f = thisCompiler.finish(name, paramNames.size());
 
+            int idx = compiler.registerConstant(f);
+            compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) idx);
         }
     }
 
     public static class Name extends Expression {
         public final String name;
-        public Name(String name) {
+        public Name(int startLine, String name) {
+            super(startLine);
             this.name = name;
         }
 
@@ -125,11 +144,7 @@ public abstract class Expression {
             } else {
                 //Otherwise , get global
                 int loc = compiler.registerConstant(name);
-                if (loc <= 255) {
-                    compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
-                } else {
-                    throw new Compiler.CompilationException("Too many literals");
-                }
+                compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
             }
         }
     }
@@ -137,7 +152,8 @@ public abstract class Expression {
     public static class Get extends Expression {
         public final Expression left;
         public final Expression index;
-        public Get(Expression left, Expression indexingName) {
+        public Get(int startLine, Expression left, Expression indexingName) {
+            super(startLine);
             this.left = left; this.index = indexingName;
         }
 
@@ -157,7 +173,8 @@ public abstract class Expression {
         public final Expression left;
         public final Expression index;
         public final Expression right;
-        public Set(Expression left, Expression index, Expression right) {
+        public Set(int startLine, Expression left, Expression index, Expression right) {
+            super(startLine);
             this.left = left; this.index = index; this.right = right;
         }
 
@@ -177,16 +194,26 @@ public abstract class Expression {
     public static class Call extends Expression {
         public final Expression callingObject; //May be null!
         public final List<Expression> args;
-        public Call(Expression left, List<Expression> args) {
+        public Call(int startLine, Expression left, List<Expression> args) {
+            super(startLine);
             this.callingObject = left;
             this.args = args;
         }
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            args.get(0).writeBytecode(compiler);
-            compiler.bytecode(Bytecode.PRINT);
-            compiler.bytecode(Bytecode.PUSH_NULL); //temporary, just print on every function call
+
+            if (callingObject instanceof Name n && n.name.equals("print")) {
+                //temporary workaround for a print function
+                args.get(0).writeBytecode(compiler);
+                compiler.bytecode(Bytecode.PRINT);
+                compiler.bytecode(Bytecode.PUSH_NULL);
+            } else {
+                callingObject.writeBytecode(compiler);
+                for (Expression arg : args)
+                    arg.writeBytecode(compiler);
+                compiler.bytecodeWithByteArg(Bytecode.CALL, (byte) args.size());
+            }
         }
 
         @Override
@@ -202,7 +229,8 @@ public abstract class Expression {
         public final Expression rhs;
         public boolean isGlobal = false;
 
-        public Assign(String varName, Expression rhs) {
+        public Assign(int startLine, String varName, Expression rhs) {
+            super(startLine);
             this.varName = varName; this.rhs = rhs;
         }
 
@@ -210,12 +238,8 @@ public abstract class Expression {
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
             if (isGlobal) {
                 int loc = compiler.registerConstant(varName);
-                if (loc <= 255) {
-                    rhs.writeBytecode(compiler);
-                    compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
-                } else {
-                    throw new Compiler.CompilationException("Too many literals");
-                }
+                rhs.writeBytecode(compiler);
+                compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
             } else {
                 int loc = compiler.indexOfLocal(varName);
                 if (loc == -1) throw new Compiler.CompilationException("Shouldn't ever happen. indexOfLocal returned -1?");
@@ -241,7 +265,8 @@ public abstract class Expression {
         public final Expression left, right;
         public final Op op;
 
-        public Binary(Expression left, Op op, Expression right) {
+        public Binary(int startLine, Expression left, Op op, Expression right) {
+            super(startLine);
             this.left = left; this.right = right; this.op = op;
         }
 
@@ -264,14 +289,14 @@ public abstract class Expression {
 
             MUL(TIMES, Bytecode.MUL),
             DIV(DIVIDE, Bytecode.DIV),
-            MOD(MODULO, (byte) 0),
+            MOD(MODULO, Bytecode.MOD),
 
             EQ(EQUALS, Bytecode.EQ),
-            NEQ(NOT_EQUALS, (byte) 0),
-            GT(GREATER, (byte) 0),
-            GTE(GREATER_EQUAL, (byte) 0),
-            LT(LESS, (byte) 0),
-            LTE(LESS_EQUAL, (byte) 0);
+            NEQ(NOT_EQUALS, Bytecode.NEQ),
+            GT(GREATER, Bytecode.GT),
+            GTE(GREATER_EQUAL, Bytecode.GTE),
+            LT(LESS, Bytecode.LT),
+            LTE(LESS_EQUAL, Bytecode.LTE);
 
             private final Lexer.TokenType t;
             private final byte bytecode;
@@ -296,7 +321,8 @@ public abstract class Expression {
         public final Expression expr;
         public final Op op;
 
-        public Unary(Op op, Expression expr) {
+        public Unary(int startLine, Op op, Expression expr) {
+            super(startLine);
             this.expr = expr; this.op = op;
         }
 
