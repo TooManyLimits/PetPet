@@ -2,42 +2,25 @@ package language;
 
 import java.util.List;
 
-public interface Upvalue {
-    Object get();
-    void set(Object o);
-
-    class Closed implements Upvalue {
-        public Closed(Object val) {
-            this.val = val;
-        }
-        private Object val;
-        @Override
-        public Object get() {
-            return val;
-        }
-        @Override
-        public void set(Object o) {
-            val = o;
-        }
+public final class Upvalue {
+    public Object obj;
+    public int idx;
+    public Upvalue next;
+    public Upvalue(List<Object> obj, int index) {
+        this.obj = obj;
+        this.idx = index;
+        next = null;
     }
-
-    class Open implements Upvalue {
-        public Open(List<Object> list, int index) {
-            this.list = list;
-            this.index = index;
-        }
-        public Closed close() {
-            return new Closed(get());
-        }
-        private final List<Object> list;
-        private final int index;
-        @Override
-        public Object get() {
-            return list.get(index);
-        }
-        @Override
-        public void set(Object o) {
-            list.set(index, o);
-        }
+    public Object get() {
+        if (idx != -1) return ((List<Object>) obj).get(idx);
+        return obj;
+    }
+    public void set(Object o) {
+        if (idx != -1) ((List<Object>) obj).set(idx, o);
+        else obj = o;
+    }
+    public void close() {
+        obj = get();
+        idx = -1;
     }
 }

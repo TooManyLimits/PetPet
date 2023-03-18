@@ -46,6 +46,7 @@ public class Bytecode {
     public static final byte CLOSURE = 24; //2 bytes per closed variable, as in Lox.
     public static final byte SET_UPVALUE = 25;
     public static final byte LOAD_UPVALUE = 26;
+    public static final byte CLOSE_UPVALUE = 27;
 
 
     //Lookup for bytecode printouts

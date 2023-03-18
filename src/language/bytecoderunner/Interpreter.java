@@ -18,6 +18,7 @@ public class Interpreter {
 
     private final int MAX_STACK_FRAMES = 64;
     private final Deque<CallFrame> callStack = new ArrayDeque<>();
+    private Upvalue upvalueList; //upvalues are a linked list
 
     public void run(LangFunction function) {
         LangClosure closure = new LangClosure(function);
@@ -52,6 +53,7 @@ public class Interpreter {
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
                     Object result = pop();
+                    closeUpvalues(frame.fp-1);
                     callStack.pop();
                     if (callStack.size() == 0) return; //return for real
 
@@ -97,6 +99,9 @@ public class Interpreter {
 
                 case SET_UPVALUE -> frame.closure.upvalues[curBytes[frame.ip++]].set(peek());
                 case LOAD_UPVALUE -> push(frame.closure.upvalues[curBytes[frame.ip++]].get());
+                case CLOSE_UPVALUE -> {
+                    closeUpvalues(stack.size()-1);
+                }
             }
         }
     }
@@ -131,9 +136,35 @@ public class Interpreter {
         }
     }
 
-    private Upvalue.Open captureUpvalue(int index) {
-        Upvalue.Open result = new Upvalue.Open(stack, index);
+    private Upvalue captureUpvalue(int index) {
+        //Search if an open upvalue already exists for this local
+        Upvalue prev = null;
+        Upvalue cur = upvalueList;
+
+        while (cur != null && upvalueList.idx > index) {
+            prev = cur;
+            cur = cur.next;
+        }
+        if (cur != null && upvalueList.idx == index)
+            return cur;
+
+        Upvalue result = new Upvalue(stack, index);
+
+        result.next = cur;
+        if (prev == null) {
+            upvalueList = result;
+        } else {
+            prev.next = result;
+        }
         return result;
+    }
+
+    //Closes upvalues at or above the given stack index
+    private void closeUpvalues(int index) {
+        while (upvalueList != null && upvalueList.idx >= index) {
+            upvalueList.close();
+            upvalueList = upvalueList.next;
+        }
     }
 
     private void runtimeException(String message) {

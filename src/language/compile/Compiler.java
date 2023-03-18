@@ -36,9 +36,15 @@ public class Compiler {
 
     public void endScope() {
         scopeDepth--;
-        while (locals.size() > 0 && locals.get(locals.size()-1).depth() > scopeDepth) {
-            //Offset 1 because at the end of the scope, the result of the block expression is on the stack
-            chunkBuilder.write(Bytecode.POP_OFFSET_1);
+        while (locals.size() > 0) {
+            Local local = locals.get(locals.size()-1);
+            if (local.depth <= scopeDepth) break;
+            if (local.isCaptured) {
+                chunkBuilder.write(Bytecode.CLOSE_UPVALUE);
+            } else {
+                //Offset 1 because at the end of the scope, the result of the block expression is on the stack
+                chunkBuilder.write(Bytecode.POP_OFFSET_1);
+            }
             locals.remove(locals.size()-1);
         }
     }
@@ -51,7 +57,7 @@ public class Compiler {
 
     public int indexOfLocal(String varName) {
         for (int i = locals.size()-1; i >= 0; i--) {
-            if (locals.get(i).name().equals(varName))
+            if (locals.get(i).name.equals(varName))
                 return i;
         }
         return -1;
@@ -73,6 +79,7 @@ public class Compiler {
         if (parent == null) return -1;
         int parentLocal = parent.indexOfLocal(varName);
         if (parentLocal != -1) {
+            parent.locals.get(parentLocal).isCaptured = true;
             return registerUpvalue(parentLocal, true);
         }
 
@@ -133,6 +140,15 @@ public class Compiler {
         }
     }
 
-    private record Local(String name, int depth) {}
+    private static class Local {
+        String name;
+        int depth;
+        boolean isCaptured;
+        public Local(String name, int depth) {
+            this.name = name;
+            this.depth = depth;
+            isCaptured = false;
+        }
+    }
     private record CompileTimeUpvalue(int index, boolean isLocal) {}
 }

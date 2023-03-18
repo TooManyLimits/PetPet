@@ -11,13 +11,17 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        x = "outside"
-        closure = fun() {
-            print(x)
+        g = fun(g) {
+            a = 3
+            fun() {
+                print(a)
+                print(g)
+            }
         }
-        closure()
-        x = "meany"
-        closure()
+        x = g(5)
+        y = g(4)
+        x()
+        y()
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
