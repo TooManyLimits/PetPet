@@ -1,5 +1,7 @@
 package language.bytecoderunner;
 
+import language.Upvalue;
+
 import java.util.*;
 
 import static language.compile.Bytecode.*;
@@ -82,12 +84,19 @@ public class Interpreter {
                 case CLOSURE -> {
                     LangClosure closure = new LangClosure((LangFunction) pop());
                     for (int i = 0; i < closure.upvalues.length; i++) {
-
+                        boolean isLocal = curBytes[frame.ip++] > 0;
+                        int index = curBytes[frame.ip++];
+                        if (isLocal) {
+                            closure.upvalues[i] = captureUpvalue(frame.fp + index);
+                        } else {
+                            closure.upvalues[i] = frame.closure.upvalues[index];
+                        }
                     }
+                    push(closure);
                 }
 
-                case SET_UPVALUE -> frame.closure.upvalues[curBytes[frame.ip++]].value = peek();
-                case LOAD_UPVALUE -> push(frame.closure.upvalues[curBytes[frame.ip++]].value);
+                case SET_UPVALUE -> frame.closure.upvalues[curBytes[frame.ip++]].set(peek());
+                case LOAD_UPVALUE -> push(frame.closure.upvalues[curBytes[frame.ip++]].get());
             }
         }
     }
@@ -120,6 +129,11 @@ public class Interpreter {
         } else {
             runtimeException("Attempt to call non-closure value: " + callee);
         }
+    }
+
+    private Upvalue.Open captureUpvalue(int index) {
+        Upvalue.Open result = new Upvalue.Open(stack, index);
+        return result;
     }
 
     private void runtimeException(String message) {

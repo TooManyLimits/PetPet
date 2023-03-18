@@ -11,10 +11,13 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        print((fun(x) x*x)(2))
-        
-        fib = fun(n) if n < 2 n else this(n-1) + this(n-2)
-        print(fib(35))
+        x = "outside"
+        closure = fun() {
+            print(x)
+        }
+        closure()
+        x = "meany"
+        closure()
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);

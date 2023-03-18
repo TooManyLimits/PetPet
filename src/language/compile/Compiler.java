@@ -77,11 +77,11 @@ public class Compiler {
         }
 
         int parentUpvalue = parent.indexOfUpvalue(varName);
-        if (parentUpvalue != 1) {
+        if (parentUpvalue != -1) {
             return registerUpvalue(parentUpvalue, false);
         }
 
-        return  -1;
+        return -1;
     }
 
     public int emitJump(byte instruction) { //returns the location of the jump

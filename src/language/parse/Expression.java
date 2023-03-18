@@ -144,9 +144,15 @@ public abstract class Expression {
                 //If there's a local variable of this name in scope, then get local
                 compiler.bytecodeWithByteArg(Bytecode.LOAD_LOCAL, (byte) localIndex);
             } else {
-                //Otherwise , get global
-                int loc = compiler.registerConstant(name);
-                compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
+                int upvalueIndex = compiler.indexOfUpvalue(name);
+                if (upvalueIndex != -1) {
+                    //Upvalue, get it
+                    compiler.bytecodeWithByteArg(Bytecode.LOAD_UPVALUE, (byte) upvalueIndex);
+                } else {
+                    //If neither local nor upvalue, get global
+                    int loc = compiler.registerConstant(name);
+                    compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
+                }
             }
         }
     }
