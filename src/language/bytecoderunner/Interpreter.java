@@ -130,6 +130,8 @@ public class Interpreter {
         if (callee instanceof LangClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
+            if (callStack.size() == MAX_STACK_FRAMES)
+                runtimeException("Stack overflow! More than the max stack frames of " + MAX_STACK_FRAMES);
             callStack.push(new CallFrame(closure, 0, stack.size() - argCount - 1));
         } else {
             runtimeException("Attempt to call non-closure value: " + callee);

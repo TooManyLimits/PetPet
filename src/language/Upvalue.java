@@ -5,7 +5,7 @@ import java.util.List;
 public final class Upvalue {
     public Object obj;
     public int idx;
-    public Upvalue next;
+    public Upvalue next; //it is also a linked list node
     public Upvalue(List<Object> obj, int index) {
         this.obj = obj;
         this.idx = index;
