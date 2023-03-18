@@ -12,9 +12,10 @@ import java.util.List;
 public class Compiler {
 
     private final List<Local> locals = new ArrayList<>(); //map name to depth
+    private final List<CompileTimeUpvalue> upvalues = new ArrayList<>();
     private int scopeDepth = 0;
 
-    private Chunk.Builder chunkBuilder;
+    private final Chunk.Builder chunkBuilder;
 
     private final Compiler parent;
 
@@ -26,7 +27,7 @@ public class Compiler {
 
     public LangFunction finish(String name, int paramCount) {
         bytecode(Bytecode.RETURN);
-        return new LangFunction(name, chunkBuilder.build(), paramCount);
+        return new LangFunction(name, chunkBuilder.build(), paramCount, upvalues.size());
     }
 
     public void beginScope() {
@@ -56,6 +57,33 @@ public class Compiler {
         return -1;
     }
 
+    private int registerUpvalue(int index, boolean isLocal) throws CompilationException {
+        for (int i = 0; i < upvalues.size(); i++) {
+            if (upvalues.get(i).isLocal == isLocal && upvalues.get(i).index == index)
+                return i;
+        }
+        if (upvalues.size() >= 255)
+            throw new CompilationException("Too many upvalues! Max 255");
+
+        upvalues.add(new CompileTimeUpvalue(index, isLocal));
+        return upvalues.size()-1;
+    }
+
+    public int indexOfUpvalue(String varName) throws CompilationException {
+        if (parent == null) return -1;
+        int parentLocal = parent.indexOfLocal(varName);
+        if (parentLocal != -1) {
+            return registerUpvalue(parentLocal, true);
+        }
+
+        int parentUpvalue = parent.indexOfUpvalue(varName);
+        if (parentUpvalue != 1) {
+            return registerUpvalue(parentUpvalue, false);
+        }
+
+        return  -1;
+    }
+
     public int emitJump(byte instruction) { //returns the location of the jump
         int res = chunkBuilder.getByteIndex()+1;
         chunkBuilder.writeWithShortArg(instruction, -1);
@@ -66,6 +94,14 @@ public class Compiler {
         int jump = chunkBuilder.getByteIndex() - jumpLocation - 2;
         if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over!");
         chunkBuilder.writeShortAt(jumpLocation, jump);
+    }
+
+    public void emitClosure(Compiler finishedCompiler) throws CompilationException {
+        bytecode(Bytecode.CLOSURE);
+        for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues) {
+            bytecode(upvalue.isLocal ? (byte) 1 : 0);
+            bytecode((byte) upvalue.index);
+        }
     }
 
     public void bytecode(byte code) {
@@ -98,5 +134,5 @@ public class Compiler {
     }
 
     private record Local(String name, int depth) {}
-
+    private record CompileTimeUpvalue(int index, boolean isLocal) {}
 }

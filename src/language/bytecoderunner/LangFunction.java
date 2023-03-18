@@ -10,12 +10,14 @@ public class LangFunction {
 
     public final String name;
     public final Chunk chunk;
-    public final int argCount;
+    public final int paramCount;
+    public final int numUpvalues;
 
-    public LangFunction(String name, Chunk chunk, int args) {
+    public LangFunction(String name, Chunk chunk, int paramCount, int numUpvalues) {
         this.name = name;
         this.chunk = chunk;
-        argCount = args;
+        this.paramCount = paramCount;
+        this.numUpvalues = numUpvalues;
     }
 
 

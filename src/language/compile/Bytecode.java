@@ -43,6 +43,9 @@ public class Bytecode {
 
     public static final byte NEQ = 22;
     public static final byte MOD = 23;
+    public static final byte CLOSURE = 24; //2 bytes per closed variable, as in Lox.
+    public static final byte SET_UPVALUE = 25;
+    public static final byte LOAD_UPVALUE = 26;
 
 
     //Lookup for bytecode printouts

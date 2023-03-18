@@ -25,7 +25,7 @@ public abstract class Expression {
 
     public abstract void writeBytecode(Compiler compiler) throws Compiler.CompilationException;
 
-    //Scans for declarations and emits bytecode to push null if it finds any, and register in compiler
+    //Scans for local declarations or upvalues and emits bytecode to push null if it finds any, and register in compiler
     public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
 
     public static class BlockExpression extends Expression {
@@ -126,6 +126,7 @@ public abstract class Expression {
 
             int idx = compiler.registerConstant(f);
             compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) idx);
+            compiler.emitClosure(thisCompiler); //emit closure instruction
         }
     }
 
@@ -243,7 +244,8 @@ public abstract class Expression {
 
         public Assign(int startLine, String varName, Expression rhs) {
             super(startLine);
-            this.varName = varName; this.rhs = rhs;
+            this.varName = varName;
+            this.rhs = rhs;
         }
 
         @Override
@@ -254,19 +256,34 @@ public abstract class Expression {
                 compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
             } else {
                 int loc = compiler.indexOfLocal(varName);
-                if (loc == -1) throw new Compiler.CompilationException("Shouldn't ever happen. indexOfLocal returned -1?");
-                rhs.writeBytecode(compiler);
-                compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);
+                if (loc == -1) {
+                    //this is an upvalue, not a local
+                    //if it was meant to be local, then
+                    //indexOfLocal would not return -1, as it
+                    //would have been registered during scanForDeclarations().
+                    int upValueLoc = compiler.indexOfUpvalue(varName);
+                    if (upValueLoc == -1) throw new Compiler.CompilationException("indexOfUpvalue shouldn't return -1, bug in compiler!");
+                    rhs.writeBytecode(compiler);
+                    compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) loc);
+                } else {
+                    rhs.writeBytecode(compiler);
+                    compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);
+                }
             }
-
         }
 
         @Override
         public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
-            if (compiler.indexOfLocal(varName) == -1) {
-                //emits a "declaration", the variable doesn't exist yet
-                compiler.registerLocal(varName);
-                compiler.bytecode(Bytecode.PUSH_NULL);
+            //If global, there will never be a declaration. Just search right side
+            if (!isGlobal && compiler.indexOfLocal(varName) == -1) {
+                //No local, look for an upvalue:
+                int upvalueIndex = compiler.indexOfUpvalue(varName);
+                if (upvalueIndex == -1) {
+                    //upvalue doesn't exist either, so emits a
+                    //"declaration". the variable doesn't exist anywhere yet
+                    compiler.registerLocal(varName);
+                    compiler.bytecode(Bytecode.PUSH_NULL); //reserve space for the new local on stack
+                }
             }
             //Scan right side next
             rhs.scanForDeclarations(compiler);

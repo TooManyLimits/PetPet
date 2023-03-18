@@ -18,15 +18,16 @@ public class Interpreter {
     private final Deque<CallFrame> callStack = new ArrayDeque<>();
 
     public void run(LangFunction function) {
-        push(function);
-        callStack.push(new CallFrame(function, 0, 0));
+        LangClosure closure = new LangClosure(function);
+        push(closure);
+        callStack.push(new CallFrame(closure, 0, 0));
         run();
     }
 
     private void run() {
         CallFrame frame = callStack.peek();
-        byte[] curBytes = frame.function.chunk.bytes;
-        Object[] constants = frame.function.chunk.constants;
+        byte[] curBytes = frame.closure.function.chunk.bytes;
+        Object[] constants = frame.closure.function.chunk.constants;
         while (true) {
             switch (curBytes[frame.ip++]) {
                 case CONSTANT -> push(constants[curBytes[frame.ip++]]);
@@ -55,8 +56,8 @@ public class Interpreter {
                     while (frame.fp < stack.size()) stack.remove(stack.size()-1);
                     push(result);
                     frame = callStack.peek();
-                    curBytes = frame.function.chunk.bytes;
-                    constants = frame.function.chunk.constants;
+                    curBytes = frame.closure.function.chunk.bytes;
+                    constants = frame.closure.function.chunk.constants;
                 }
 
                 case SET_GLOBAL -> globals.put((String) constants[curBytes[frame.ip++]], peek());
@@ -74,9 +75,19 @@ public class Interpreter {
                     int argCount = curBytes[frame.ip++];
                     makeCall(peek(argCount), argCount);
                     frame = callStack.peek();
-                    curBytes = frame.function.chunk.bytes;
-                    constants = frame.function.chunk.constants;
+                    curBytes = frame.closure.function.chunk.bytes;
+                    constants = frame.closure.function.chunk.constants;
                 }
+
+                case CLOSURE -> {
+                    LangClosure closure = new LangClosure((LangFunction) pop());
+                    for (int i = 0; i < closure.upvalues.length; i++) {
+
+                    }
+                }
+
+                case SET_UPVALUE -> frame.closure.upvalues[curBytes[frame.ip++]].value = peek();
+                case LOAD_UPVALUE -> push(frame.closure.upvalues[curBytes[frame.ip++]].value);
             }
         }
     }
@@ -102,19 +113,19 @@ public class Interpreter {
     }
 
     private void makeCall(Object callee, int argCount) {
-        if (callee instanceof LangFunction f) {
-            if (argCount != f.argCount)
-                runtimeException(String.format("Expected %d args, got %d", f.argCount, argCount));
-            callStack.push(new CallFrame(f, 0, stack.size() - argCount - 1));
+        if (callee instanceof LangClosure closure) {
+            if (argCount != closure.function.paramCount)
+                runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
+            callStack.push(new CallFrame(closure, 0, stack.size() - argCount - 1));
         } else {
-            runtimeException("Attempt to call non-function value: " + callee);
+            runtimeException("Attempt to call non-closure value: " + callee);
         }
     }
 
     private void runtimeException(String message) {
         StringBuilder messageBuilder = new StringBuilder(message);
         for (CallFrame frame : callStack) {
-            messageBuilder.append("\n in: ").append(frame.function.toString());
+            messageBuilder.append("\n in: ").append(frame.closure.function);
         }
         message = messageBuilder.toString();
 
@@ -122,11 +133,11 @@ public class Interpreter {
     }
 
     private static class CallFrame {
-        private LangFunction function;
+        private LangClosure closure;
         private int ip; //instruction pointer
         private int fp; //frame pointer
-        public CallFrame(LangFunction f, int ip, int fp) {
-            function = f;
+        public CallFrame(LangClosure closure, int ip, int fp) {
+            this.closure = closure;
             this.ip = ip;
             this.fp = fp;
         }

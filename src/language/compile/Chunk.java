@@ -19,24 +19,36 @@ public class Chunk {
         StringBuilder result = new StringBuilder();
         int digits = ((int) Math.log10(bytes.length + 1)+1);
         String numFormatString = " ".repeat(indent) + "%0" + digits + "d | ";
+        LangFunction constFunc = null;
         for (int i = 0; i < bytes.length; i++) {
             result.append(String.format(numFormatString, i));
             result.append(Bytecode.NAMES[bytes[i]]);
             boolean dontNewLine = false;
-            switch (bytes[i]) {
-                case CONSTANT,SET_GLOBAL,LOAD_GLOBAL -> {
+            byte code = bytes[i];
+            switch (code) {
+                case CONSTANT -> {
                     result.append("(").append(bytes[++i]).append(") = ");
                     if (constants[bytes[i]] instanceof LangFunction func) {
                         result.append(func).append(":\n").append(func.chunk.toString(indent + digits + 1));
                         dontNewLine = true;
+                        constFunc = func;
                     } else
                         result.append("'").append(constants[bytes[i]]).append("'");
                 }
+                case SET_GLOBAL,LOAD_GLOBAL -> result.append("(").append(bytes[++i]).append(") = '").append(constants[bytes[i]]).append("'");
                 case SET_LOCAL,LOAD_LOCAL -> result.append("(").append(bytes[++i]).append(")");
                 case JUMP, JUMP_IF_FALSE -> result.append(" by ").append((bytes[++i] << 8 | bytes[++i]) + 3);
                 case CALL -> result.append(" with ").append(bytes[++i]).append(" args");
+                case CLOSURE -> {
+                    if (constFunc == null) throw new RuntimeException("Failed to print closure bytecode");
+                    result.append(" over: \n");
+                    for (int j = 0; j < constFunc.numUpvalues; j++)
+                        result.append(bytes[++i] == 0 ? "| Upvalue " : "| Local ").append(bytes[++i]).append("\n");
+                    dontNewLine = true;
+                }
                 default -> {}
             }
+            if (code != CONSTANT) constFunc = null;
             if (!dontNewLine) result.append("\n");
         }
         return result.toString();
