@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Lexer {
 
     public static final Pattern REGEX = Pattern.compile(
-            "==|!=|>=|<=|[{}();!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?(?:f32|i64)?|[a-zA-Z_]\\w*|\"[^\"]*\"|\n"
+            "==|!=|>=|<=|[\\[\\]{}();!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?(?:f32|i64)?|[a-zA-Z_]\\w*|\"[^\"]*\"|\n"
     );
     public static final Pattern WORD_REGEX = Pattern.compile(
             "[a-zA-Z_]\\w*"
@@ -116,6 +116,8 @@ public class Lexer {
         RIGHT_CURLY("}"),
         LEFT_PAREN("("),
         RIGHT_PAREN(")"),
+        LEFT_SQUARE("["),
+        RIGHT_SQUARE("]"),
         SEMICOLON(";"),
         COMMA(","),
 

@@ -19,10 +19,6 @@ public abstract class Expression {
         this.startLine = startLine;
     }
 
-    /**
-     * Temporary method for tree-walk interpreter
-     */
-
     public abstract void writeBytecode(Compiler compiler) throws Compiler.CompilationException;
 
     //Scans for local declarations or upvalues and emits bytecode to push null if it finds any, and register in compiler
@@ -37,6 +33,10 @@ public abstract class Expression {
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            if (exprs.size() == 0) {
+                compiler.bytecode(Bytecode.PUSH_NULL);
+                return;
+            }
             compiler.beginScope();
             for (int i = 0; i < exprs.size(); i++) {
                 exprs.get(i).scanForDeclarations(compiler);
@@ -170,21 +170,23 @@ public abstract class Expression {
 
     public static class Get extends Expression {
         public final Expression left;
-        public final Expression index;
-        public Get(int startLine, Expression left, Expression indexingName) {
+        public final Expression indexer;
+        public Get(int startLine, Expression left, Expression indexer) {
             super(startLine);
-            this.left = left; this.index = indexingName;
+            this.left = left; this.indexer = indexer;
         }
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-
+            left.writeBytecode(compiler);
+            indexer.writeBytecode(compiler);
+            compiler.bytecode(Bytecode.GET);
         }
 
         @Override
         public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
             left.scanForDeclarations(compiler);
-            index.scanForDeclarations(compiler);
+            indexer.scanForDeclarations(compiler);
         }
     }
 
@@ -199,7 +201,10 @@ public abstract class Expression {
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-
+            left.writeBytecode(compiler);
+            index.writeBytecode(compiler);
+            right.writeBytecode(compiler);
+            compiler.bytecode(Bytecode.SET);
         }
 
         @Override

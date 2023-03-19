@@ -82,7 +82,7 @@ public class Parser {
             if (lhs instanceof Expression.Name name)
                 return new Expression.Assign(lhs.startLine, name.name, parseAssignment());
             if (lhs instanceof Expression.Get get) {
-                return new Expression.Set(lhs.startLine, get.left, get.index, parseAssignment());
+                return new Expression.Set(lhs.startLine, get.left, get.indexer, parseAssignment());
             }
             throw new ParserException("Invalid assign target for '=' on line " + tokline);
         }
@@ -134,19 +134,30 @@ public class Parser {
 
     private Expression parseCallOrGet() throws ParserException {
         Expression lhs = parseUnit();
-        while (check(LEFT_PAREN, DOT)) {
+        while (check(LEFT_PAREN, DOT, LEFT_SQUARE) && !check(SEMICOLON)) {
             if (check(LEFT_PAREN)) {
                 int openParenLine = consume().line();
                 lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
-            } else {
+            } else if (check(DOT)) {
                 int dotLine = consume().line();
-                Expression rhs = parseUnit();
-                if (rhs instanceof Expression.Name)
-                    lhs = new Expression.Get(dotLine, lhs, rhs);
-                else
+                if (check(NAME)) {
+                    Token name = consume();
+                    int line = name.line();
+                    String val = name.getString();
+                    lhs = new Expression.Get(dotLine, lhs, new Expression.Literal(line, val));
+                } else {
                     throw new ParserException("Expected name after '.' on line " + dotLine);
+                }
+            } else {
+                int openSquareLine = consume().line();
+                Expression indexer = parseExpression();
+                if (!check(RIGHT_SQUARE))
+                    throw new ParserException("Expected ] to end indexing operation on line " + openSquareLine);
+                consume(); //consume right square bracket
+                lhs = new Expression.Get(openSquareLine, lhs, indexer);
             }
         }
+        if (check(SEMICOLON)) consume(); //consume the semi
         return lhs;
     }
 

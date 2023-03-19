@@ -48,6 +48,9 @@ public class Bytecode {
     public static final byte LOAD_UPVALUE = 26;
     public static final byte CLOSE_UPVALUE = 27;
 
+    public static final byte GET = 28; //pops the value on top of the stack as a key when indexing the value popped below it. pushes the result on the stack.
+    public static final byte SET = 29; //stack is <new value> above <indexer> above <indexed obj>. afterwards, stack is just <new value>.
+
 
     //Lookup for bytecode printouts
     public static final String[] NAMES = Arrays.stream(Bytecode.class.getFields()).filter(f -> Modifier.isStatic(f.getModifiers())).filter(f -> f.getType() == byte.class)
