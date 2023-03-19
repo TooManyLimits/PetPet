@@ -216,7 +216,7 @@ public abstract class Expression {
     }
 
     public static class Call extends Expression {
-        public final Expression callingObject; //May be null!
+        public final Expression callingObject;
         public final List<Expression> args;
         public Call(int startLine, Expression left, List<Expression> args) {
             super(startLine);
@@ -243,6 +243,35 @@ public abstract class Expression {
         @Override
         public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException{
             callingObject.scanForDeclarations(compiler);
+            for (Expression e : args)
+                e.scanForDeclarations(compiler);
+        }
+    }
+
+    public static class Invoke extends Expression {
+        public final Expression instance;
+        public final Expression indexer;
+        public final List<Expression> args;
+        public Invoke(int startLine, Expression left, Expression indexer, List<Expression> args) {
+            super(startLine);
+            this.instance = left;
+            this.indexer = indexer;
+            this.args = args;
+        }
+
+        @Override
+        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            instance.writeBytecode(compiler);
+            indexer.writeBytecode(compiler);
+            for (Expression arg : args)
+                arg.writeBytecode(compiler);
+            compiler.bytecodeWithByteArg(Bytecode.INVOKE, (byte) args.size());
+        }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException{
+            instance.scanForDeclarations(compiler);
+            indexer.scanForDeclarations(compiler);
             for (Expression e : args)
                 e.scanForDeclarations(compiler);
         }

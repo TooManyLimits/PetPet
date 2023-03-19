@@ -20,6 +20,7 @@ public class JavaFunction {
     //boolean is whether this method should be converted to a Masque method
     //if true, it will have an implicit "this" parameter inserted
     public JavaFunction(Method method, boolean isMethod) {
+        method.setAccessible(true);
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodHandle handle = lookup.unreflect(method);

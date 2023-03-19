@@ -137,7 +137,10 @@ public class Parser {
         while (check(LEFT_PAREN, DOT, LEFT_SQUARE) && !check(SEMICOLON)) {
             if (check(LEFT_PAREN)) {
                 int openParenLine = consume().line();
-                lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
+                if (lhs instanceof Expression.Get get)
+                    lhs = new Expression.Invoke(openParenLine, get.left, get.indexer, parseArguments(openParenLine));
+                else
+                    lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
             } else if (check(DOT)) {
                 int dotLine = consume().line();
                 if (check(NAME)) {

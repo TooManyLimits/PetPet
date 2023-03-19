@@ -3,6 +3,8 @@ package language.bytecoderunner;
 import language.Upvalue;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static language.compile.Bytecode.*;
 
@@ -21,8 +23,9 @@ public class Interpreter {
     private final Deque<CallFrame> callStack = new ArrayDeque<>();
     private Upvalue upvalueList; //upvalues are a linked list
 
-    public void run(LangFunction function) {
-        LangClosure closure = new LangClosure(function);
+    public int cost;
+
+    public void run(LangClosure closure) {
         push(closure);
         callStack.push(new CallFrame(closure, 0, 0));
         run();
@@ -33,6 +36,7 @@ public class Interpreter {
         byte[] curBytes = frame.closure.function.chunk.bytes;
         Object[] constants = frame.closure.function.chunk.constants;
         while (true) {
+            cost++;
             switch (curBytes[frame.ip++]) {
                 case CONSTANT -> push(constants[curBytes[frame.ip++]]);
                 case PUSH_NULL -> push(null);
@@ -99,23 +103,92 @@ public class Interpreter {
                     push(closure);
                 }
 
-                case SET_UPVALUE -> frame.closure.upvalues[curBytes[frame.ip++]].set(peek());
-                case LOAD_UPVALUE -> push(frame.closure.upvalues[curBytes[frame.ip++]].get());
+                case SET_UPVALUE -> {
+                    cost++; //upvalues more expensive than locals
+                    frame.closure.upvalues[curBytes[frame.ip++]].set(peek());
+                }
+                case LOAD_UPVALUE -> {
+                    cost++;
+                    push(frame.closure.upvalues[curBytes[frame.ip++]].get());
+                }
                 case CLOSE_UPVALUE -> {
                     closeUpvalues(stack.size()-1);
                 }
 
                 case GET -> {
-                    Object indexer = pop();
-                    Object indexee = pop();
-                    push(classMap.get(indexee.getClass()).get(indexee, indexer));
+                    Object indexer = peek();
+                    Object instance = peek(1);
+                    LangClass langClass = classMap.get(instance.getClass());
+
+                    if (indexer instanceof String name) {
+                        Function field = langClass.fieldGetters.get(name);
+                        if (field != null)  {
+                            pop(); pop();
+                            push(field.apply(instance));
+                            break;
+                        }
+                        cost++;
+                    }
+
+                    String indexerTypeName = indexer.getClass().getSimpleName();
+                    String specialString = "__get_" + indexerTypeName;
+                    Object getMethod = langClass.methods.get(specialString);
+                    if (getMethod != null) {
+                        makeCall(getMethod, 2);
+                        break;
+                    }
+                    cost++;
+                    getMethod = langClass.methods.get("__get");
+                    if (getMethod != null) {
+                        makeCall(getMethod, 2);
+                        break;
+                    }
+                    runtimeException("Tried to get from " + instance + " with illegal key " + indexer);
                 }
                 case SET -> {
-                    Object val = pop();
-                    Object indexer = pop();
-                    Object indexee = pop();
-                    classMap.get(indexee.getClass()).set(indexee, indexer, val);
-                    push(val);
+                    Object value = peek();
+                    Object indexer = peek(1);
+                    Object instance = peek(2);
+                    LangClass langClass = classMap.get(instance.getClass());
+
+                    if (indexer instanceof String name) {
+                        BiConsumer field = langClass.fieldSetters.get(name);
+                        if (field != null) {
+                            pop(); pop(); pop();
+                            field.accept(instance, value);
+                            push(value);
+                            break;
+                        }
+                    }
+
+                    String indexerTypeName = indexer.getClass().getSimpleName();
+                    String specialString = "__set_" + indexerTypeName;
+                    Object setMethod = langClass.methods.get(specialString);
+                    if (setMethod != null) {
+                        makeCall(setMethod, 3);
+                        break;
+                    }
+                    setMethod = langClass.methods.get("__set");
+                    if (setMethod != null) {
+                        makeCall(setMethod, 3);
+                        break;
+                    }
+                    runtimeException("Tried to set to " + instance + " with illegal key " + indexer);
+                }
+
+                case INVOKE -> {
+                    int argCount = curBytes[frame.ip++];
+
+                    Object indexer = peek(argCount);
+                    Object instance = peek(argCount+1);
+                    stack.remove(stack.size()-1-argCount);
+                    LangClass langClass = classMap.get(instance.getClass());
+                    if (indexer instanceof String name) {
+                        Object method = langClass.methods.get(name);
+                        makeCall(method, argCount+1);
+                        break;
+                    }
+                    runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
                 }
             }
         }
@@ -174,6 +247,7 @@ public class Interpreter {
             };
             for (int i = 0; i < argCount; i++)
                 pop();
+            cost += argCount;
             push(result);
             return false;
         } else {
@@ -208,6 +282,7 @@ public class Interpreter {
     //Closes upvalues at or above the given stack index
     private void closeUpvalues(int index) {
         while (upvalueList != null && upvalueList.idx >= index) {
+            cost++;
             upvalueList.close();
             upvalueList = upvalueList.next;
         }

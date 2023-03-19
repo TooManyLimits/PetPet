@@ -49,7 +49,8 @@ public class Bytecode {
     public static final byte CLOSE_UPVALUE = 27;
 
     public static final byte GET = 28; //pops the value on top of the stack as a key when indexing the value popped below it. pushes the result on the stack.
-    public static final byte SET = 29; //stack is <new value> above <indexer> above <indexed obj>. afterwards, stack is just <new value>.
+    public static final byte SET = 29; //stack is <new value> above <indexer> above <indexed obj>. afterwards, stack is just <new value> or result of __set.
+    public static final byte INVOKE = 30; //stack is <args> above <indexer> above <instance>. Afterwards, stack is the result of the invocation.
 
 
     //Lookup for bytecode printouts
