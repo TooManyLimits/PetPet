@@ -5,7 +5,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,9 +14,14 @@ public class JavaFunction {
     public final int paramCount;
     private final Backing backing;
 
+    //0, 1, 2, ...
+    //double, float, long, int, short, byte
+    private boolean needsNumberConversion;
+    private byte[] requiredTypes;
+
     private static final int MAX_PARAMS = 15;
 
-    //boolean is whether this method should be converted to a Masque method
+    //boolean is whether this method should be converted to a Masque method for invocation
     //if true, it will have an implicit "this" parameter inserted
     public JavaFunction(Method method, boolean isMethod) {
         method.setAccessible(true);
@@ -41,6 +45,7 @@ public class JavaFunction {
                         invocType //The dynamic method type enforced at invocation time
                 ).getTarget();
                 backing = (Backing) site.invokeExact();
+                checkNumberConversion(invocType);
             } else {
                 paramCount = method.getParameterCount();
                 List<Class<?>> ptypes = new ArrayList<>(paramCount);
@@ -55,12 +60,48 @@ public class JavaFunction {
                         handle, //A method handle for the function to wrap
                         invocType //The dynamic method type enforced at invocation time
                 ).getTarget().invokeExact();
+                checkNumberConversion(invocType);
             }
         } catch (Throwable throwable) {
             throw new RuntimeException(throwable);
         }
         if (paramCount > MAX_PARAMS)
             throw new IllegalArgumentException("Cannot create JavaFunction from method with over " + MAX_PARAMS + " params!");
+    }
+
+    private void checkNumberConversion(MethodType invocType) {
+        Class<?>[] paramTypes = invocType.parameterArray();
+        byte[] req = new byte[paramTypes.length];
+        for (int i = 0; i < paramTypes.length; i++) {
+            Class<?> param = paramTypes[i];
+            if (Number.class.isAssignableFrom(param)) {
+                if (param != Double.class) {
+                    needsNumberConversion = true;
+                    if (param == Float.class) req[i] = 1;
+                    else if (param == Long.class) req[i] = 2;
+                    else if (param == Integer.class) req[i] = 3;
+                    else if (param == Short.class) req[i] = 4;
+                    else if (param == Byte.class) req[i] = 5;
+                }
+            }
+        }
+        requiredTypes = needsNumberConversion ? req : null;
+    }
+
+    public boolean needsNumberConversion() {
+        return needsNumberConversion;
+    }
+
+    public Object castNumber(Object o, int index) {
+        return switch (requiredTypes[index]) {
+            case 0 -> o;
+            case 1 -> ((Number) o).floatValue();
+            case 2 -> ((Number) o).longValue();
+            case 3 -> ((Number) o).intValue();
+            case 4 -> ((Number) o).shortValue();
+            case 5 -> ((Number) o).byteValue();
+            default -> throw new IllegalArgumentException("Shouldn't ever happen, bug in interpreter number casting");
+        };
     }
 
     public JavaFunction(Class<?> clazz, String name, boolean isMethod) {
@@ -136,8 +177,9 @@ public class JavaFunction {
         }
         result.append("}");
         System.out.println(result);
+
         System.out.println("-----------------Switch Statement----------------");
-        result = new StringBuilder("Object result = switch(argCount) {\n");
+        result = new StringBuilder("result = switch(argCount) {\n");
         for (int i = 0; i <= MAX_PARAMS; i++) {
             result.append("\t\t\t\tcase ").append(i).append(" -> jFunction.invoke(");
             for (int j = i-1; j >= 0; j--) {
@@ -147,6 +189,24 @@ public class JavaFunction {
                     result.append("peek()");
                 else
                     result.append("peek(").append(j).append(")");
+            }
+            result.append(");\n");
+        }
+        result.append("\t\t\tdefault -> throw new IllegalStateException(\"function has too many args??\");\n");
+        result.append("\t\t\t};");
+        System.out.println(result);
+
+        System.out.println("-----------------Switch Statement With Number Casts----------------");
+        result = new StringBuilder("result = switch(argCount) {\n");
+        for (int i = 0; i <= MAX_PARAMS; i++) {
+            result.append("\t\t\t\tcase ").append(i).append(" -> jFunction.invoke(");
+            for (int j = i-1; j >= 0; j--) {
+                if (j != i-1)
+                    result.append(", ");
+                if (j == 0)
+                    result.append("jFunction.castNumber(peek(), ").append(i-1-j).append(")");
+                else
+                    result.append("jFunction.castNumber(peek(").append(j).append("), ").append(i-1-j).append(")");
             }
             result.append(");\n");
         }

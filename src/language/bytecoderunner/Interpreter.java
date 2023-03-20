@@ -2,6 +2,7 @@ package language.bytecoderunner;
 
 import language.Upvalue;
 import language.compile.Bytecode;
+import language.compile.Compiler;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -26,7 +27,8 @@ public class Interpreter {
 
     public int cost;
 
-    public void run(LangClosure closure) {
+    public void run(LangFunction function) {
+        LangClosure closure = new LangClosure(function);
         push(closure);
         callStack.push(new CallFrame(closure, 0, 0));
         run();
@@ -45,19 +47,19 @@ public class Interpreter {
                 case POP -> pop();
 
                 //Temp operators
-                case ADD -> push(((Number) pop()).doubleValue() + ((Number) pop()).doubleValue());
-                case SUB -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l-r);}
-                case MUL -> push(((Number) pop()).doubleValue() * ((Number) pop()).doubleValue());
-                case DIV -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l/r);}
-                case MOD -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l%r);}
+                case ADD -> push((Double) pop() + (Double) pop());
+                case SUB -> {double r = (Double) pop(); double l = (Double) pop(); push(l-r);}
+                case MUL -> push((Double) pop() * (Double) pop());
+                case DIV -> {double r = (Double) pop(); double l = (Double) pop(); push(l/r);}
+                case MOD -> {double r = (Double) pop(); double l = (Double) pop(); push(l%r);}
                 case EQ -> push(Objects.equals(pop(), pop()));
                 case NEQ -> push(!Objects.equals(pop(), pop()));
-                case LT -> push(((Number) pop()).doubleValue() > ((Number) pop()).doubleValue());
-                case GT -> push(((Number) pop()).doubleValue() < ((Number) pop()).doubleValue());
-                case LTE -> push(((Number) pop()).doubleValue() >= ((Number) pop()).doubleValue());
-                case GTE -> push(((Number) pop()).doubleValue() <= ((Number) pop()).doubleValue());
+                case LT -> push((Double) pop() > (Double) pop());
+                case GT -> push((Double) pop() < (Double) pop());
+                case LTE -> push((Double) pop() >= (Double) pop());
+                case GTE -> push((Double) pop() <= (Double) pop());
 
-                case NEGATE -> push(-(Integer) pop());
+                case NEGATE -> push(-(Double) pop());
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
@@ -129,13 +131,20 @@ public class Interpreter {
                         Function field = langClass.fieldGetters.get(name);
                         if (field != null)  {
                             pop(); pop();
-                            push(field.apply(instance));
+                            try {
+                                Object result = field.apply(instance);
+                                if (result instanceof Number n)
+                                    push(n.doubleValue());
+                                else push(result);
+                            } catch (Exception e) {
+                                runtimeException(e.toString());
+                            }
                             break;
                         }
                         cost++;
                     }
 
-                    String indexerTypeName = indexer.getClass().getSimpleName();
+                    String indexerTypeName = classMap.get(indexer.getClass()).name;
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
                     if (getMethod != null) {
@@ -160,13 +169,17 @@ public class Interpreter {
                         BiConsumer field = langClass.fieldSetters.get(name);
                         if (field != null) {
                             pop(); pop(); pop();
-                            field.accept(instance, value);
+                            try {
+                                field.accept(instance, value);
+                            } catch (Exception e) {
+                                runtimeException(e.toString());
+                            }
                             push(value);
                             break;
                         }
                     }
 
-                    String indexerTypeName = indexer.getClass().getSimpleName();
+                    String indexerTypeName = classMap.get(indexer.getClass()).name;
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
                     if (setMethod != null) {
@@ -235,29 +248,61 @@ public class Interpreter {
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount)
                 runtimeException(String.format("Expected %d args, got %d", jFunction.paramCount, argCount));
-            Object result = switch(argCount) {
-                case 0 -> jFunction.invoke();
-                case 1 -> jFunction.invoke(peek());
-                case 2 -> jFunction.invoke(peek(1), peek());
-                case 3 -> jFunction.invoke(peek(2), peek(1), peek());
-                case 4 -> jFunction.invoke(peek(3), peek(2), peek(1), peek());
-                case 5 -> jFunction.invoke(peek(4), peek(3), peek(2), peek(1), peek());
-                case 6 -> jFunction.invoke(peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 7 -> jFunction.invoke(peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 8 -> jFunction.invoke(peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 9 -> jFunction.invoke(peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 10 -> jFunction.invoke(peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 11 -> jFunction.invoke(peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 12 -> jFunction.invoke(peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 13 -> jFunction.invoke(peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 14 -> jFunction.invoke(peek(13), peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                case 15 -> jFunction.invoke(peek(14), peek(13), peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
-                default -> throw new IllegalStateException("function has too many args??");
-            };
-            for (int i = 0; i < argCount; i++)
-                pop();
-            cost += argCount;
-            push(result);
+            try {
+                Object result;
+                if (jFunction.needsNumberConversion()) {
+                    result = switch(argCount) {
+                        case 0 -> jFunction.invoke();
+                        case 1 -> jFunction.invoke(jFunction.castNumber(peek(), 0));
+                        case 2 -> jFunction.invoke(jFunction.castNumber(peek(1), 0), jFunction.castNumber(peek(), 1));
+                        case 3 -> jFunction.invoke(jFunction.castNumber(peek(2), 0), jFunction.castNumber(peek(1), 1), jFunction.castNumber(peek(), 2));
+                        case 4 -> jFunction.invoke(jFunction.castNumber(peek(3), 0), jFunction.castNumber(peek(2), 1), jFunction.castNumber(peek(1), 2), jFunction.castNumber(peek(), 3));
+                        case 5 -> jFunction.invoke(jFunction.castNumber(peek(4), 0), jFunction.castNumber(peek(3), 1), jFunction.castNumber(peek(2), 2), jFunction.castNumber(peek(1), 3), jFunction.castNumber(peek(), 4));
+                        case 6 -> jFunction.invoke(jFunction.castNumber(peek(5), 0), jFunction.castNumber(peek(4), 1), jFunction.castNumber(peek(3), 2), jFunction.castNumber(peek(2), 3), jFunction.castNumber(peek(1), 4), jFunction.castNumber(peek(), 5));
+                        case 7 -> jFunction.invoke(jFunction.castNumber(peek(6), 0), jFunction.castNumber(peek(5), 1), jFunction.castNumber(peek(4), 2), jFunction.castNumber(peek(3), 3), jFunction.castNumber(peek(2), 4), jFunction.castNumber(peek(1), 5), jFunction.castNumber(peek(), 6));
+                        case 8 -> jFunction.invoke(jFunction.castNumber(peek(7), 0), jFunction.castNumber(peek(6), 1), jFunction.castNumber(peek(5), 2), jFunction.castNumber(peek(4), 3), jFunction.castNumber(peek(3), 4), jFunction.castNumber(peek(2), 5), jFunction.castNumber(peek(1), 6), jFunction.castNumber(peek(), 7));
+                        case 9 -> jFunction.invoke(jFunction.castNumber(peek(8), 0), jFunction.castNumber(peek(7), 1), jFunction.castNumber(peek(6), 2), jFunction.castNumber(peek(5), 3), jFunction.castNumber(peek(4), 4), jFunction.castNumber(peek(3), 5), jFunction.castNumber(peek(2), 6), jFunction.castNumber(peek(1), 7), jFunction.castNumber(peek(), 8));
+                        case 10 -> jFunction.invoke(jFunction.castNumber(peek(9), 0), jFunction.castNumber(peek(8), 1), jFunction.castNumber(peek(7), 2), jFunction.castNumber(peek(6), 3), jFunction.castNumber(peek(5), 4), jFunction.castNumber(peek(4), 5), jFunction.castNumber(peek(3), 6), jFunction.castNumber(peek(2), 7), jFunction.castNumber(peek(1), 8), jFunction.castNumber(peek(), 9));
+                        case 11 -> jFunction.invoke(jFunction.castNumber(peek(10), 0), jFunction.castNumber(peek(9), 1), jFunction.castNumber(peek(8), 2), jFunction.castNumber(peek(7), 3), jFunction.castNumber(peek(6), 4), jFunction.castNumber(peek(5), 5), jFunction.castNumber(peek(4), 6), jFunction.castNumber(peek(3), 7), jFunction.castNumber(peek(2), 8), jFunction.castNumber(peek(1), 9), jFunction.castNumber(peek(), 10));
+                        case 12 -> jFunction.invoke(jFunction.castNumber(peek(11), 0), jFunction.castNumber(peek(10), 1), jFunction.castNumber(peek(9), 2), jFunction.castNumber(peek(8), 3), jFunction.castNumber(peek(7), 4), jFunction.castNumber(peek(6), 5), jFunction.castNumber(peek(5), 6), jFunction.castNumber(peek(4), 7), jFunction.castNumber(peek(3), 8), jFunction.castNumber(peek(2), 9), jFunction.castNumber(peek(1), 10), jFunction.castNumber(peek(), 11));
+                        case 13 -> jFunction.invoke(jFunction.castNumber(peek(12), 0), jFunction.castNumber(peek(11), 1), jFunction.castNumber(peek(10), 2), jFunction.castNumber(peek(9), 3), jFunction.castNumber(peek(8), 4), jFunction.castNumber(peek(7), 5), jFunction.castNumber(peek(6), 6), jFunction.castNumber(peek(5), 7), jFunction.castNumber(peek(4), 8), jFunction.castNumber(peek(3), 9), jFunction.castNumber(peek(2), 10), jFunction.castNumber(peek(1), 11), jFunction.castNumber(peek(), 12));
+                        case 14 -> jFunction.invoke(jFunction.castNumber(peek(13), 0), jFunction.castNumber(peek(12), 1), jFunction.castNumber(peek(11), 2), jFunction.castNumber(peek(10), 3), jFunction.castNumber(peek(9), 4), jFunction.castNumber(peek(8), 5), jFunction.castNumber(peek(7), 6), jFunction.castNumber(peek(6), 7), jFunction.castNumber(peek(5), 8), jFunction.castNumber(peek(4), 9), jFunction.castNumber(peek(3), 10), jFunction.castNumber(peek(2), 11), jFunction.castNumber(peek(1), 12), jFunction.castNumber(peek(), 13));
+                        case 15 -> jFunction.invoke(jFunction.castNumber(peek(14), 0), jFunction.castNumber(peek(13), 1), jFunction.castNumber(peek(12), 2), jFunction.castNumber(peek(11), 3), jFunction.castNumber(peek(10), 4), jFunction.castNumber(peek(9), 5), jFunction.castNumber(peek(8), 6), jFunction.castNumber(peek(7), 7), jFunction.castNumber(peek(6), 8), jFunction.castNumber(peek(5), 9), jFunction.castNumber(peek(4), 10), jFunction.castNumber(peek(3), 11), jFunction.castNumber(peek(2), 12), jFunction.castNumber(peek(1), 13), jFunction.castNumber(peek(), 14));
+                        default -> throw new IllegalStateException("function has too many args??");
+                    };
+                } else {
+                    result = switch(argCount) {
+                        case 0 -> jFunction.invoke();
+                        case 1 -> jFunction.invoke(peek());
+                        case 2 -> jFunction.invoke(peek(1), peek());
+                        case 3 -> jFunction.invoke(peek(2), peek(1), peek());
+                        case 4 -> jFunction.invoke(peek(3), peek(2), peek(1), peek());
+                        case 5 -> jFunction.invoke(peek(4), peek(3), peek(2), peek(1), peek());
+                        case 6 -> jFunction.invoke(peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 7 -> jFunction.invoke(peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 8 -> jFunction.invoke(peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 9 -> jFunction.invoke(peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 10 -> jFunction.invoke(peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 11 -> jFunction.invoke(peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 12 -> jFunction.invoke(peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 13 -> jFunction.invoke(peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 14 -> jFunction.invoke(peek(13), peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        case 15 -> jFunction.invoke(peek(14), peek(13), peek(12), peek(11), peek(10), peek(9), peek(8), peek(7), peek(6), peek(5), peek(4), peek(3), peek(2), peek(1), peek());
+                        default -> throw new IllegalStateException("function has too many args??");
+                    };
+                }
+
+                if (result instanceof Number n)
+                    result = n.doubleValue();
+
+                for (int i = 0; i < argCount; i++)
+                    pop();
+                cost += argCount;
+                push(result);
+            } catch (Exception e) {
+                e.printStackTrace();
+                runtimeException(e.toString());
+            }
             return false;
         } else {
             runtimeException("Attempt to call non-function value: " + callee);
@@ -300,7 +345,10 @@ public class Interpreter {
     private void runtimeException(String message) {
         StringBuilder messageBuilder = new StringBuilder(message);
         for (CallFrame frame : callStack) {
-            messageBuilder.append("\n in: ").append(frame.closure.function);
+            messageBuilder.append("\n in: ")
+                    .append(frame.closure.function)
+                    .append(" at line ")
+                    .append(frame.lineNumber());
         }
         message = messageBuilder.toString();
 
@@ -315,6 +363,13 @@ public class Interpreter {
             this.closure = closure;
             this.ip = ip;
             this.fp = fp;
+        }
+
+        public int lineNumber() {
+            int[] lines = closure.function.lineNumberTable;
+            int index = 0;
+            while (++index < lines.length && lines[index] <= ip);
+            return index + closure.function.lineNumberOffset;
         }
     }
 

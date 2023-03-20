@@ -1,7 +1,6 @@
 package language.compile;
 
 import language.bytecoderunner.LangFunction;
-import language.parse.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,10 @@ public class Compiler {
 
     private final List<Local> locals = new ArrayList<>(); //map name to depth
     private final List<CompileTimeUpvalue> upvalues = new ArrayList<>();
+
+    //The nth number in the list is the bytecode index of the first byte at line n or higher
+    private final ArrayList<Integer> lineNumberTable = new ArrayList<>();
+    private int latestLine = 0;
     private int scopeDepth = 0;
 
     private final Chunk.Builder chunkBuilder;
@@ -25,9 +28,12 @@ public class Compiler {
         try {registerLocal("");} catch (Exception ignored) {}
     }
 
-    public LangFunction finish(String name, int paramCount) {
+    public LangFunction finish(String name, int lineNumber, int paramCount) {
         bytecode(Bytecode.RETURN);
-        return new LangFunction(name, chunkBuilder.build(), paramCount, upvalues.size());
+        int[] lineNumberArr = new int[lineNumberTable.size()];
+        for (int i = 0; i < lineNumberArr.length; i++)
+            lineNumberArr[i] = lineNumberTable.get(i);
+        return new LangFunction(name, chunkBuilder.build(), lineNumber, lineNumberArr, paramCount, upvalues.size());
     }
 
     public void beginScope() {
@@ -119,6 +125,14 @@ public class Compiler {
         for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues) {
             bytecode(upvalue.isLocal ? (byte) 1 : 0);
             bytecode((byte) upvalue.index);
+        }
+    }
+
+    //Accepts the given line number and inserts it for lookup table
+    public void acceptLineNumber(int line) {
+        while (line > latestLine) {
+            lineNumberTable.add(getChunkBuilder().getByteIndex());
+            latestLine++;
         }
     }
 

@@ -47,15 +47,10 @@ public class Lexer {
                     if (str.startsWith("\"")) //String literal
                         toks.add(new Token(TokenType.STRING_LITERAL, str.substring(1, str.length() - 1), curLine));
 
-                    else if (Character.isDigit(str.charAt(0))) {
-                        if (str.contains(".")) {
-                            toks.add(new Token(TokenType.FLOAT_LITERAL, Double.parseDouble(str), curLine));
-                        } else {
-                            toks.add(new Token(TokenType.INT_LITERAL, Long.parseLong(str), curLine));
-                        }
-                    }
+                    else if (Character.isDigit(str.charAt(0))) //Number literal
+                        toks.add(new Token(TokenType.NUMBER_LITERAL, Double.parseDouble(str), curLine));
 
-                    else if (WORD_REGEX.matcher(str).matches())
+                    else if (WORD_REGEX.matcher(str).matches()) //Name
                         toks.add(new Token(TokenType.NAME, str, curLine));
                     else
                         throw new LexingException(str, curLine);
@@ -72,10 +67,7 @@ public class Lexer {
         public String getString() {
             return (String) value;
         }
-        public long getInt() {
-            return (Long) value;
-        }
-        public double getFloat() {
+        public double getNumber() {
             return (Double) value;
         }
 
@@ -102,8 +94,8 @@ public class Lexer {
         GREATER(">"),
         LESS("<"),
 
-        AND("&&"),
-        OR("||"),
+        AND("&&", "and"),
+        OR("||", "or"),
 
         LEFT_CURLY("{"),
         RIGHT_CURLY("}"),
@@ -122,8 +114,7 @@ public class Lexer {
 
         FUN("fun"),
 
-        INT_LITERAL(), //long
-        FLOAT_LITERAL(), //double
+        NUMBER_LITERAL(), //double
         BOOLEAN_LITERAL(),
         NAME(),
         CALL(),

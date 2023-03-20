@@ -19,7 +19,9 @@ public abstract class Expression {
         this.startLine = startLine;
     }
 
-    public abstract void writeBytecode(Compiler compiler) throws Compiler.CompilationException;
+    public void compile(Compiler compiler) throws Compiler.CompilationException {
+        compiler.acceptLineNumber(startLine);
+    }
 
     //Scans for local declarations or upvalues and emits bytecode to push null if it finds any, and register in compiler
     public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
@@ -32,7 +34,8 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             if (exprs.size() == 0) {
                 compiler.bytecode(Bytecode.PUSH_NULL);
                 return;
@@ -40,7 +43,7 @@ public abstract class Expression {
             compiler.beginScope();
             for (int i = 0; i < exprs.size(); i++) {
                 exprs.get(i).scanForDeclarations(compiler);
-                exprs.get(i).writeBytecode(compiler);
+                exprs.get(i).compile(compiler);
                 if (i != exprs.size()-1)
                     compiler.bytecode(Bytecode.POP);
             }
@@ -58,13 +61,14 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            condition.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            condition.compile(compiler);
 
             int jumpElse = compiler.emitJump(Bytecode.JUMP_IF_FALSE);
             int jumpOut = -1;
             compiler.bytecode(Bytecode.POP);
-            ifTrue.writeBytecode(compiler);
+            ifTrue.compile(compiler);
 
             if (ifFalse != null) //if we have an else statement, emit an unconditional jump to skip it
                 jumpOut = compiler.emitJump(Bytecode.JUMP);
@@ -74,7 +78,7 @@ public abstract class Expression {
             compiler.bytecode(Bytecode.POP);
 
             if (ifFalse != null) {
-                ifFalse.writeBytecode(compiler);
+                ifFalse.compile(compiler);
                 compiler.patchJump(jumpOut);
             } else {
                 compiler.bytecode(Bytecode.PUSH_NULL);
@@ -113,14 +117,15 @@ public abstract class Expression {
         ...
          */
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             compiler.bytecode(Bytecode.PUSH_NULL);
             int start = compiler.startLoop(); //returns the index of the first bytecode of condition
-            condition.writeBytecode(compiler);
+            condition.compile(compiler);
             int endJump = compiler.emitJump(Bytecode.JUMP_IF_FALSE);
             compiler.bytecode(Bytecode.POP);
             compiler.bytecode(Bytecode.POP);
-            body.writeBytecode(compiler);
+            body.compile(compiler);
             compiler.endLoop(start);
             compiler.patchJump(endJump);
             compiler.bytecode(Bytecode.POP);
@@ -141,7 +146,8 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             int loc = compiler.registerConstant(value);
             if (loc <= 255) {
                 compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) loc);
@@ -161,13 +167,14 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             Compiler thisCompiler = new Compiler(compiler);
             for (String param : paramNames)
                 thisCompiler.registerLocal(param);
-            body.writeBytecode(thisCompiler);
+            body.compile(thisCompiler);
             String name = "function (line=" + startLine + ")";
-            LangFunction f = thisCompiler.finish(name, paramNames.size());
+            LangFunction f = thisCompiler.finish(name, startLine-1, paramNames.size());
 
             int idx = compiler.registerConstant(f);
             compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) idx);
@@ -183,7 +190,8 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             int localIndex = compiler.indexOfLocal(name);
             if (localIndex != -1) {
                 //If there's a local variable of this name in scope, then get local
@@ -208,7 +216,8 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            compiler.acceptLineNumber(startLine);
             compiler.bytecodeWithByteArg(Bytecode.LOAD_LOCAL, (byte) 0);
         }
     }
@@ -222,9 +231,10 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            left.writeBytecode(compiler);
-            indexer.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            left.compile(compiler);
+            indexer.compile(compiler);
             compiler.bytecode(Bytecode.GET);
         }
 
@@ -245,10 +255,11 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            left.writeBytecode(compiler);
-            index.writeBytecode(compiler);
-            right.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            left.compile(compiler);
+            index.compile(compiler);
+            right.compile(compiler);
             compiler.bytecode(Bytecode.SET);
         }
 
@@ -270,10 +281,11 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            callingObject.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            callingObject.compile(compiler);
             for (Expression arg : args)
-                arg.writeBytecode(compiler);
+                arg.compile(compiler);
             compiler.bytecodeWithByteArg(Bytecode.CALL, (byte) args.size());
         }
 
@@ -297,11 +309,12 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            instance.writeBytecode(compiler);
-            indexer.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            instance.compile(compiler);
+            indexer.compile(compiler);
             for (Expression arg : args)
-                arg.writeBytecode(compiler);
+                arg.compile(compiler);
             compiler.bytecodeWithByteArg(Bytecode.INVOKE, (byte) args.size());
         }
 
@@ -327,10 +340,11 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
             if (isGlobal) {
                 int loc = compiler.registerConstant(varName);
-                rhs.writeBytecode(compiler);
+                rhs.compile(compiler);
                 compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
             } else {
                 int loc = compiler.indexOfLocal(varName);
@@ -341,10 +355,10 @@ public abstract class Expression {
                     //would have been registered during scanForDeclarations().
                     int upValueLoc = compiler.indexOfUpvalue(varName);
                     if (upValueLoc == -1) throw new Compiler.CompilationException("indexOfUpvalue shouldn't return -1, bug in compiler!");
-                    rhs.writeBytecode(compiler);
+                    rhs.compile(compiler);
                     compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) loc);
                 } else {
-                    rhs.writeBytecode(compiler);
+                    rhs.compile(compiler);
                     compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);
                 }
             }
@@ -379,12 +393,13 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            left.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            left.compile(compiler);
             byte code = isAnd ? Bytecode.JUMP_IF_FALSE : Bytecode.JUMP_IF_TRUE;
             int shortCircuit = compiler.emitJump(code);
             compiler.bytecode(Bytecode.POP);
-            right.writeBytecode(compiler);
+            right.compile(compiler);
             compiler.patchJump(shortCircuit);
         }
 
@@ -405,9 +420,10 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            left.writeBytecode(compiler);
-            right.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            left.compile(compiler);
+            right.compile(compiler);
             compiler.bytecode(op.bytecode);
         }
 
@@ -461,8 +477,9 @@ public abstract class Expression {
         }
 
         @Override
-        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-            expr.writeBytecode(compiler);
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            expr.compile(compiler);
             compiler.bytecode(op.bytecode);
         }
 
