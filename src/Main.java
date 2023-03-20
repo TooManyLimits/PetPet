@@ -13,8 +13,10 @@ public class Main {
     public int abcd = 0;
     public static void main(String[] args) throws Exception {
         String src =
-        """        
-        if (1 == 3 || 4 >= 2) print(x)
+        """
+        i = 0
+        x = while(i < 10) {i = i + 1 i*i}
+        print(x)
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
@@ -36,6 +38,7 @@ public class Main {
         listClass.methods.put("__get_Integer", new JavaFunction(ArrayList.class, "get", true));
         listClass.methods.put("__set_Integer", new JavaFunction(ArrayList.class, "set", true));
         listClass.methods.put("add", new JavaFunction(ArrayList.class, "add", true, Object.class));
+        listClass.methods.put("size", new JavaFunction(ArrayList.class, "size", true));
         i.classMap.put(ArrayList.class, listClass);
         i.globals.put("list", new JavaFunction(Main.class, "makeList", false));
 

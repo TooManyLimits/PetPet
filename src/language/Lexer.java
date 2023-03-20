@@ -118,6 +118,7 @@ public class Lexer {
         ELSE("else"),
         WHILE("while"),
         THIS("this"),
+        GLOBAL("global"),
 
         FUN("fun"),
 

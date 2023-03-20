@@ -266,6 +266,7 @@ public class Interpreter {
     }
 
     private Upvalue captureUpvalue(int index) {
+        cost++; //cost for capturing an upvalue
         //Search if an open upvalue already exists for this local
         Upvalue prev = null;
         Upvalue cur = upvalueList;
@@ -291,7 +292,6 @@ public class Interpreter {
     //Closes upvalues at or above the given stack index
     private void closeUpvalues(int index) {
         while (upvalueList != null && upvalueList.idx >= index) {
-            cost++;
             upvalueList.close();
             upvalueList = upvalueList.next;
         }

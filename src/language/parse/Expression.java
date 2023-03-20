@@ -317,10 +317,11 @@ public abstract class Expression {
     public static class Assign extends Expression {
         public final String varName;
         public final Expression rhs;
-        public boolean isGlobal = false;
+        public boolean isGlobal;
 
-        public Assign(int startLine, String varName, Expression rhs) {
+        public Assign(int startLine, boolean global, String varName, Expression rhs) {
             super(startLine);
+            this.isGlobal = global;
             this.varName = varName;
             this.rhs = rhs;
         }

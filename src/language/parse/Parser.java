@@ -76,12 +76,15 @@ public class Parser {
     }
 
     private Expression parseAssignment() throws ParserException {
+        boolean global = check(GLOBAL);
+        if (global) consume();
         Expression lhs = parseOr();
         if (check(ASSIGN)) {
             int tokline = consume().line(); //consume the '='
             if (lhs instanceof Expression.Name name)
-                return new Expression.Assign(lhs.startLine, name.name, parseAssignment());
+                return new Expression.Assign(lhs.startLine, global, name.name, parseAssignment());
             if (lhs instanceof Expression.Get get) {
+                if (global) throw new ParserException("Cannot use global on indexing operation (line " + tokline + ")");
                 return new Expression.Set(lhs.startLine, get.left, get.indexer, parseAssignment());
             }
             throw new ParserException("Invalid assign target for '=' on line " + tokline);
