@@ -88,6 +88,45 @@ public abstract class Expression {
         }
     }
 
+    public static class While extends Expression {
+        public final Expression condition, body;
+        public While(int startLine, Expression condition, Expression body) {
+            super(startLine);
+            this.condition = condition;
+            this.body = body;
+        }
+
+        /*
+        ...
+        push null
+        START
+        push condition
+        pop condition, if false jump to END
+        pop
+        body
+        jump to START
+        END
+        ...
+         */
+        @Override
+        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            compiler.bytecode(Bytecode.PUSH_NULL);
+            int start = compiler.startLoop(); //returns the index of the first bytecode of condition
+            condition.writeBytecode(compiler);
+            int endJump = compiler.emitJump(Bytecode.JUMP_IF_FALSE);
+            compiler.bytecode(Bytecode.POP);
+            body.writeBytecode(compiler);
+            compiler.endLoop(start);
+            compiler.patchJump(endJump);
+        }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            condition.scanForDeclarations(compiler);
+            body.scanForDeclarations(compiler);
+        }
+    }
+
     public static class Literal extends Expression {
         public final Object value;
         public Literal(int startLine, Object value) {
@@ -226,18 +265,10 @@ public abstract class Expression {
 
         @Override
         public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
-
-            if (callingObject instanceof Name n && n.name.equals("print")) {
-                //temporary workaround for a print function
-                args.get(0).writeBytecode(compiler);
-                compiler.bytecode(Bytecode.PRINT);
-                compiler.bytecode(Bytecode.PUSH_NULL);
-            } else {
-                callingObject.writeBytecode(compiler);
-                for (Expression arg : args)
-                    arg.writeBytecode(compiler);
-                compiler.bytecodeWithByteArg(Bytecode.CALL, (byte) args.size());
-            }
+            callingObject.writeBytecode(compiler);
+            for (Expression arg : args)
+                arg.writeBytecode(compiler);
+            compiler.bytecodeWithByteArg(Bytecode.CALL, (byte) args.size());
         }
 
         @Override
@@ -408,7 +439,7 @@ public abstract class Expression {
 
         public enum Op {
             NOT(Lexer.TokenType.NOT, (byte) 0),
-            NEGATE(Lexer.TokenType.MINUS, (byte) 0);
+            NEGATE(Lexer.TokenType.MINUS, Bytecode.NEGATE);
 
             private final Lexer.TokenType t;
             private final byte bytecode;

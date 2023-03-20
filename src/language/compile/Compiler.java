@@ -103,6 +103,17 @@ public class Compiler {
         chunkBuilder.writeShortAt(jumpLocation, jump);
     }
 
+    public int startLoop() {
+        return chunkBuilder.getByteIndex();
+    }
+
+    //loopstart is the index of the first bytecode of condition
+    public void endLoop(int loopStart) throws CompilationException {
+        int jump = loopStart - chunkBuilder.getByteIndex() - 3;
+        if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over!");
+        chunkBuilder.writeWithShortArg(Bytecode.JUMP, jump);
+    }
+
     public void emitClosure(Compiler finishedCompiler) throws CompilationException {
         bytecode(Bytecode.CLOSURE);
         for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues) {

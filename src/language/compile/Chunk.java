@@ -37,7 +37,7 @@ public class Chunk {
                 }
                 case SET_GLOBAL,LOAD_GLOBAL -> result.append("(").append(bytes[++i]).append(") = '").append(constants[bytes[i]]).append("'");
                 case SET_LOCAL,LOAD_LOCAL,SET_UPVALUE,LOAD_UPVALUE -> result.append("(").append(bytes[++i]).append(")");
-                case JUMP, JUMP_IF_FALSE -> result.append(" by ").append((bytes[++i] << 8 | bytes[++i]) + 3);
+                case JUMP, JUMP_IF_FALSE -> result.append(" by ").append(extendSignwise(bytes[++i] << 8 | bytes[++i], 3));
                 case CALL, INVOKE -> result.append(" with ").append(bytes[++i]).append(" args");
                 case CLOSURE -> {
                     if (constFunc == null) throw new RuntimeException("Failed to print closure bytecode");
@@ -52,6 +52,10 @@ public class Chunk {
             if (!dontNewLine) result.append("\n");
         }
         return result.toString();
+    }
+
+    private static int extendSignwise(int v, int o) {
+        return v < 0 ? v - o : v > 0 ? v + o : v;
     }
 
     public static Builder builder() {return new Builder();}

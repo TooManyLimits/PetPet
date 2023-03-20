@@ -14,10 +14,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        a = list()
-        a.add(3)
-        a.add(4)
-        print(a)
+        i=-1while(i=i+1)<10print(i)
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
@@ -42,6 +39,8 @@ public class Main {
         i.classMap.put(ArrayList.class, listClass);
         i.globals.put("list", new JavaFunction(Main.class, "makeList", false));
 
+        i.globals.put("print", new JavaFunction(Main.class, "print", false));
+
         long before = System.nanoTime();
         i.run(new LangClosure(f));
         System.out.println((System.nanoTime() - before) / 1000000d + " ms");
@@ -60,5 +59,9 @@ public class Main {
 
     public static ArrayList makeList() {
         return new ArrayList();
+    }
+
+    public static void print(Object o) {
+        System.out.println(o);
     }
 }

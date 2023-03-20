@@ -1,6 +1,7 @@
 package language.bytecoderunner;
 
 import language.Upvalue;
+import language.compile.Bytecode;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -37,6 +38,7 @@ public class Interpreter {
         Object[] constants = frame.closure.function.chunk.constants;
         while (true) {
             cost++;
+//            System.out.println(NAMES[curBytes[frame.ip]]);
             switch (curBytes[frame.ip++]) {
                 case CONSTANT -> push(constants[curBytes[frame.ip++]]);
                 case PUSH_NULL -> push(null);
@@ -54,6 +56,8 @@ public class Interpreter {
                 case GT -> push((Integer) pop() < (Integer) pop());
                 case LTE -> push((Integer) pop() >= (Integer) pop());
                 case GTE -> push((Integer) pop() <= (Integer) pop());
+
+                case NEGATE -> push(-(Integer) pop());
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {

@@ -121,7 +121,6 @@ public class Lexer {
         SEMICOLON(";"),
         COMMA(","),
 
-        TYPE("type"),
         IF("if"),
         ELSE("else"),
         WHILE("while"),

@@ -52,6 +52,8 @@ public class Bytecode {
     public static final byte SET = 29; //stack is <new value> above <indexer> above <indexed obj>. afterwards, stack is just <new value> or result of __set.
     public static final byte INVOKE = 30; //stack is <args> above <indexer> above <instance>. Afterwards, stack is the result of the invocation.
 
+    public static final byte NEGATE = 31;
+
 
     //Lookup for bytecode printouts
     public static final String[] NAMES = Arrays.stream(Bytecode.class.getFields()).filter(f -> Modifier.isStatic(f.getModifiers())).filter(f -> f.getType() == byte.class)

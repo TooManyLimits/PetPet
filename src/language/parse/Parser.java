@@ -200,7 +200,7 @@ public class Parser {
             }
             case LEFT_CURLY -> parseBlockExpression();
             case IF -> parseIfExpression();
-            case WHILE -> null;
+            case WHILE -> parseWhileExpression();
             default -> throw new ParserException(peek());
         };
     }
@@ -256,7 +256,7 @@ public class Parser {
 
     private Expression parseIfExpression() throws ParserException {
         if (!check(IF))
-            throw new ParserException("Expected if statement? Bug with the parser, contact devs");
+            throw new ParserException("Expected if expression? Bug with the parser, contact devs");
         int ifLine = consume().line(); //consume "if"
         Expression condition = parseExpression();
         Expression ifTrue = parseExpression();
@@ -266,6 +266,15 @@ public class Parser {
         } else {
             return new Expression.IfExpression(ifLine, condition, ifTrue, null);
         }
+    }
+
+    private Expression parseWhileExpression() throws ParserException {
+        if (!check(WHILE))
+            throw new ParserException("Expected while expression? Bug with parser, contact devs");
+        int whileLine = consume().line();
+        Expression condition = parseExpression();
+        Expression body = parseExpression();
+        return new Expression.While(whileLine, condition, body);
     }
 
     public static class ParserException extends Exception {
