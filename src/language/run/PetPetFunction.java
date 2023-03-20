@@ -6,7 +6,7 @@ import language.compile.Chunk;
  * Represents a function that's written in the language itself,
  * !not! a function that's a proxy for an external java call.
  */
-public class LangFunction {
+public class PetPetFunction {
 
     public final String name;
     public final Chunk chunk;
@@ -16,7 +16,7 @@ public class LangFunction {
     public final int lineNumberOffset;
     public final int[] lineNumberTable;
 
-    public LangFunction(String name, Chunk chunk, int lineNumberOffset, int[] lineNumberTable, int paramCount, int numUpvalues) {
+    public PetPetFunction(String name, Chunk chunk, int lineNumberOffset, int[] lineNumberTable, int paramCount, int numUpvalues) {
         this.name = name;
         this.chunk = chunk;
         this.paramCount = paramCount;

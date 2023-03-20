@@ -1,7 +1,7 @@
 package language.reflect;
 
 import language.run.JavaFunction;
-import language.run.LangClass;
+import language.run.PetPetClass;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
@@ -11,28 +11,28 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public class MasqueReflector {
+public class PetPetReflector {
     //Ensuring that things don't need to be reflected twice to generate the classes
-    public static final Map<Class<?>, LangClass> CACHE = new IdentityHashMap<>();
+    public static final Map<Class<?>, PetPetClass> CACHE = new IdentityHashMap<>();
 
-    public static LangClass reflect(Class<?> clazz, String name) {
+    public static PetPetClass reflect(Class<?> clazz, String name) {
         if (!CACHE.containsKey(clazz))
             CACHE.put(clazz, reflectInner(clazz, name));
         return CACHE.get(clazz);
     }
 
-    private static LangClass reflectInner(Class<?> clazz, String name) {
-        if (!clazz.isAnnotationPresent(MasqueWhitelist.class)) {
-            throw new RuntimeException("Can only automatically reflect classes with the @MasqueWhitelist annotation, for safety reasons.");
+    private static PetPetClass reflectInner(Class<?> clazz, String name) {
+        if (!clazz.isAnnotationPresent(PetPetWhitelist.class)) {
+            throw new RuntimeException("Can only automatically reflect classes with the @PetPetWhitelist annotation, for safety reasons.");
         }
-        LangClass result = new LangClass(name == null ? clazz.getSimpleName() : name);
+        PetPetClass result = new PetPetClass(name == null ? clazz.getSimpleName() : name);
         for (Field f : clazz.getFields()) {
-            if (f.isAnnotationPresent(MasqueWhitelist.class)) {
+            if (f.isAnnotationPresent(PetPetWhitelist.class)) {
                 result.addField(f.getName(), f);
             }
         }
         for (Method m : clazz.getMethods()) {
-            if (m.isAnnotationPresent(MasqueWhitelist.class)) {
+            if (m.isAnnotationPresent(PetPetWhitelist.class)) {
                 if (result.methods.containsKey(m.getName()))
                     throw new RuntimeException("Failed to reflect class " + clazz.getName() + ": unfortunately, method overloads are not implemented yet :(");
                 result.methods.put(m.getName(), new JavaFunction(m, true));

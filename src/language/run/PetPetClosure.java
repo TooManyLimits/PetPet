@@ -2,11 +2,11 @@ package language.run;
 
 import language.Upvalue;
 
-public class LangClosure {
-    public final LangFunction function;
+public class PetPetClosure {
+    public final PetPetFunction function;
     public final Upvalue[] upvalues;
 
-    public LangClosure(LangFunction function) {
+    public PetPetClosure(PetPetFunction function) {
         this.function = function;
         this.upvalues = new Upvalue[function.numUpvalues];
     }

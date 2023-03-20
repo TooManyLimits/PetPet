@@ -14,7 +14,7 @@ import static language.compile.Bytecode.*;
 public class Interpreter {
 
     //temp public
-    public final Map<Class<?>, LangClass> classMap = new IdentityHashMap<>(); //keys are classes, identity works
+    public final Map<Class<?>, PetPetClass> classMap = new IdentityHashMap<>(); //keys are classes, identity works
     public final Map<String, Object> globals = new HashMap<>();
 
     private final List<Object> stack = new ArrayList<>();
@@ -25,8 +25,8 @@ public class Interpreter {
 
     public int cost;
 
-    public void run(LangFunction function) {
-        LangClosure closure = new LangClosure(function);
+    public void run(PetPetFunction function) {
+        PetPetClosure closure = new PetPetClosure(function);
         push(closure);
         callStack.push(new CallFrame(closure, 0, 0));
         run();
@@ -95,7 +95,7 @@ public class Interpreter {
                 }
 
                 case CLOSURE -> {
-                    LangClosure closure = new LangClosure((LangFunction) pop());
+                    PetPetClosure closure = new PetPetClosure((PetPetFunction) pop());
                     for (int i = 0; i < closure.upvalues.length; i++) {
                         boolean isLocal = curBytes[frame.ip++] > 0;
                         int index = curBytes[frame.ip++];
@@ -123,7 +123,7 @@ public class Interpreter {
                 case GET -> {
                     Object indexer = peek();
                     Object instance = peek(1);
-                    LangClass langClass = classMap.get(instance.getClass());
+                    PetPetClass langClass = classMap.get(instance.getClass());
 
                     if (indexer instanceof String name) {
                         Function field = langClass.fieldGetters.get(name);
@@ -161,7 +161,7 @@ public class Interpreter {
                     Object value = peek();
                     Object indexer = peek(1);
                     Object instance = peek(2);
-                    LangClass langClass = classMap.get(instance.getClass());
+                    PetPetClass langClass = classMap.get(instance.getClass());
 
                     if (indexer instanceof String name) {
                         BiConsumer field = langClass.fieldSetters.get(name);
@@ -198,7 +198,7 @@ public class Interpreter {
                     Object indexer = peek(argCount);
                     Object instance = peek(argCount+1);
                     stack.remove(stack.size()-1-argCount);
-                    LangClass langClass = classMap.get(instance.getClass());
+                    PetPetClass langClass = classMap.get(instance.getClass());
                     if (indexer instanceof String name) {
                         Object method = langClass.methods.get(name);
                         makeCall(method, argCount+1);
@@ -234,9 +234,9 @@ public class Interpreter {
         return stack.get(stack.size()-1-offset);
     }
 
-    //Returns true if this was a masque function, false if a java function
+    //Returns true if this was a petpet function, false if a java function
     private boolean makeCall(Object callee, int argCount) {
-        if (callee instanceof LangClosure closure) {
+        if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
             if (callStack.size() == MAX_STACK_FRAMES)
@@ -354,10 +354,10 @@ public class Interpreter {
     }
 
     private static class CallFrame {
-        private LangClosure closure;
+        private PetPetClosure closure;
         private int ip; //instruction pointer
         private int fp; //frame pointer
-        public CallFrame(LangClosure closure, int ip, int fp) {
+        public CallFrame(PetPetClosure closure, int ip, int fp) {
             this.closure = closure;
             this.ip = ip;
             this.fp = fp;

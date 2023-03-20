@@ -1,6 +1,6 @@
 package language.compile;
 
-import language.run.LangFunction;
+import language.run.PetPetFunction;
 
 import java.util.ArrayList;
 
@@ -19,7 +19,7 @@ public class Chunk {
         StringBuilder result = new StringBuilder();
         int digits = ((int) Math.log10(bytes.length + 1)+1);
         String numFormatString = " ".repeat(indent) + "%0" + digits + "d | ";
-        LangFunction constFunc = null;
+        PetPetFunction constFunc = null;
         for (int i = 0; i < bytes.length; i++) {
             result.append(String.format(numFormatString, i));
             result.append(Bytecode.NAMES[bytes[i]]);
@@ -28,7 +28,7 @@ public class Chunk {
             switch (code) {
                 case CONSTANT -> {
                     result.append("(").append(bytes[++i]).append(") = ");
-                    if (constants[bytes[i]] instanceof LangFunction func) {
+                    if (constants[bytes[i]] instanceof PetPetFunction func) {
                         result.append(func).append(":\n").append(func.chunk.toString(indent + digits + 1));
                         dontNewLine = true;
                         constFunc = func;

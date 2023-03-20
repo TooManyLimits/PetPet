@@ -1,6 +1,6 @@
 package language.run;
 
-import language.reflect.MasqueReflector;
+import language.reflect.PetPetReflector;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public class LangClass {
+public class PetPetClass {
     public final String name;
-    public LangClass(String name) {
+    public PetPetClass(String name) {
         this.name = name;
     }
     //method object is JavaFunction or LangClosure
@@ -25,9 +25,9 @@ public class LangClass {
     }
 
     public void addField(String name, Field field) {
-        fieldGetters.put(name, MasqueReflector.unreflectGetter(field));
+        fieldGetters.put(name, PetPetReflector.unreflectGetter(field));
         if (!Modifier.isFinal(field.getModifiers()))
-            fieldSetters.put(name, MasqueReflector.unreflectSetter(field));
+            fieldSetters.put(name, PetPetReflector.unreflectSetter(field));
     }
 
 }

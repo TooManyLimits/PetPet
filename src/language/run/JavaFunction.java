@@ -21,7 +21,7 @@ public class JavaFunction {
 
     private static final int MAX_PARAMS = 15;
 
-    //boolean is whether this method should be converted to a Masque method for invocation
+    //boolean is whether this method should be converted to a Petpet method for invocation
     //if true, it will have an implicit "this" parameter inserted
     public JavaFunction(Method method, boolean isMethod) {
         method.setAccessible(true);

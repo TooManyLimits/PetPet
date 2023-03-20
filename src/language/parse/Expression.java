@@ -1,7 +1,7 @@
 package language.parse;
 
 import language.Lexer;
-import language.run.LangFunction;
+import language.run.PetPetFunction;
 import language.compile.Bytecode;
 import language.compile.Compiler;
 
@@ -174,7 +174,7 @@ public abstract class Expression {
                 thisCompiler.registerLocal(param);
             body.compile(thisCompiler);
             String name = "function (line=" + startLine + ")";
-            LangFunction f = thisCompiler.finish(name, startLine-1, paramNames.size());
+            PetPetFunction f = thisCompiler.finish(name, startLine-1, paramNames.size());
 
             int idx = compiler.registerConstant(f);
             compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) idx);

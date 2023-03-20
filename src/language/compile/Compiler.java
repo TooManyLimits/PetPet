@@ -1,6 +1,6 @@
 package language.compile;
 
-import language.run.LangFunction;
+import language.run.PetPetFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +28,12 @@ public class Compiler {
         try {registerLocal("");} catch (Exception ignored) {}
     }
 
-    public LangFunction finish(String name, int lineNumber, int paramCount) {
+    public PetPetFunction finish(String name, int lineNumber, int paramCount) {
         bytecode(Bytecode.RETURN);
         int[] lineNumberArr = new int[lineNumberTable.size()];
         for (int i = 0; i < lineNumberArr.length; i++)
             lineNumberArr[i] = lineNumberTable.get(i);
-        return new LangFunction(name, chunkBuilder.build(), lineNumber, lineNumberArr, paramCount, upvalues.size());
+        return new PetPetFunction(name, chunkBuilder.build(), lineNumber, lineNumberArr, paramCount, upvalues.size());
     }
 
     public void beginScope() {
