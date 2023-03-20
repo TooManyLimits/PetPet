@@ -1,12 +1,11 @@
 package language.reflect;
 
-import language.bytecoderunner.JavaFunction;
-import language.bytecoderunner.LangClass;
+import language.run.JavaFunction;
+import language.run.LangClass;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -29,9 +28,7 @@ public class MasqueReflector {
         LangClass result = new LangClass(name == null ? clazz.getSimpleName() : name);
         for (Field f : clazz.getFields()) {
             if (f.isAnnotationPresent(MasqueWhitelist.class)) {
-                result.fieldGetters.put(f.getName(), unreflectGetter(f));
-                if (!Modifier.isFinal(f.getModifiers()))
-                    result.fieldSetters.put(f.getName(), unreflectSetter(f));
+                result.addField(f.getName(), f);
             }
         }
         for (Method m : clazz.getMethods()) {
@@ -45,7 +42,7 @@ public class MasqueReflector {
     }
 
     //LambdaMetafactory "doesn't currently support" getters/setters, so we use method handles like chumps
-    private static Function<Object, Object> unreflectGetter(Field f) {
+    public static Function<Object, Object> unreflectGetter(Field f) {
         try {
             f.setAccessible(true);
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -64,7 +61,7 @@ public class MasqueReflector {
         }
     }
 
-    private static BiConsumer<Object, Object> unreflectSetter(Field f) {
+    public static BiConsumer<Object, Object> unreflectSetter(Field f) {
         try {
             f.setAccessible(true);
             MethodHandles.Lookup lookup = MethodHandles.lookup();

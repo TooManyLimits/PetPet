@@ -1,7 +1,7 @@
 package language.parse;
 
 import language.Lexer;
-import language.bytecoderunner.LangFunction;
+import language.run.LangFunction;
 import language.compile.Bytecode;
 import language.compile.Compiler;
 

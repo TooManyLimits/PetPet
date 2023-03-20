@@ -1,8 +1,6 @@
-package language.bytecoderunner;
+package language.run;
 
 import language.Upvalue;
-import language.compile.Bytecode;
-import language.compile.Compiler;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -213,7 +211,7 @@ public class Interpreter {
     }
 
     private boolean isFalsy(Object o) {
-        return o == Boolean.FALSE || o == null || (o instanceof Number && ((Number) o).doubleValue() == 0);
+        return o == Boolean.FALSE || o == null || (o instanceof Double d && d == 0);
     }
 
     private boolean isTruthy(Object o) {

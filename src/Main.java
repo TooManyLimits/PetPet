@@ -1,5 +1,5 @@
 import language.Lexer;
-import language.bytecoderunner.*;
+import language.run.*;
 import language.compile.Compiler;
 import language.parse.Expression;
 import language.parse.Parser;
@@ -12,7 +12,6 @@ import java.util.List;
 
 public class Main {
 
-    public int abcd = 0;
     public static void main(String[] args) throws Exception {
         String src =
         """
@@ -25,7 +24,7 @@ public class Main {
         new Expression.BlockExpression(0, exprs).compile(comp);
         LangFunction compiled = comp.finish("script", 0, 0);
 
-        JavaFunction.generateCode();
+//        JavaFunction.generateCode();
 
         System.out.println(compiled.prettyBytecode());
         Interpreter i = new Interpreter();

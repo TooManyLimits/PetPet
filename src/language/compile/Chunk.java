@@ -1,6 +1,6 @@
 package language.compile;
 
-import language.bytecoderunner.LangFunction;
+import language.run.LangFunction;
 
 import java.util.ArrayList;
 

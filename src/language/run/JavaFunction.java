@@ -1,4 +1,4 @@
-package language.bytecoderunner;
+package language.run;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
