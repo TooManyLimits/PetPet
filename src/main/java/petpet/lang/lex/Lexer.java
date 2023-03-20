@@ -1,4 +1,4 @@
-package language;
+package main.java.petpet.lang.lex;
 
 import java.util.ArrayList;
 import java.util.HashMap;

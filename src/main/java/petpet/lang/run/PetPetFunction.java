@@ -1,6 +1,6 @@
-package language.run;
+package main.java.petpet.lang.run;
 
-import language.compile.Chunk;
+import main.java.petpet.lang.compile.Chunk;
 
 /**
  * Represents a function that's written in the language itself,

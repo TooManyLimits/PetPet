@@ -1,12 +1,10 @@
-package language.run;
-
-import language.Upvalue;
+package main.java.petpet.lang.run;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static language.compile.Bytecode.*;
+import static main.java.petpet.lang.compile.Bytecode.*;
 
 /**
  * Runs functions and maintains a global state
@@ -19,17 +17,21 @@ public class Interpreter {
 
     private final List<Object> stack = new ArrayList<>();
 
-    private final int MAX_STACK_FRAMES = 64;
+    public int maxStackFrames = 256; //256 default
     private final Deque<CallFrame> callStack = new ArrayDeque<>();
     private Upvalue upvalueList; //upvalues are a linked list
 
     public int cost;
 
-    public void run(PetPetFunction function) {
-        PetPetClosure closure = new PetPetClosure(function);
+    public Object run(PetPetClosure closure, Object... args) {
+        if (closure.function.paramCount != args.length)
+            runtimeException("Expected " + closure.function.paramCount + " args, got " + args.length);
         push(closure);
-        callStack.push(new CallFrame(closure, 0, 0));
+        for (Object arg : args)
+            push(arg);
+        makeCall(closure, args.length, true);
         run();
+        return pop();
     }
 
     private void run() {
@@ -64,10 +66,11 @@ public class Interpreter {
                     Object result = pop();
                     closeUpvalues(frame.fp-1);
                     callStack.pop();
-                    if (callStack.size() == 0) return; //return for real
 
                     while (frame.fp < stack.size()) stack.remove(stack.size()-1);
                     push(result);
+
+                    if (frame.wasJavaCall) return; //return for real
                     frame = callStack.peek();
                     curBytes = frame.closure.function.chunk.bytes;
                     constants = frame.closure.function.chunk.constants;
@@ -87,7 +90,7 @@ public class Interpreter {
 
                 case CALL -> {
                     int argCount = curBytes[frame.ip++];
-                    if (makeCall(peek(argCount), argCount)) {
+                    if (makeCall(peek(argCount), argCount, false)) {
                         frame = callStack.peek();
                         curBytes = frame.closure.function.chunk.bytes;
                         constants = frame.closure.function.chunk.constants;
@@ -95,7 +98,7 @@ public class Interpreter {
                 }
 
                 case CLOSURE -> {
-                    PetPetClosure closure = new PetPetClosure((PetPetFunction) pop());
+                    PetPetClosure closure = new PetPetClosure((PetPetFunction) pop(), this);
                     for (int i = 0; i < closure.upvalues.length; i++) {
                         boolean isLocal = curBytes[frame.ip++] > 0;
                         int index = curBytes[frame.ip++];
@@ -146,13 +149,13 @@ public class Interpreter {
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
                     if (getMethod != null) {
-                        makeCall(getMethod, 2);
+                        makeCall(getMethod, 2, false);
                         break;
                     }
                     cost++;
                     getMethod = langClass.methods.get("__get");
                     if (getMethod != null) {
-                        makeCall(getMethod, 2);
+                        makeCall(getMethod, 2, false);
                         break;
                     }
                     runtimeException("Tried to get from " + instance + " with illegal key " + indexer);
@@ -181,12 +184,12 @@ public class Interpreter {
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
                     if (setMethod != null) {
-                        makeCall(setMethod, 3);
+                        makeCall(setMethod, 3, false);
                         break;
                     }
                     setMethod = langClass.methods.get("__set");
                     if (setMethod != null) {
-                        makeCall(setMethod, 3);
+                        makeCall(setMethod, 3, false);
                         break;
                     }
                     runtimeException("Tried to set to " + instance + " with illegal key " + indexer);
@@ -201,7 +204,7 @@ public class Interpreter {
                     PetPetClass langClass = classMap.get(instance.getClass());
                     if (indexer instanceof String name) {
                         Object method = langClass.methods.get(name);
-                        makeCall(method, argCount+1);
+                        makeCall(method, argCount+1, false);
                         break;
                     }
                     runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
@@ -235,13 +238,13 @@ public class Interpreter {
     }
 
     //Returns true if this was a petpet function, false if a java function
-    private boolean makeCall(Object callee, int argCount) {
+    private boolean makeCall(Object callee, int argCount, boolean calledFromJava) {
         if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
-            if (callStack.size() == MAX_STACK_FRAMES)
-                runtimeException("Stack overflow! More than the max stack frames of " + MAX_STACK_FRAMES);
-            callStack.push(new CallFrame(closure, 0, stack.size() - argCount - 1));
+            if (callStack.size() == maxStackFrames)
+                runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
+            callStack.push(new CallFrame(closure, 0, stack.size() - argCount - 1, calledFromJava));
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount)
@@ -357,10 +360,12 @@ public class Interpreter {
         private PetPetClosure closure;
         private int ip; //instruction pointer
         private int fp; //frame pointer
-        public CallFrame(PetPetClosure closure, int ip, int fp) {
+        private boolean wasJavaCall; //whether this function was called from java itself, or inside the function
+        public CallFrame(PetPetClosure closure, int ip, int fp, boolean wasJavaCall) {
             this.closure = closure;
             this.ip = ip;
             this.fp = fp;
+            this.wasJavaCall = wasJavaCall;
         }
 
         public int lineNumber() {

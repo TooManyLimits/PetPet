@@ -1,4 +1,4 @@
-package language.compile;
+package main.java.petpet.lang.compile;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

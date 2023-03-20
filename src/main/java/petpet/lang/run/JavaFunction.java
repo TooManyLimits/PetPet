@@ -1,10 +1,11 @@
-package language.run;
+package main.java.petpet.lang.run;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +25,11 @@ public class JavaFunction {
     //boolean is whether this method should be converted to a Petpet method for invocation
     //if true, it will have an implicit "this" parameter inserted
     public JavaFunction(Method method, boolean isMethod) {
-        method.setAccessible(true);
+        if (!Modifier.isPublic(method.getModifiers()))
+            throw new IllegalArgumentException(
+                    "Failed to reflect method " + method.getName() + " in class " + method.getDeclaringClass() +
+                            ". Sadly, we can only make java functions from public methods, for some reason."
+            );
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodHandle handle = lookup.unreflect(method);
@@ -53,7 +58,7 @@ public class JavaFunction {
                 MethodType samType = isVoid ? MethodType.methodType(void.class, ptypes) : MethodType.methodType(Object.class, ptypes);
                 MethodType invocType = isVoid ? handle.type().wrap().changeReturnType(void.class) : handle.type().wrap();
                 backing = (Backing) LambdaMetafactory.metafactory(
-                        MethodHandles.lookup(),
+                        lookup,
                         methodName, //The name of the method in the class we're implementing
                         MethodType.methodType(Backing.class), //Interface to return
                         samType, //Type of implemented method

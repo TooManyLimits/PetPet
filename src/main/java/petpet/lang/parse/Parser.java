@@ -1,7 +1,7 @@
-package language.parse;
+package main.java.petpet.lang.parse;
 
-import static language.Lexer.*;
-import static language.Lexer.TokenType.*;
+import static main.java.petpet.lang.lex.Lexer.*;
+import static main.java.petpet.lang.lex.Lexer.TokenType.*;
 
 
 import java.util.ArrayList;

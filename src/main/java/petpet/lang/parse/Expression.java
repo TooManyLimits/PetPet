@@ -1,15 +1,15 @@
-package language.parse;
+package main.java.petpet.lang.parse;
 
-import language.Lexer;
-import language.run.PetPetFunction;
-import language.compile.Bytecode;
-import language.compile.Compiler;
+import main.java.petpet.lang.lex.Lexer;
+import main.java.petpet.lang.run.PetPetFunction;
+import main.java.petpet.lang.compile.Bytecode;
+import main.java.petpet.lang.compile.Compiler;
 
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static language.Lexer.TokenType.*;
+import static main.java.petpet.lang.lex.Lexer.TokenType.*;
 
 public abstract class Expression {
 
