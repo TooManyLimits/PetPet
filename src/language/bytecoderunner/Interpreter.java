@@ -45,17 +45,17 @@ public class Interpreter {
                 case POP -> pop();
 
                 //Temp operators
-                case ADD -> push((Integer) pop() + (Integer) pop());
-                case SUB -> {int r = (Integer) pop(); int l = (Integer) pop(); push(l-r);}
-                case MUL -> push((Integer) pop() * (Integer) pop());
-                case DIV -> {int r = (Integer) pop(); int l = (Integer) pop(); push(l/r);}
-                case MOD -> {int r = (Integer) pop(); int l = (Integer) pop(); push(l%r);}
+                case ADD -> push(((Number) pop()).doubleValue() + ((Number) pop()).doubleValue());
+                case SUB -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l-r);}
+                case MUL -> push(((Number) pop()).doubleValue() * ((Number) pop()).doubleValue());
+                case DIV -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l/r);}
+                case MOD -> {double r = ((Number) pop()).doubleValue(); double l = ((Number) pop()).doubleValue(); push(l%r);}
                 case EQ -> push(Objects.equals(pop(), pop()));
                 case NEQ -> push(!Objects.equals(pop(), pop()));
-                case LT -> push((Integer) pop() > (Integer) pop());
-                case GT -> push((Integer) pop() < (Integer) pop());
-                case LTE -> push((Integer) pop() >= (Integer) pop());
-                case GTE -> push((Integer) pop() <= (Integer) pop());
+                case LT -> push(((Number) pop()).doubleValue() > ((Number) pop()).doubleValue());
+                case GT -> push(((Number) pop()).doubleValue() < ((Number) pop()).doubleValue());
+                case LTE -> push(((Number) pop()).doubleValue() >= ((Number) pop()).doubleValue());
+                case GTE -> push(((Number) pop()).doubleValue() <= ((Number) pop()).doubleValue());
 
                 case NEGATE -> push(-(Integer) pop());
 
@@ -82,7 +82,8 @@ public class Interpreter {
                 case POP_OFFSET_1 -> stack.remove(stack.size()-2);
 
                 case JUMP -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); frame.ip += offset; }
-                case JUMP_IF_FALSE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isFalsy(pop())) frame.ip += offset;}
+                case JUMP_IF_FALSE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isFalsy(peek())) frame.ip += offset;}
+                case JUMP_IF_TRUE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isTruthy(peek())) frame.ip += offset;}
 
                 case CALL -> {
                     int argCount = curBytes[frame.ip++];
@@ -199,7 +200,11 @@ public class Interpreter {
     }
 
     private boolean isFalsy(Object o) {
-        return !(Boolean) o;
+        return o == Boolean.FALSE || o == null || (o instanceof Number && ((Number) o).doubleValue() == 0);
+    }
+
+    private boolean isTruthy(Object o) {
+        return !isFalsy(o);
     }
 
     private void push(Object o) {

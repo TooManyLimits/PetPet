@@ -76,7 +76,7 @@ public class Parser {
     }
 
     private Expression parseAssignment() throws ParserException {
-        Expression lhs = parseComparison();
+        Expression lhs = parseOr();
         if (check(ASSIGN)) {
             int tokline = consume().line(); //consume the '='
             if (lhs instanceof Expression.Name name)
@@ -85,6 +85,22 @@ public class Parser {
                 return new Expression.Set(lhs.startLine, get.left, get.indexer, parseAssignment());
             }
             throw new ParserException("Invalid assign target for '=' on line " + tokline);
+        }
+        return lhs;
+    }
+
+    private Expression parseOr() throws ParserException {
+        Expression lhs = parseAnd();
+        while (check(OR)) {
+            lhs = new Expression.Logical(consume().line(), false, lhs, parseAnd());
+        }
+        return lhs;
+    }
+
+    private Expression parseAnd() throws ParserException {
+        Expression lhs = parseComparison();
+        while (check(AND)) {
+            lhs = new Expression.Logical(consume().line(), true, lhs, parseComparison());
         }
         return lhs;
     }
@@ -188,7 +204,7 @@ public class Parser {
         return switch (peek().type()) {
             case NAME -> new Expression.Name(peek().line(), consume().getString());
             case THIS -> new Expression.This(consume().line());
-            case INT_LITERAL, FLOAT_LITERAL, DOUBLE_LITERAL, LONG_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
+            case INT_LITERAL, FLOAT_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
             case FUN -> parseFunction();
             case LEFT_PAREN -> { //Parenthesis for grouping
                 int leftLine = consume().line(); //Consume left paren

@@ -53,6 +53,7 @@ public class Bytecode {
     public static final byte INVOKE = 30; //stack is <args> above <indexer> above <instance>. Afterwards, stack is the result of the invocation.
 
     public static final byte NEGATE = 31;
+    public static final byte JUMP_IF_TRUE = 32;
 
 
     //Lookup for bytecode printouts

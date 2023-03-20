@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Lexer {
 
     public static final Pattern REGEX = Pattern.compile(
-            "==|!=|>=|<=|[\\[\\]{}();!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?(?:f32|i64)?|[a-zA-Z_]\\w*|\"[^\"]*\"|\n"
+            "//.*|==|!=|>=|<=|&&|\\|\\||[\\[\\]{}();!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?|[a-zA-Z_]\\w*|\"[^\"]*\"|\n"
     );
     public static final Pattern WORD_REGEX = Pattern.compile(
             "[a-zA-Z_]\\w*"
@@ -36,9 +36,10 @@ public class Lexer {
                 if (TOKMAP.containsKey(str))
                     toks.add(TOKMAP.get(str).apply(curLine));
                 else {
-
                     //Otherwise, find it ourselves
-                    if (str.isBlank()) {
+
+                    if (str.startsWith("//")) continue; //comment
+                    if (str.isBlank()) { //newline
                         curLine++;
                         continue;
                     }
@@ -47,18 +48,13 @@ public class Lexer {
                         toks.add(new Token(TokenType.STRING_LITERAL, str.substring(1, str.length() - 1), curLine));
 
                     else if (Character.isDigit(str.charAt(0))) {
-                        if (str.contains(".") || str.endsWith("f32")) {
-                            if (str.endsWith("f32"))
-                                toks.add(new Token(TokenType.FLOAT_LITERAL, Float.parseFloat(str.replace("f32", "")), curLine));
-                            else
-                                toks.add(new Token(TokenType.DOUBLE_LITERAL, Double.parseDouble(str), curLine));
+                        if (str.contains(".")) {
+                            toks.add(new Token(TokenType.FLOAT_LITERAL, Double.parseDouble(str), curLine));
                         } else {
-                            if (str.endsWith("i64"))
-                                toks.add(new Token(TokenType.LONG_LITERAL, Long.parseLong(str.replace("i64", "")), curLine));
-                            else
-                                toks.add(new Token(TokenType.INT_LITERAL, Integer.parseInt(str), curLine));
+                            toks.add(new Token(TokenType.INT_LITERAL, Long.parseLong(str), curLine));
                         }
                     }
+
                     else if (WORD_REGEX.matcher(str).matches())
                         toks.add(new Token(TokenType.NAME, str, curLine));
                     else
@@ -76,17 +72,11 @@ public class Lexer {
         public String getString() {
             return (String) value;
         }
-        public long getLong() {
+        public long getInt() {
             return (Long) value;
         }
-        public int getInt() {
-            return (Integer) value;
-        }
-        public double getDouble() {
+        public double getFloat() {
             return (Double) value;
-        }
-        public float getFloat() {
-            return (Float) value;
         }
 
         @Override
@@ -112,6 +102,9 @@ public class Lexer {
         GREATER(">"),
         LESS("<"),
 
+        AND("&&"),
+        OR("||"),
+
         LEFT_CURLY("{"),
         RIGHT_CURLY("}"),
         LEFT_PAREN("("),
@@ -128,10 +121,8 @@ public class Lexer {
 
         FUN("fun"),
 
-        LONG_LITERAL(),
-        INT_LITERAL(),
-        FLOAT_LITERAL(),
-        DOUBLE_LITERAL(),
+        INT_LITERAL(), //long
+        FLOAT_LITERAL(), //double
         BOOLEAN_LITERAL(),
         NAME(),
         CALL(),

@@ -63,6 +63,7 @@ public abstract class Expression {
 
             int jumpElse = compiler.emitJump(Bytecode.JUMP_IF_FALSE);
             int jumpOut = -1;
+            compiler.bytecode(Bytecode.POP);
             ifTrue.writeBytecode(compiler);
 
             if (ifFalse != null) //if we have an else statement, emit an unconditional jump to skip it
@@ -70,6 +71,7 @@ public abstract class Expression {
 
             //Always patch the jumpElse
             compiler.patchJump(jumpElse);
+            compiler.bytecode(Bytecode.POP);
 
             if (ifFalse != null) {
                 ifFalse.writeBytecode(compiler);
@@ -101,11 +103,13 @@ public abstract class Expression {
         push null
         START
         push condition
-        pop condition, if false jump to END
-        pop
+        if false jump to END
+        > pop condition
+        > pop prev result
         body
         jump to START
         END
+        > pop condition
         ...
          */
         @Override
@@ -115,9 +119,11 @@ public abstract class Expression {
             condition.writeBytecode(compiler);
             int endJump = compiler.emitJump(Bytecode.JUMP_IF_FALSE);
             compiler.bytecode(Bytecode.POP);
+            compiler.bytecode(Bytecode.POP);
             body.writeBytecode(compiler);
             compiler.endLoop(start);
             compiler.patchJump(endJump);
+            compiler.bytecode(Bytecode.POP);
         }
 
         @Override
@@ -358,6 +364,33 @@ public abstract class Expression {
             }
             //Scan right side next
             rhs.scanForDeclarations(compiler);
+        }
+    }
+
+    public static class Logical extends Expression {
+        public final Expression left, right;
+        public final boolean isAnd; //otherwise, is or
+        public Logical(int startLine, boolean isAnd, Expression left, Expression right) {
+            super(startLine);
+            this.isAnd = isAnd;
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        public void writeBytecode(Compiler compiler) throws Compiler.CompilationException {
+            left.writeBytecode(compiler);
+            byte code = isAnd ? Bytecode.JUMP_IF_FALSE : Bytecode.JUMP_IF_TRUE;
+            int shortCircuit = compiler.emitJump(code);
+            compiler.bytecode(Bytecode.POP);
+            right.writeBytecode(compiler);
+            compiler.patchJump(shortCircuit);
+        }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            left.scanForDeclarations(compiler);
+            right.scanForDeclarations(compiler);
         }
     }
 

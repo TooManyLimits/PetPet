@@ -13,8 +13,8 @@ public class Main {
     public int abcd = 0;
     public static void main(String[] args) throws Exception {
         String src =
-        """
-        i=-1while(i=i+1)<10print(i)
+        """        
+        if (1 == 3 || 4 >= 2) print(x)
         """;
 
         Lexer.Token[] toks = Lexer.lex(src);
