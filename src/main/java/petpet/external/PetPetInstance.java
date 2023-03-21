@@ -1,16 +1,16 @@
 package main.java.petpet.external;
 
+import main.java.petpet.helpers.GlobalFunctions;
 import main.java.petpet.helpers.ListClass;
+import main.java.petpet.helpers.TableClass;
 import main.java.petpet.lang.compile.Compiler;
 import main.java.petpet.lang.lex.Lexer;
 import main.java.petpet.lang.parse.Expression;
 import main.java.petpet.lang.parse.Parser;
-import main.java.petpet.lang.run.Interpreter;
-import main.java.petpet.lang.run.PetPetClass;
-import main.java.petpet.lang.run.PetPetClosure;
-import main.java.petpet.lang.run.PetPetFunction;
+import main.java.petpet.lang.run.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A class that encapsulates, well, an instance of
@@ -26,7 +26,7 @@ public class PetPetInstance {
 
     public PetPetInstance() {
         this.interpreter = new Interpreter();
-        loadDefaultClasses();
+        loadBuiltinLibrary();
     }
 
     public Object runScript(String scriptName, String source, Object... args) throws Lexer.LexingException, Parser.ParserException, Compiler.CompilationException {
@@ -63,16 +63,21 @@ public class PetPetInstance {
         interpreter.globals.put(key, value);
     }
 
-    private void loadDefaultClasses() {
+    private void loadBuiltinLibrary() {
         //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num"));
-
-
+        //String class
+        interpreter.classMap.put(String.class, new PetPetClass("str"));
         //List Class
         interpreter.classMap.put(ListClass.JAVA_CLASS, ListClass.PETPET_CLASS);
-        setGlobal("List", ListClass.NEW_LIST);
+        setGlobal("List", ListClass.NEW);
+        //Table Class
+        interpreter.classMap.put(TableClass.JAVA_CLASS, TableClass.PETPET_CLASS);
+        setGlobal("Table", TableClass.NEW);
 
-
+        //Global functions
+        for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())
+            setGlobal(entry.getKey(), entry.getValue());
     }
 
     public void setMaxStackFrames(int cap) {interpreter.maxStackFrames = cap;}

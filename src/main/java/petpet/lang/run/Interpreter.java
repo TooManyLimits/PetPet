@@ -29,7 +29,7 @@ public class Interpreter {
         push(closure);
         for (Object arg : args)
             push(arg);
-        makeCall(closure, args.length, true);
+        makeCall(closure, args.length, true, false);
         run();
         return pop();
     }
@@ -90,7 +90,7 @@ public class Interpreter {
 
                 case CALL -> {
                     int argCount = curBytes[frame.ip++];
-                    if (makeCall(peek(argCount), argCount, false)) {
+                    if (makeCall(peek(argCount), argCount, false, false)) {
                         frame = callStack.peek();
                         curBytes = frame.closure.function.chunk.bytes;
                         constants = frame.closure.function.chunk.constants;
@@ -149,13 +149,13 @@ public class Interpreter {
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
                     if (getMethod != null) {
-                        makeCall(getMethod, 2, false);
+                        makeCall(getMethod, 2, false, true);
                         break;
                     }
                     cost++;
                     getMethod = langClass.methods.get("__get");
                     if (getMethod != null) {
-                        makeCall(getMethod, 2, false);
+                        makeCall(getMethod, 2, false, true);
                         break;
                     }
                     runtimeException("Tried to get from " + instance + " with illegal key " + indexer);
@@ -184,12 +184,12 @@ public class Interpreter {
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
                     if (setMethod != null) {
-                        makeCall(setMethod, 3, false);
+                        makeCall(setMethod, 3, false, true);
                         break;
                     }
                     setMethod = langClass.methods.get("__set");
                     if (setMethod != null) {
-                        makeCall(setMethod, 3, false);
+                        makeCall(setMethod, 3, false, true);
                         break;
                     }
                     runtimeException("Tried to set to " + instance + " with illegal key " + indexer);
@@ -206,7 +206,7 @@ public class Interpreter {
                         Object method = langClass.methods.get(name);
                         if (method == null)
                             runtimeException("Method " + name + " does not exist for type " + langClass.name);
-                        makeCall(method, argCount+1, false);
+                        makeCall(method, argCount+1, false, true);
                         break;
                     }
                     runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
@@ -240,7 +240,7 @@ public class Interpreter {
     }
 
     //Returns true if this was a petpet function, false if a java function
-    private boolean makeCall(Object callee, int argCount, boolean calledFromJava) {
+    private boolean makeCall(Object callee, int argCount, boolean calledFromJava, boolean isInvocation) {
 //        System.out.println(stack);
         if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
@@ -298,7 +298,8 @@ public class Interpreter {
 
                 if (result instanceof Number n)
                     result = n.doubleValue();
-                for (int i = 0; i < argCount; i++)
+                int numToPop = isInvocation ? argCount : argCount + 1;
+                for (int i = 0; i < numToPop; i++)
                     pop();
                 cost += argCount;
                 push(result);

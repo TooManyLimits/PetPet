@@ -3,7 +3,6 @@ package main.java.petpet.helpers;
 import main.java.petpet.lang.run.JavaFunction;
 import main.java.petpet.lang.run.PetPetCallable;
 import main.java.petpet.lang.run.PetPetClass;
-import main.java.petpet.lang.run.PetPetClosure;
 
 import java.util.ArrayList;
 
@@ -16,7 +15,7 @@ public class ListClass {
     public static final Class<?> JAVA_CLASS = ArrayList.class;
     public static final PetPetClass PETPET_CLASS;
 
-    public static final JavaFunction NEW_LIST = new JavaFunction(ListClass.class, "newList", false);
+    public static final JavaFunction NEW = new JavaFunction(ListClass.class, "newList", false);
 
     static {
         PETPET_CLASS = new PetPetClass("List");

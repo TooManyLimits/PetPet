@@ -16,9 +16,12 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        x.a()
-        x[b]()
-        x:b()
+        t = Table()
+        i = 0
+        while (i = i + 1) < 10 
+            t[rand()] = rand()
+        t.each(print2)
+        
         """;
 
         PetPetInstance instance = new PetPetInstance();
@@ -26,11 +29,15 @@ public class Main {
         instance.debugBytecode = true;
         instance.debugCost = true;
         instance.setGlobal("print", new JavaFunction(Main.class, "print", false));
+        instance.setGlobal("print2", new JavaFunction(Main.class, "print2", false));
 
         instance.runScriptOrThrow("script", src);
     }
 
-    public static void print(Object o) {
-        System.out.println(o);
+    public static void print(Object a) {
+        System.out.println(a);
+    }
+    public static void print2(Object a, Object b) {
+        System.out.println(a + ",\t" + b);
     }
 }
