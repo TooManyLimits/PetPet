@@ -16,25 +16,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        x = List()
-        i = 0
-        while i < 50 {
-            x.add(i)
-            i = i + 1
-        }
-        print(x)
-        {
-            fib = fun(j) {
-                y = if j < 2
-                    j
-                else
-                    x[j-1] + x[j-2]
-                j = j + 1
-                y
-            }
-            x.map(fib)
-        }
-        print(x)
+        x.a()
+        x[b]()
+        x:b()
         """;
 
         PetPetInstance instance = new PetPetInstance();

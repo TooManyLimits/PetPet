@@ -156,7 +156,7 @@ public class Parser {
         while (check(LEFT_PAREN, DOT, COLON, LEFT_SQUARE) && !check(SEMICOLON)) {
             if (check(LEFT_PAREN)) {
                 int openParenLine = consume().line();
-                if (lhs instanceof Expression.Get get)
+                if (lhs instanceof Expression.Get get && (!(lhs instanceof Expression.Get.Strong)))
                     lhs = new Expression.Invoke(openParenLine, get.left, get.indexer, parseArguments(openParenLine));
                 else
                     lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
@@ -168,9 +168,9 @@ public class Parser {
                     int line = name.line();
                     String val = name.getString();
                     if (strong)
-                        lhs = new Expression.Get(indexerLine, lhs, new Expression.Literal(line, val));
-                    else
                         lhs = new Expression.Get.Strong(indexerLine, lhs, new Expression.Literal(line, val));
+                    else
+                        lhs = new Expression.Get(indexerLine, lhs, new Expression.Literal(line, val));
                 } else {
                     String indexerSymbol = strong ? ":" : ".";
                     throw new ParserException("Expected name after '" + indexerSymbol + "' on line " + indexerLine);
