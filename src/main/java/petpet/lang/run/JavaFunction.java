@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class JavaFunction {
+public class JavaFunction implements PetPetCallable {
     public final boolean isVoid;
     public final int paramCount;
     private final Backing backing;
@@ -139,6 +139,54 @@ public class JavaFunction {
     }
 
     public Object invoke() {if (isVoid) {backing.callVoid();return null;}return backing.callReturning();}public Object invoke(Object arg0) {if (isVoid) {backing.callVoid(arg0);return null;}return backing.callReturning(arg0);}public Object invoke(Object arg0, Object arg1) {if (isVoid) {backing.callVoid(arg0, arg1);return null;}return backing.callReturning(arg0, arg1);}public Object invoke(Object arg0, Object arg1, Object arg2) {if (isVoid) {backing.callVoid(arg0, arg1, arg2);return null;}return backing.callReturning(arg0, arg1, arg2);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3);return null;}return backing.callReturning(arg0, arg1, arg2, arg3);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);}
+
+    @Override
+    public Object call(Object... args) {
+        if (args.length != paramCount)
+            throw new IllegalArgumentException("Expected " + paramCount + " args, got " + args.length);
+        if (needsNumberConversion) {
+            return switch(paramCount) {
+                case 0 -> invoke();
+                case 1 -> invoke(castNumber(args[0], 0));
+                case 2 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1));
+                case 3 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2));
+                case 4 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3));
+                case 5 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4));
+                case 6 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5));
+                case 7 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6));
+                case 8 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7));
+                case 9 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8));
+                case 10 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9));
+                case 11 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9), castNumber(args[10], 10));
+                case 12 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9), castNumber(args[10], 10), castNumber(args[11], 11));
+                case 13 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9), castNumber(args[10], 10), castNumber(args[11], 11), castNumber(args[12], 12));
+                case 14 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9), castNumber(args[10], 10), castNumber(args[11], 11), castNumber(args[12], 12), castNumber(args[13], 13));
+                case 15 -> invoke(castNumber(args[0], 0), castNumber(args[1], 1), castNumber(args[2], 2), castNumber(args[3], 3), castNumber(args[4], 4), castNumber(args[5], 5), castNumber(args[6], 6), castNumber(args[7], 7), castNumber(args[8], 8), castNumber(args[9], 9), castNumber(args[10], 10), castNumber(args[11], 11), castNumber(args[12], 12), castNumber(args[13], 13), castNumber(args[14], 14));
+                default -> throw new IllegalStateException("function has too many args??");
+            };
+        } else {
+            return switch(paramCount) {
+                case 0 -> invoke();
+                case 1 -> invoke(args[0]);
+                case 2 -> invoke(args[0], args[1]);
+                case 3 -> invoke(args[0], args[1], args[2]);
+                case 4 -> invoke(args[0], args[1], args[2], args[3]);
+                case 5 -> invoke(args[0], args[1], args[2], args[3], args[4]);
+                case 6 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5]);
+                case 7 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+                case 8 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+                case 9 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
+                case 10 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);
+                case 11 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);
+                case 12 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);
+                case 13 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]);
+                case 14 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]);
+                case 15 -> invoke(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]);
+                default -> throw new IllegalStateException("function has too many args??");
+            };
+        }
+    }
+
     public interface Backing {Object callReturning();void callVoid();Object callReturning(Object arg0);void callVoid(Object arg0);Object callReturning(Object arg0, Object arg1);void callVoid(Object arg0, Object arg1);Object callReturning(Object arg0, Object arg1, Object arg2);void callVoid(Object arg0, Object arg1, Object arg2);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13);Object callReturning(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14);void callVoid(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14);}
 
     public static void generateCode() {
@@ -202,7 +250,7 @@ public class JavaFunction {
         System.out.println(result);
 
         System.out.println("-----------------Switch Statement With Number Casts----------------");
-        result = new StringBuilder("result = switch(argCount) {\n");
+        result = new StringBuilder("result = switch(paramCount) {\n");
         for (int i = 0; i <= MAX_PARAMS; i++) {
             result.append("\t\t\t\tcase ").append(i).append(" -> jFunction.invoke(");
             for (int j = i-1; j >= 0; j--) {
@@ -217,6 +265,33 @@ public class JavaFunction {
         }
         result.append("\t\t\tdefault -> throw new IllegalStateException(\"function has too many args??\");\n");
         result.append("\t\t\t};");
+        System.out.println(result);
+
+        System.out.println("-----------------JavaFunction.call Impl----------------");
+        result = new StringBuilder("if (needsNumberConversion) {\n\t\t\treturn switch(argCount) {\n");
+        for (int i = 0; i <= MAX_PARAMS; i++) {
+            result.append("\t\t\t\tcase ").append(i).append(" -> invoke(");
+            for (int j = 0; j < i; j++) {
+                if (j != 0)
+                    result.append(", ");
+                result.append("castNumber(args[").append(j).append("], ").append(j).append(")");
+            }
+            result.append(");\n");
+        }
+        result.append("\t\t\tdefault -> throw new IllegalStateException(\"function has too many args??\");\n");
+        result.append("\t\t\t};\n");
+        result.append("\t\t\t} else {\n\t\t\treturn switch(paramCount) {\n");
+        for (int i = 0; i <= MAX_PARAMS; i++) {
+            result.append("\t\t\t\tcase ").append(i).append(" -> invoke(");
+            for (int j = 0; j < i; j++) {
+                if (j != 0)
+                    result.append(", ");
+                result.append("args[").append(j).append("]");
+            }
+            result.append(");\n");
+        }
+        result.append("\t\t\tdefault -> throw new IllegalStateException(\"function has too many args??\");\n");
+        result.append("\t\t\t};\n\t\t}");
         System.out.println(result);
     }
 }

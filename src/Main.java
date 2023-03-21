@@ -17,24 +17,24 @@ public class Main {
         String src =
         """
         nums = List()
+        nums.add(0)
         i = 0
-        while i < 10 {
-            nums.add(i)
-            i = i + 1
-        }
+        nums.map(fun(x) i = i + 1)
         print(nums)
-        print(nums.copy().map(fun(x) x*x))
-        print(nums)
-        print(nums.map(fun(x) x*x))
-        print(nums)
+        
+        compose = fun(a, b) fun(x) a(b(x))
+        inc = fun(x) x+1
+        print1more = compose(print, inc)
+        print1more(5)
         """;
+
         PetPetInstance instance = new PetPetInstance();
-        instance.debugMode = true;
+        instance.debugTime = true;
+        instance.debugBytecode = true;
+        instance.debugCost = true;
         instance.setGlobal("print", new JavaFunction(Main.class, "print", false));
 
-        long before = System.nanoTime();
         instance.runScriptOrThrow("script", src);
-        System.out.println((System.nanoTime() - before) / 1000000d + " ms");
     }
 
     public static void print(Object o) {

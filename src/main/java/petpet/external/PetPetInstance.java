@@ -21,7 +21,7 @@ public class PetPetInstance {
 
     private static final int DEFAULT_MAX_STACK_FRAMES = 256;
     private final Interpreter interpreter;
-    public boolean debugMode = false;
+    public boolean debugTime, debugBytecode, debugCost;
 
     public PetPetInstance() {
         this.interpreter = new Interpreter();
@@ -29,14 +29,25 @@ public class PetPetInstance {
     }
 
     public Object runScript(String scriptName, String source, Object... args) throws Lexer.LexingException, Parser.ParserException, Compiler.CompilationException {
+        long before = 0;
+        if (debugTime) before = System.nanoTime();
+
         Lexer.Token[] toks = Lexer.lex(source);
         List<Expression> exprs = new Parser(toks).parseChunk();
         Compiler comp = new Compiler(null);
         new Expression.BlockExpression(0, exprs).compile(comp);
         PetPetFunction compiled = comp.finish(scriptName, 0, 0);
-        if (debugMode) System.out.println(compiled.prettyBytecode());
+
+        if (debugTime) System.out.println((System.nanoTime() - before) / 1000000d + " ms to read code");
+        if (debugBytecode) System.out.println(compiled.prettyBytecode());
+        if (debugTime) before = System.nanoTime();
+
         PetPetClosure closure = new PetPetClosure(compiled, interpreter);
-        return closure.call(args);
+        Object result = closure.call(args);
+
+        if (debugTime) System.out.println((System.nanoTime() - before) / 1000000d + " ms to execute");
+        if (debugCost) System.out.println("Cost was " + interpreter.cost);
+        return result;
     }
 
     public Object runScriptOrThrow(String scriptName, String source, Object... args) {

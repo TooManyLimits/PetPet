@@ -204,6 +204,8 @@ public class Interpreter {
                     PetPetClass langClass = classMap.get(instance.getClass());
                     if (indexer instanceof String name) {
                         Object method = langClass.methods.get(name);
+                        if (method == null)
+                            runtimeException("Method " + name + " does not exist for type " + langClass.name);
                         makeCall(method, argCount+1, false);
                         break;
                     }
@@ -239,6 +241,7 @@ public class Interpreter {
 
     //Returns true if this was a petpet function, false if a java function
     private boolean makeCall(Object callee, int argCount, boolean calledFromJava) {
+        System.out.println(stack);
         if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
@@ -295,7 +298,6 @@ public class Interpreter {
 
                 if (result instanceof Number n)
                     result = n.doubleValue();
-
                 for (int i = 0; i < argCount; i++)
                     pop();
                 cost += argCount;

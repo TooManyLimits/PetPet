@@ -356,7 +356,7 @@ public abstract class Expression {
                     int upValueLoc = compiler.indexOfUpvalue(varName);
                     if (upValueLoc == -1) throw new Compiler.CompilationException("indexOfUpvalue shouldn't return -1, bug in compiler!");
                     rhs.compile(compiler);
-                    compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) loc);
+                    compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) upValueLoc);
                 } else {
                     rhs.compile(compiler);
                     compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);

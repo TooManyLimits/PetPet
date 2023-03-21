@@ -1,6 +1,7 @@
 package main.java.petpet.helpers;
 
 import main.java.petpet.lang.run.JavaFunction;
+import main.java.petpet.lang.run.PetPetCallable;
 import main.java.petpet.lang.run.PetPetClass;
 import main.java.petpet.lang.run.PetPetClosure;
 
@@ -25,12 +26,11 @@ public class ListClass {
         PETPET_CLASS.addMethod("__set_num", new JavaFunction(JAVA_CLASS, "set", true));
 
         //other arraylist methods
-        PETPET_CLASS.addMethod("size", new JavaFunction(JAVA_CLASS, "size", true));
         JavaFunction add = new JavaFunction(JAVA_CLASS, "add", true, Object.class);
         PETPET_CLASS.addMethod("add", add);
         PETPET_CLASS.addMethod("push", add);
         PETPET_CLASS.addMethod("enqueue", add);
-        PETPET_CLASS.addMethod("grow", new JavaFunction(JAVA_CLASS, "ensureCapacity", true));
+        PETPET_CLASS.addMethod("size", new JavaFunction(JAVA_CLASS, "size", true));
         PETPET_CLASS.addMethod("empty", new JavaFunction(JAVA_CLASS, "isEmpty", true));
         PETPET_CLASS.addMethod("remove", new JavaFunction(JAVA_CLASS, "remove", true, int.class));
         PETPET_CLASS.addMethod("clear", new JavaFunction(JAVA_CLASS, "clear", true));
@@ -41,6 +41,7 @@ public class ListClass {
         PETPET_CLASS.addMethod("pop", new JavaFunction(ListClass.class, "pop", false));
         PETPET_CLASS.addMethod("swap", new JavaFunction(ListClass.class, "swap", false));
         PETPET_CLASS.addMethod("map", new JavaFunction(ListClass.class, "map", false));
+        PETPET_CLASS.addMethod("each", new JavaFunction(ListClass.class, "each", false));
     }
 
     public static ArrayList newList() {
@@ -55,9 +56,14 @@ public class ListClass {
         list.set(index2, temp);
         return list;
     }
-    public static ArrayList map(ArrayList list, PetPetClosure func) {
+    public static ArrayList map(ArrayList list, PetPetCallable func) {
         for (int i = 0; i < list.size(); i++)
             list.set(i, func.call(list.get(i)));
+        return list;
+    }
+    public static ArrayList each(ArrayList list, PetPetCallable func) {
+        for (Object o : list)
+            func.call(o);
         return list;
     }
 
