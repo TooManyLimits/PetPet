@@ -241,7 +241,7 @@ public class Interpreter {
 
     //Returns true if this was a petpet function, false if a java function
     private boolean makeCall(Object callee, int argCount, boolean calledFromJava) {
-        System.out.println(stack);
+//        System.out.println(stack);
         if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
@@ -374,7 +374,7 @@ public class Interpreter {
             int[] lines = closure.function.lineNumberTable;
             int index = 0;
             while (++index < lines.length && lines[index] <= ip);
-            return index + closure.function.lineNumberOffset;
+            return index + 0;//closure.function.lineNumberOffset;
         }
     }
 

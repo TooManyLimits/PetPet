@@ -153,22 +153,27 @@ public class Parser {
 
     private Expression parseCallOrGet() throws ParserException {
         Expression lhs = parseUnit();
-        while (check(LEFT_PAREN, DOT, LEFT_SQUARE) && !check(SEMICOLON)) {
+        while (check(LEFT_PAREN, DOT, COLON, LEFT_SQUARE) && !check(SEMICOLON)) {
             if (check(LEFT_PAREN)) {
                 int openParenLine = consume().line();
                 if (lhs instanceof Expression.Get get)
                     lhs = new Expression.Invoke(openParenLine, get.left, get.indexer, parseArguments(openParenLine));
                 else
                     lhs = new Expression.Call(openParenLine, lhs, parseArguments(openParenLine));
-            } else if (check(DOT)) {
-                int dotLine = consume().line();
+            } else if (check(DOT, COLON)) {
+                boolean strong = peek().type() == COLON;
+                int indexerLine = consume().line();
                 if (check(NAME)) {
                     Token name = consume();
                     int line = name.line();
                     String val = name.getString();
-                    lhs = new Expression.Get(dotLine, lhs, new Expression.Literal(line, val));
+                    if (strong)
+                        lhs = new Expression.Get(indexerLine, lhs, new Expression.Literal(line, val));
+                    else
+                        lhs = new Expression.Get.Strong(indexerLine, lhs, new Expression.Literal(line, val));
                 } else {
-                    throw new ParserException("Expected name after '.' on line " + dotLine);
+                    String indexerSymbol = strong ? ":" : ".";
+                    throw new ParserException("Expected name after '" + indexerSymbol + "' on line " + indexerLine);
                 }
             } else {
                 int openSquareLine = consume().line();

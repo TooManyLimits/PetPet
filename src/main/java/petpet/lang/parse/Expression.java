@@ -243,6 +243,12 @@ public abstract class Expression {
             left.scanForDeclarations(compiler);
             indexer.scanForDeclarations(compiler);
         }
+
+        public static class Strong extends Get {
+            public Strong(int startLine, Expression left, Expression indexer) {
+                super(startLine, left, indexer);
+            }
+        }
     }
 
     public static class Set extends Expression {

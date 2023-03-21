@@ -104,6 +104,7 @@ public class Lexer {
         LEFT_SQUARE("["),
         RIGHT_SQUARE("]"),
         SEMICOLON(";"),
+        COLON(":"),
         COMMA(","),
 
         IF("if"),

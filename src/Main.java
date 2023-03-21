@@ -16,16 +16,25 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String src =
         """
-        nums = List()
-        nums.add(0)
+        x = List()
         i = 0
-        nums.map(fun(x) i = i + 1)
-        print(nums)
-        
-        compose = fun(a, b) fun(x) a(b(x))
-        inc = fun(x) x+1
-        print1more = compose(print, inc)
-        print1more(5)
+        while i < 50 {
+            x.add(i)
+            i = i + 1
+        }
+        print(x)
+        {
+            fib = fun(j) {
+                y = if j < 2
+                    j
+                else
+                    x[j-1] + x[j-2]
+                j = j + 1
+                y
+            }
+            x.map(fib)
+        }
+        print(x)
         """;
 
         PetPetInstance instance = new PetPetInstance();

@@ -6,6 +6,7 @@ import main.java.petpet.lang.lex.Lexer;
 import main.java.petpet.lang.parse.Expression;
 import main.java.petpet.lang.parse.Parser;
 import main.java.petpet.lang.run.Interpreter;
+import main.java.petpet.lang.run.PetPetClass;
 import main.java.petpet.lang.run.PetPetClosure;
 import main.java.petpet.lang.run.PetPetFunction;
 
@@ -63,6 +64,10 @@ public class PetPetInstance {
     }
 
     private void loadDefaultClasses() {
+        //Num class
+        interpreter.classMap.put(Double.class, new PetPetClass("num"));
+
+
         //List Class
         interpreter.classMap.put(ListClass.JAVA_CLASS, ListClass.PETPET_CLASS);
         setGlobal("List", ListClass.NEW_LIST);
