@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.ToIntFunction;
 
 public class JavaFunction implements PetPetCallable {
     public final boolean isVoid;
@@ -20,15 +21,26 @@ public class JavaFunction implements PetPetCallable {
     private boolean needsNumberConversion;
     private byte[] requiredTypes;
 
+    //If non-null, is invoked with the interpreter as an argument when this function is called.
+    //Currently, must read directly from the stack to find relevant args.
+    //Return value is used to increment the cost.
+    public final ToIntFunction<Interpreter> costPenalizer;
+
     private static final int MAX_PARAMS = 15;
+
+    public JavaFunction(Method method, boolean isMethod) {
+        this(method, isMethod, null);
+    }
 
     //boolean is whether this method should be converted to a Petpet method for invocation
     //if true, it will have an implicit "this" parameter inserted
-    public JavaFunction(Method method, boolean isMethod) {
+    public JavaFunction(Method method, boolean isMethod, ToIntFunction<Interpreter> costPenalizer) {
+        this.costPenalizer = costPenalizer;
         if (!Modifier.isPublic(method.getModifiers()))
             throw new IllegalArgumentException(
                     "Failed to reflect method " + method.getName() + " in class " + method.getDeclaringClass() +
-                            ". Sadly, we can only make java functions from public methods, for some reason."
+                            ". Sadly, we can only make java functions from public methods currently, because" +
+                            "of LambdaMetafactory's restrictions."
             );
         try {
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -110,29 +122,39 @@ public class JavaFunction implements PetPetCallable {
     }
 
     public JavaFunction(Class<?> clazz, String name, boolean isMethod) {
+        this(clazz, name, isMethod, (ToIntFunction<Interpreter>) null);
+    }
+
+    public JavaFunction(Class<?> clazz, String name, boolean isMethod, ToIntFunction<Interpreter> costPenalizer) {
         this(
                 tryFindMethod(clazz, name, (Class<?>[]) null),
-                isMethod
+                isMethod,
+                costPenalizer
         );
     }
 
     public JavaFunction(Class<?> clazz, String name, boolean isMethod, Class<?>... argTypes) {
+        this(clazz, name, isMethod, null, argTypes);
+    }
+
+    public JavaFunction(Class<?> clazz, String name, boolean isMethod, ToIntFunction<Interpreter> costPenalizer, Class<?>... argTypes) {
         this(
                 tryFindMethod(clazz, name, argTypes),
-                isMethod
+                isMethod,
+                costPenalizer
         );
     }
 
     private static Method tryFindMethod(Class<?> clazz, String name, Class<?>... argTypes) {
         if (argTypes == null) {
-            List<Method> methods = Arrays.stream(clazz.getDeclaredMethods())
+            List<Method> methods = Arrays.stream(clazz.getMethods())
                     .filter(m -> m.getName().equals(name)).toList();
             if (methods.size() != 1)
                 throw new RuntimeException("Ambiguous or incorrect JavaFunction constructor for method " + name);
             return methods.get(0);
         }
         try {
-            return clazz.getDeclaredMethod(name, argTypes);
+            return clazz.getMethod(name, argTypes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

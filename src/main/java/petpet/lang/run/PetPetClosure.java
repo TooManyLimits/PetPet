@@ -12,6 +12,8 @@ public class PetPetClosure implements PetPetCallable {
     }
 
     public Object call(Object... args) {
+        //calling a function this way might impose a great penalty unfortunately
+        interpreter.cost += args.length + 2;
         return interpreter.run(this, args);
     }
 

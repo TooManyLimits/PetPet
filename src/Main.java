@@ -1,27 +1,16 @@
 import main.java.petpet.external.PetPetInstance;
-import main.java.petpet.lang.lex.Lexer;
 import main.java.petpet.lang.run.*;
-import main.java.petpet.lang.compile.Compiler;
-import main.java.petpet.lang.parse.Expression;
-import main.java.petpet.lang.parse.Parser;
-import main.java.petpet.external.PetPetReflector;
-import main.java.petpet.external.PetPetWhitelist;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         String src =
         """
-        t = Table()
-        i = 0
-        while (i = i + 1) < 10 
-            t[rand()] = rand()
-        t.each(print2)
-        
+        x = "hello aple :D"
+        print(x.concat(" ").concat(x))
+        print(x[" "]:cutie)
+        print(x.concat(" ").cuite_.snuggle)
+        print(x.len())
         """;
 
         PetPetInstance instance = new PetPetInstance();
@@ -31,7 +20,11 @@ public class Main {
         instance.setGlobal("print", new JavaFunction(Main.class, "print", false));
         instance.setGlobal("print2", new JavaFunction(Main.class, "print2", false));
 
-        instance.runScriptOrThrow("script", src);
+        try {
+            instance.runScript("script", src); //normally need error handling here, but eh
+        } catch (PetPetException petpet) {
+            System.err.println(petpet.getMessage());
+        }
     }
 
     public static void print(Object a) {

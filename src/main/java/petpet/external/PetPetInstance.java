@@ -1,8 +1,9 @@
 package main.java.petpet.external;
 
-import main.java.petpet.helpers.GlobalFunctions;
-import main.java.petpet.helpers.ListClass;
-import main.java.petpet.helpers.TableClass;
+import main.java.petpet.types.GlobalFunctions;
+import main.java.petpet.types.PetPetList;
+import main.java.petpet.types.PetPetString;
+import main.java.petpet.types.PetPetTable;
 import main.java.petpet.lang.compile.Compiler;
 import main.java.petpet.lang.lex.Lexer;
 import main.java.petpet.lang.parse.Expression;
@@ -19,8 +20,6 @@ import java.util.Map;
  * the class that users should... well, use.
  */
 public class PetPetInstance {
-
-    private static final int DEFAULT_MAX_STACK_FRAMES = 256;
     private final Interpreter interpreter;
     public boolean debugTime, debugBytecode, debugCost;
 
@@ -29,34 +28,34 @@ public class PetPetInstance {
         loadBuiltinLibrary();
     }
 
+    /**
+     * Compiles the given string into a closure
+     * and runs it immediately.
+     */
     public Object runScript(String scriptName, String source, Object... args) throws Lexer.LexingException, Parser.ParserException, Compiler.CompilationException {
+        PetPetClosure closure = compile(scriptName, source);
+
         long before = 0;
         if (debugTime) before = System.nanoTime();
-
-        Lexer.Token[] toks = Lexer.lex(source);
-        List<Expression> exprs = new Parser(toks).parseChunk();
-        Compiler comp = new Compiler(null);
-        new Expression.BlockExpression(0, exprs).compile(comp);
-        PetPetFunction compiled = comp.finish(scriptName, 0, 0);
-
-        if (debugTime) System.out.println((System.nanoTime() - before) / 1000000d + " ms to read code");
-        if (debugBytecode) System.out.println(compiled.prettyBytecode());
-        if (debugTime) before = System.nanoTime();
-
-        PetPetClosure closure = new PetPetClosure(compiled, interpreter);
         Object result = closure.call(args);
-
         if (debugTime) System.out.println((System.nanoTime() - before) / 1000000d + " ms to execute");
         if (debugCost) System.out.println("Cost was " + interpreter.cost);
         return result;
     }
 
-    public Object runScriptOrThrow(String scriptName, String source, Object... args) {
-        try {
-            return runScript(scriptName, source, args);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public PetPetClosure compile(String name, String script) throws Lexer.LexingException, Parser.ParserException, Compiler.CompilationException {
+        long before = 0;
+        if (debugTime) before = System.nanoTime();
+
+        Lexer.Token[] toks = Lexer.lex(script);
+        List<Expression> exprs = new Parser(toks).parseChunk();
+        Compiler comp = new Compiler(null);
+        new Expression.BlockExpression(0, exprs).compile(comp);
+        PetPetFunction compiled = comp.finish(name, 0, 0);
+
+        if (debugTime) System.out.println((System.nanoTime() - before) / 1000000d + " ms to compile ");
+        if (debugBytecode) System.out.println(compiled.prettyBytecode());
+        return new PetPetClosure(compiled, interpreter);
     }
 
     public void setGlobal(String key, Object value) {
@@ -66,14 +65,13 @@ public class PetPetInstance {
     private void loadBuiltinLibrary() {
         //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num"));
-        //String class
-        interpreter.classMap.put(String.class, new PetPetClass("str"));
-        //List Class
-        interpreter.classMap.put(ListClass.JAVA_CLASS, ListClass.PETPET_CLASS);
-        setGlobal("List", ListClass.NEW);
-        //Table Class
-        interpreter.classMap.put(TableClass.JAVA_CLASS, TableClass.PETPET_CLASS);
-        setGlobal("Table", TableClass.NEW);
+        interpreter.classMap.put(Boolean.class, new PetPetClass("bool"));
+        interpreter.classMap.put(JavaFunction.class, new PetPetClass("javaFunc"));
+        interpreter.classMap.put(PetPetClosure.class, new PetPetClass("function"));
+
+        PetPetString.registerToInterpreter(this.interpreter);
+        PetPetList.registerToInterpreter(this.interpreter);
+        PetPetTable.registerToInterpreter(this.interpreter);
 
         //Global functions
         for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())

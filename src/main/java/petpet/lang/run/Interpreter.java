@@ -126,6 +126,8 @@ public class Interpreter {
                 case GET -> {
                     Object indexer = peek();
                     Object instance = peek(1);
+                    if (instance == null)
+                        runtimeException("Attempt to get from null value");
                     PetPetClass langClass = classMap.get(instance.getClass());
 
                     if (indexer instanceof String name) {
@@ -201,7 +203,11 @@ public class Interpreter {
                     Object indexer = peek(argCount);
                     Object instance = peek(argCount+1);
                     stack.remove(stack.size()-1-argCount);
+                    if (instance == null)
+                        runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
                     PetPetClass langClass = classMap.get(instance.getClass());
+                    if (langClass == null)
+                        runtimeException("Invalid environment - object " + instance + "has no class. Contact developers of the application! (not petpet's fault... probably)");
                     if (indexer instanceof String name) {
                         Object method = langClass.methods.get(name);
                         if (method == null)
@@ -215,11 +221,11 @@ public class Interpreter {
         }
     }
 
-    private boolean isFalsy(Object o) {
+    public boolean isFalsy(Object o) {
         return o == Boolean.FALSE || o == null || (o instanceof Double d && d == 0);
     }
 
-    private boolean isTruthy(Object o) {
+    public boolean isTruthy(Object o) {
         return !isFalsy(o);
     }
 
@@ -231,17 +237,19 @@ public class Interpreter {
         return stack.remove(stack.size()-1);
     }
 
-    private Object peek() {
+    public Object peek() {
         return peek(0);
     }
 
-    private Object peek(int offset) {
+    public Object peek(int offset) {
         return stack.get(stack.size()-1-offset);
     }
 
     //Returns true if this was a petpet function, false if a java function
     private boolean makeCall(Object callee, int argCount, boolean calledFromJava, boolean isInvocation) {
 //        System.out.println(stack);
+        if (callee == null)
+            runtimeException("Attempt to call null value");
         if (callee instanceof PetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
@@ -252,6 +260,8 @@ public class Interpreter {
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount)
                 runtimeException(String.format("Expected %d args, got %d", jFunction.paramCount, argCount));
+            if (jFunction.costPenalizer != null)
+                cost += jFunction.costPenalizer.applyAsInt(this);
             try {
                 Object result;
                 if (jFunction.needsNumberConversion()) {
@@ -304,12 +314,11 @@ public class Interpreter {
                 cost += argCount;
                 push(result);
             } catch (Exception e) {
-                e.printStackTrace();
-                runtimeException(e.toString());
+                runtimeException("Java exception occurred: " + e);
             }
             return false;
         } else {
-            runtimeException("Attempt to call non-function value: " + callee);
+            runtimeException("Attempt to call non-callable value: " + callee);
         }
         return false;
     }
@@ -356,7 +365,7 @@ public class Interpreter {
         }
         message = messageBuilder.toString();
 
-        throw new RuntimeException(message);
+        throw new PetPetException(message);
     }
 
     private static class CallFrame {
