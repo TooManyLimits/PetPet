@@ -61,6 +61,7 @@ public class PetPetList extends ArrayList<Object> {
         PETPET_CLASS.addMethod("swap", new JavaFunction(PetPetList.class, "swap", false));
         PETPET_CLASS.addMethod("map", new JavaFunction(PetPetList.class, "map", false));
         PETPET_CLASS.addMethod("each", new JavaFunction(PetPetList.class, "each", false));
+        PETPET_CLASS.addMethod("eachIndexed", new JavaFunction(PetPetList.class, "eachIndexed", false));
     }
 
     public static Object pop(ArrayList list) { return list.remove(list.size()-1); }
@@ -79,6 +80,11 @@ public class PetPetList extends ArrayList<Object> {
     public static ArrayList each(ArrayList list, PetPetCallable func) {
         for (Object o : list)
             func.call(o);
+        return list;
+    }
+    public static ArrayList eachIndexed(ArrayList list, PetPetCallable func) {
+        for (int i = 0; i < list.size(); i++)
+            func.call(i, list.get(i));
         return list;
     }
 

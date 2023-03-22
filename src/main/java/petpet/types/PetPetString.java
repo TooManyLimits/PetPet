@@ -12,7 +12,7 @@ public class PetPetString {
     }
 
     private static final PetPetClass PETPET_CLASS;
-    private static final JavaFunction STR = new JavaFunction(String.class, "valueOf", false, Object.class);
+    private static final JavaFunction STR = new JavaFunction(PetPetString.class, "valueOf", false, Object.class);
 
     static {
         PETPET_CLASS = new PetPetClass("str");
@@ -34,6 +34,13 @@ public class PetPetString {
                 String.class
         ));
 
+    }
+
+    //I didn't like that doubles without any decimal component printed with the .0
+    public static String valueOf(Object o) {
+        if (o instanceof Double d && d.longValue() == d)
+            return String.valueOf(d.longValue());
+        return String.valueOf(o);
     }
 
     //fake charAt because can't be bothered to add a char class

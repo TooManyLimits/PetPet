@@ -1,6 +1,7 @@
 package main.java.petpet.lang.run;
 
 import main.java.petpet.types.PetPetList;
+import main.java.petpet.types.PetPetString;
 import main.java.petpet.types.PetPetTable;
 
 import java.util.*;
@@ -54,9 +55,9 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof String s)
-                        push(s + r);
+                        push(s + PetPetString.valueOf(r));
                     else if (r instanceof String s)
-                        push(l + s);
+                        push(PetPetString.valueOf(l) + s);
                     else
                         push((Double) l + (Double) r);
                 }
@@ -332,7 +333,7 @@ public class Interpreter {
                 cost += argCount;
                 push(result);
             } catch (Exception e) {
-                runtimeException("Java exception occurred: " + e);
+                runtimeException("Java exception occurred: " + e.getMessage());
             }
             return false;
         } else {

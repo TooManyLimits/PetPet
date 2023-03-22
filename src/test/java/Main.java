@@ -2,6 +2,7 @@ package test.java;
 
 import main.java.petpet.external.PetPetInstance;
 import main.java.petpet.lang.run.*;
+import main.java.petpet.types.PetPetString;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String src = Files.readString(Path.of("src", "test", "resources", "petpet", "literals.petpet"));
+        String src = Files.readString(Path.of("src", "test", "resources", "petpet", "rule110.petpet"));
 
         PetPetInstance instance = new PetPetInstance();
         instance.debugTime = true;
@@ -27,9 +28,9 @@ public class Main {
     }
 
     public static void print(Object a) {
-        System.out.println(a);
+        System.out.println(PetPetString.valueOf(a));
     }
     public static void print2(Object a, Object b) {
-        System.out.println(a + ",\t" + b);
+        System.out.println(PetPetString.valueOf(a) + ",\t" + PetPetString.valueOf(a));
     }
 }

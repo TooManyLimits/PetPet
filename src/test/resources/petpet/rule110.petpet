@@ -1,0 +1,15 @@
+board = range(0,10).map(fun(x) rand() < 0.5)
+board2 = board.copy()
+printBoard = fun(board) {
+    x = ""
+    board.each(fun(z) x = x + if z "X" else "_")
+    print(x)
+}
+
+i = 0
+while (i = i + 1) < 30 {
+    board2.eachIndexed(fun(i, v) {
+        //WIP
+    })
+}
+
