@@ -147,6 +147,7 @@ public class Interpreter {
                     Object instance = peek(1);
                     if (instance == null)
                         runtimeException("Attempt to get from null value");
+
                     PetPetClass langClass = classMap.get(instance.getClass());
 
                     if (indexer instanceof String name) {
@@ -165,8 +166,16 @@ public class Interpreter {
                         }
                         cost++;
                     }
+                    String indexerTypeName;
+                    if (indexer == null) {
+                        indexerTypeName = "null";
+                    } else {
+                        PetPetClass indexerClass = classMap.get(indexer.getClass());
+                        if (indexerClass == null)
+                            runtimeException("Environment error: java object of type " + indexer.getClass() + " is in the environment, but it has no PetPetClass associated.");
+                        indexerTypeName = classMap.get(indexer.getClass()).name;
+                    }
 
-                    String indexerTypeName = classMap.get(indexer.getClass()).name;
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
                     if (getMethod != null) {
@@ -185,6 +194,9 @@ public class Interpreter {
                     Object value = peek();
                     Object indexer = peek(1);
                     Object instance = peek(2);
+                    if (instance == null)
+                        runtimeException("Attempt to set key " + PetPetString.valueOf(indexer) + " on null value");
+
                     PetPetClass langClass = classMap.get(instance.getClass());
 
                     if (indexer instanceof String name) {
@@ -201,7 +213,16 @@ public class Interpreter {
                         }
                     }
 
-                    String indexerTypeName = classMap.get(indexer.getClass()).name;
+                    String indexerTypeName;
+                    if (indexer == null) {
+                        indexerTypeName = "null";
+                    } else {
+                        PetPetClass indexerClass = classMap.get(indexer.getClass());
+                        if (indexerClass == null)
+                            runtimeException("Environment error: java object of type " + indexer.getClass() + " is in the environment, but it has no PetPetClass associated.");
+                        indexerTypeName = classMap.get(indexer.getClass()).name;
+                    }
+
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
                     if (setMethod != null) {
@@ -333,6 +354,7 @@ public class Interpreter {
                 cost += argCount;
                 push(result);
             } catch (Exception e) {
+                e.printStackTrace();
                 runtimeException("Java exception occurred: " + e.getMessage());
             }
             return false;

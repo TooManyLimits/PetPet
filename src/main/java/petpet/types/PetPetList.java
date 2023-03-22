@@ -84,8 +84,24 @@ public class PetPetList extends ArrayList<Object> {
     }
     public static ArrayList eachIndexed(ArrayList list, PetPetCallable func) {
         for (int i = 0; i < list.size(); i++)
-            func.call(i, list.get(i));
+            func.call((double) i, list.get(i));
         return list;
     }
 
+    @Override
+    public Object get(int index) {
+        return super.get((index % size() + size()) % size());
+    }
+
+    @Override
+    public Object set(int index, Object element) {
+        return super.set((index % size() + size()) % size(), element);
+    }
+
+    @Override
+    public Object clone() {
+        PetPetList newList = new PetPetList(this.size());
+        newList.addAll(this);
+        return newList;
+    }
 }
