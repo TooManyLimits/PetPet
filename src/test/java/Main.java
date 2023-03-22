@@ -1,3 +1,5 @@
+package test.java;
+
 import main.java.petpet.external.PetPetInstance;
 import main.java.petpet.lang.run.*;
 
