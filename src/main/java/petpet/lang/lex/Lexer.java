@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Lexer {
 
     public static final Pattern REGEX = Pattern.compile(
-            "//.*|==|!=|>=|<=|&&|\\|\\||[\\[\\]{}():;!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?|[a-zA-Z_]\\w*|\"[^\"]*\"|\n"
+            "//.*|==|!=|>=|<=|&&|\\|\\||[\\[\\]{}():;!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?|[a-zA-Z_]\\w*|\"(?:\\\\.|[^\\\\\"])*\"|\n|."
     );
     public static final Pattern WORD_REGEX = Pattern.compile(
             "[a-zA-Z_]\\w*"
@@ -39,13 +39,34 @@ public class Lexer {
                     //Otherwise, find it ourselves
 
                     if (str.startsWith("//")) continue; //comment
-                    if (str.isBlank()) { //newline
-                        curLine++;
+                    if (str.isBlank()) { //whitespace
+                        if (str.contains("\n")) curLine++;
                         continue;
                     }
 
-                    if (str.startsWith("\"")) //String literal
-                        toks.add(new Token(TokenType.STRING_LITERAL, str.substring(1, str.length() - 1), curLine));
+                    if (str.startsWith("\"")) { //String literal
+                        if (str.length() == 1)
+                            throw new LexingException("Encountered unmatched quote on line " + curLine);
+                        StringBuilder builder = new StringBuilder();
+                        for (int i = 1; i < str.length()-1; i++) {
+                            char c = str.charAt(i);
+                            if (c == '\\') {
+                                i++;
+                                char next = str.charAt(i);
+                                builder.append(switch (next) {
+                                    case '\\' -> '\\';
+                                    case 'n' -> '\n';
+                                    case 't' -> '\t';
+                                    case 'r' -> '\r';
+                                    case '"' -> '"';
+                                    default -> throw new LexingException("Illegal escape character \"\\" + next + "\" on line " + curLine);
+                                });
+                            } else {
+                                builder.append(c);
+                            }
+                        }
+                        toks.add(new Token(TokenType.STRING_LITERAL, builder.toString(), curLine));
+                    }
 
                     else if (Character.isDigit(str.charAt(0))) //Number literal
                         toks.add(new Token(TokenType.NUMBER_LITERAL, Double.parseDouble(str), curLine));
@@ -135,6 +156,10 @@ public class Lexer {
 
         public LexingException(String invalidString, int line) {
             super("Encountered unrecognized character sequence on line " + line + ": \"" + invalidString + "\".");
+        }
+
+        public LexingException(String message) {
+            super(message);
         }
     }
 

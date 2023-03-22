@@ -20,13 +20,6 @@ public class PetPetString {
         PETPET_CLASS.addMethod("__get_num", new JavaFunction(PetPetString.class, "charAt", false));
 
         //i love arbitrarily guessing on cost penalties with no benchmarking whatsoever ! :D
-        PETPET_CLASS.addMethod("concat", new JavaFunction(String.class, "concat", true,
-                i -> (((String) i.peek()).length() + ((String) i.peek(1)).length()) / 8
-        ));
-        PETPET_CLASS.addMethod("__get", new JavaFunction(PetPetString.class, "concatAny", false,
-                i -> ((((String) i.peek()).length() + String.valueOf(i.peek(1)).length()) + 3) / 8
-        ));
-
         PETPET_CLASS.addMethod("sub", new JavaFunction(String.class, "substring", true,
                 i -> Math.max(0, (int) ((Double) i.peek() - (Double) i.peek(1)) / 8),
                 int.class, int.class

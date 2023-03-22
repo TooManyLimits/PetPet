@@ -47,7 +47,16 @@ public class Interpreter {
                 case POP -> pop();
 
                 //Temp operators
-                case ADD -> push((Double) pop() + (Double) pop());
+                case ADD -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof String s)
+                        push(s + r);
+                    else if (r instanceof String s)
+                        push(l + s);
+                    else
+                        push((Double) l + (Double) r);
+                }
                 case SUB -> {double r = (Double) pop(); double l = (Double) pop(); push(l-r);}
                 case MUL -> push((Double) pop() * (Double) pop());
                 case DIV -> {double r = (Double) pop(); double l = (Double) pop(); push(l/r);}

@@ -1,17 +1,14 @@
 import main.java.petpet.external.PetPetInstance;
 import main.java.petpet.lang.run.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        String src =
-        """
-        x = "hello aple :D"
-        print(x.concat(" ").concat(x))
-        print(x[" "]:cutie)
-        print(x.concat(" ").cuite_.snuggle)
-        print(x.len())
-        """;
+
+        String src = Files.readString(Path.of("src", "main", "resources", "petpet", "cursed_strings.petpet"));
 
         PetPetInstance instance = new PetPetInstance();
         instance.debugTime = true;
