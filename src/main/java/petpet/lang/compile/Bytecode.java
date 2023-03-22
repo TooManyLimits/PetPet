@@ -54,6 +54,10 @@ public class Bytecode {
 
     public static final byte NEGATE = 31;
     public static final byte JUMP_IF_TRUE = 32;
+    public static final byte NEW_LIST = 33;
+    public static final byte LIST_ADD = 35;
+    public static final byte NEW_TABLE = 34;
+    public static final byte TABLE_SET = 36;
 
 
     //Lookup for bytecode printouts

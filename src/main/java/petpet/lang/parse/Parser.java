@@ -225,6 +225,8 @@ public class Parser {
             case LEFT_CURLY -> parseBlockExpression();
             case IF -> parseIfExpression();
             case WHILE -> parseWhileExpression();
+            case LIST_START -> parseListConstructor();
+            case TABLE_START -> parseTableConstructor();
             default -> throw new ParserException(peek());
         };
     }
@@ -279,8 +281,6 @@ public class Parser {
     }
 
     private Expression parseIfExpression() throws ParserException {
-        if (!check(IF))
-            throw new ParserException("Expected if expression? Bug with the parser, contact devs");
         int ifLine = consume().line(); //consume "if"
         Expression condition = parseExpression();
         Expression ifTrue = parseExpression();
@@ -293,12 +293,78 @@ public class Parser {
     }
 
     private Expression parseWhileExpression() throws ParserException {
-        if (!check(WHILE))
-            throw new ParserException("Expected while expression? Bug with parser, contact devs");
         int whileLine = consume().line();
         Expression condition = parseExpression();
         Expression body = parseExpression();
         return new Expression.While(whileLine, condition, body);
+    }
+
+    private Expression parseListConstructor() throws ParserException {
+        int startLine = consume().line();
+        if (check(RIGHT_SQUARE)) { //If we find the right square immediately, just consume it and return empty list
+            consume();
+            return new Expression.ListConstructor(startLine, List.of());
+        }
+
+        List<Expression> exprs = new ArrayList<>();
+        exprs.add(parseExpression());
+        while (check(COMMA)) {
+            consume(); //consume comma
+            exprs.add(parseExpression());
+        }
+        //Now that comma statements are all gone, expect right square
+        if (!check(RIGHT_SQUARE))
+            throw new ParserException("Expected ] to end list constructor on line " + startLine);
+        consume(); //consume right square
+        return new Expression.ListConstructor(startLine, exprs);
+    }
+
+    private Expression parseTableConstructor() throws ParserException {
+        int startLine = consume().line();
+        if (check(RIGHT_SQUARE)) { //If we find the right side immediately, just consume it and return empty
+            consume();
+            return new Expression.TableConstructor(startLine, List.of());
+        }
+        List<Expression> keysValues = new ArrayList<>();
+
+        if (check(NAME)) {
+            keysValues.add(new Expression.Literal(peek().line(), consume().getString()));
+        } else if (check(LEFT_SQUARE)) {
+            int leftLine = consume().line();
+            keysValues.add(parseExpression());
+            if (!check(RIGHT_SQUARE))
+                throw new ParserException("Expected ] for key (line="+leftLine+") inside table constructor (line="+startLine+")");
+            consume();
+        } else {
+            throw new ParserException("Keys in table constructor (line="+startLine+") must either be names or expressions inside []");
+        }
+        if (!check(ASSIGN))
+            throw new ParserException("Expected = for key-value pair (line="+last().line()+") in table constructor (line=" + startLine + ")");
+        consume();
+        keysValues.add(parseExpression());
+        while (check(COMMA)) {
+            consume(); //consume comma
+            if (check(NAME)) {
+                keysValues.add(new Expression.Literal(peek().line(), consume().getString()));
+            } else if (check(LEFT_SQUARE)) {
+                int leftLine = consume().line();
+                keysValues.add(parseExpression());
+                if (!check(RIGHT_SQUARE))
+                    throw new ParserException("Expected ] for key (line="+leftLine+") inside table constructor (line="+startLine+")");
+                consume();
+            } else {
+                throw new ParserException("Keys in table constructor (line="+startLine+") must either be names or expressions inside []");
+            }
+            if (!check(ASSIGN))
+                throw new ParserException("Expected = for key-value pair (line="+last().line()+") in table constructor (line=" + startLine + ")");
+            consume();
+            keysValues.add(parseExpression());
+        }
+        //Now that comma statements are all gone, expect right square
+        if (!check(RIGHT_SQUARE))
+            throw new ParserException("Expected ] to end table constructor on line " + startLine);
+        consume(); //consume right square
+        return new Expression.TableConstructor(startLine, keysValues);
     }
 
     public static class ParserException extends Exception {

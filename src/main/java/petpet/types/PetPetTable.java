@@ -33,13 +33,10 @@ public class PetPetTable extends HashMap<Object, Object> {
 
     public static void registerToInterpreter(Interpreter i) {
         i.classMap.put(JAVA_CLASS, PETPET_CLASS);
-        i.globals.put("table", NEW);
     }
 
     private static final Class<?> JAVA_CLASS = PetPetTable.class;
     private static final PetPetClass PETPET_CLASS = new PetPetClass("table");
-
-    private static final JavaFunction NEW = new JavaFunction(PetPetTable.class, "newTable", false);
 
     static {
         PETPET_CLASS.addMethod("__get", new JavaFunction(PetPetTable.class, "get", true));
@@ -51,10 +48,6 @@ public class PetPetTable extends HashMap<Object, Object> {
         PETPET_CLASS.addMethod("each", new JavaFunction(PetPetTable.class, "each", false));
         PETPET_CLASS.addMethod("eachKey", new JavaFunction(PetPetTable.class, "eachKey", false));
         PETPET_CLASS.addMethod("eachValue", new JavaFunction(PetPetTable.class, "eachValue", false));
-    }
-
-    public static HashMap newTable() {
-        return new PetPetTable();
     }
 
     public static HashMap each(HashMap<?,?> map, PetPetCallable func) {

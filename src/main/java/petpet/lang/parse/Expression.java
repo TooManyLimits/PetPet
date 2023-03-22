@@ -157,6 +157,44 @@ public abstract class Expression {
         }
     }
 
+    public static class ListConstructor extends Expression {
+        public final List<Expression> elems;
+        public ListConstructor(int startLine, List<Expression> elems) {
+            super(startLine);
+            this.elems = elems;
+        }
+
+        @Override
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            compiler.bytecode(Bytecode.NEW_LIST);
+            for (Expression elem : elems) {
+                elem.compile(compiler);
+                compiler.bytecode(Bytecode.LIST_ADD);
+            }
+        }
+    }
+
+    public static class TableConstructor extends Expression {
+        public final List<Expression> keysValues;
+        public TableConstructor(int startLine, List<Expression> keysValues) {
+            super(startLine);
+            this.keysValues = keysValues;
+        }
+
+        @Override
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            compiler.bytecode(Bytecode.NEW_TABLE);
+            for (int i = 0; i < keysValues.size(); i += 2) {
+                //Push value then key, as it allows `map.put(pop(), pop())` in the interpreter
+                keysValues.get(i+1).compile(compiler);
+                keysValues.get(i).compile(compiler);
+                compiler.bytecode(Bytecode.TABLE_SET);
+            }
+        }
+    }
+
     public static class Function extends Expression {
         public final List<String> paramNames;
         public final Expression body;

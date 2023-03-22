@@ -35,12 +35,9 @@ public class PetPetList extends ArrayList<Object> {
 
     public static void registerToInterpreter(Interpreter i) {
         i.classMap.put(PetPetList.class, PETPET_CLASS);
-        i.globals.put("list", NEW);
     }
 
     private static final PetPetClass PETPET_CLASS;
-
-    private static final JavaFunction NEW = new JavaFunction(PetPetList.class, "newList", false);
 
     static {
         PETPET_CLASS = new PetPetClass("list");
@@ -64,10 +61,6 @@ public class PetPetList extends ArrayList<Object> {
         PETPET_CLASS.addMethod("swap", new JavaFunction(PetPetList.class, "swap", false));
         PETPET_CLASS.addMethod("map", new JavaFunction(PetPetList.class, "map", false));
         PETPET_CLASS.addMethod("each", new JavaFunction(PetPetList.class, "each", false));
-    }
-
-    public static ArrayList newList() {
-        return new PetPetList();
     }
 
     public static Object pop(ArrayList list) { return list.remove(list.size()-1); }

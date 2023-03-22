@@ -1,0 +1,4 @@
+setOf=fun(x){y=$[]x.each(fun(z)y[z]=true)y}
+
+someCuties = setOf(!["kate", "katt", "fran", "aple"])
+someCuties.eachKey(print)

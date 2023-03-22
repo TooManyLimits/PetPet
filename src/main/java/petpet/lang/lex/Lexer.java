@@ -9,14 +9,14 @@ import java.util.regex.Pattern;
 
 public class Lexer {
 
-    public static final Pattern REGEX = Pattern.compile(
-            "//.*|==|!=|>=|<=|&&|\\|\\||[\\[\\]{}():;!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?|[a-zA-Z_]\\w*|\"(?:\\\\.|[^\\\\\"])*\"|\n|."
+    private static final Pattern REGEX = Pattern.compile(
+            "//.*|==|!=|>=|<=|&&|\\|\\||!\\[|\\$\\[|[\\[\\]{}():;!=><+\\-*/%.,]|\\d+(?:\\.\\d*)?|[a-zA-Z_]\\w*|\"(?:\\\\.|[^\\\\\"])*\"|\n|."
     );
-    public static final Pattern WORD_REGEX = Pattern.compile(
+    private static final Pattern WORD_REGEX = Pattern.compile(
             "[a-zA-Z_]\\w*"
     );
 
-    public static final Map<String, Function<Integer, Token>> TOKMAP = new HashMap<>() {{
+    private static final Map<String, Function<Integer, Token>> TOKMAP = new HashMap<>() {{
 
         for (TokenType type: TokenType.values())
             for (String s : type.s)
@@ -88,9 +88,6 @@ public class Lexer {
         public String getString() {
             return (String) value;
         }
-        public double getNumber() {
-            return (Double) value;
-        }
 
         @Override
         public String toString() {
@@ -125,6 +122,8 @@ public class Lexer {
         LEFT_SQUARE("["),
         RIGHT_SQUARE("]"),
         SEMICOLON(";"),
+        TABLE_START("$["),
+        LIST_START("!["),
         COLON(":"),
         COMMA(","),
 
@@ -151,7 +150,7 @@ public class Lexer {
 
     public static class LexingException extends Exception {
         public LexingException(NumberFormatException nfe, int line) {
-            super("Failed to parse given number on line " + line + ": perhaps it is too large?", nfe);
+            super("Failed to parse given number on line " + line, nfe);
         }
 
         public LexingException(String invalidString, int line) {

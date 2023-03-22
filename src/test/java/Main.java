@@ -10,7 +10,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String src = Files.readString(Path.of("src", "main", "resources", "petpet", "cursed_strings.petpet"));
+        String src = Files.readString(Path.of("src", "test", "resources", "petpet", "literals.petpet"));
 
         PetPetInstance instance = new PetPetInstance();
         instance.debugTime = true;

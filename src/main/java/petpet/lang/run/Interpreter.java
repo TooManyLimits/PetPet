@@ -1,5 +1,8 @@
 package main.java.petpet.lang.run;
 
+import main.java.petpet.types.PetPetList;
+import main.java.petpet.types.PetPetTable;
+
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -96,6 +99,12 @@ public class Interpreter {
                 case JUMP -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); frame.ip += offset; }
                 case JUMP_IF_FALSE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isFalsy(peek())) frame.ip += offset;}
                 case JUMP_IF_TRUE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isTruthy(peek())) frame.ip += offset;}
+
+                case NEW_LIST -> push(new PetPetList());
+                case LIST_ADD -> ((PetPetList) peek(1)).add(pop());
+
+                case NEW_TABLE -> push(new PetPetTable());
+                case TABLE_SET -> ((PetPetTable) peek(2)).put(pop(), pop()); //value was pushed, then key
 
                 case CALL -> {
                     int argCount = curBytes[frame.ip++];
