@@ -1,6 +1,6 @@
 package main.java.petpet.external;
 
-import main.java.petpet.types.GlobalFunctions;
+import main.java.petpet.types.libraries.GlobalFunctions;
 import main.java.petpet.types.PetPetList;
 import main.java.petpet.types.PetPetString;
 import main.java.petpet.types.PetPetTable;
@@ -9,6 +9,7 @@ import main.java.petpet.lang.lex.Lexer;
 import main.java.petpet.lang.parse.Expression;
 import main.java.petpet.lang.parse.Parser;
 import main.java.petpet.lang.run.*;
+import main.java.petpet.types.libraries.MathLibrary;
 
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,8 @@ public class PetPetInstance {
         //Global functions
         for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())
             setGlobal(entry.getKey(), entry.getValue());
+
+        MathLibrary.registerToInterpreter(this.interpreter);
     }
 
     public void setMaxStackFrames(int cap) {interpreter.maxStackFrames = cap;}
