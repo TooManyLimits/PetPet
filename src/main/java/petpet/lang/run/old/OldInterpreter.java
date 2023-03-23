@@ -1,5 +1,6 @@
-package main.java.petpet.lang.run;
+package main.java.petpet.lang.run.old;
 
+import main.java.petpet.lang.run.*;
 import main.java.petpet.types.PetPetList;
 import main.java.petpet.types.PetPetString;
 import main.java.petpet.types.PetPetTable;
@@ -12,30 +13,24 @@ import static main.java.petpet.lang.compile.Bytecode.*;
 
 /**
  * Runs functions and maintains a global state
+ *
+ * OLD CLASS! Kept around for reference implementation!
  */
-public class Interpreter {
+public class OldInterpreter extends Interpreter {
 
     //temp public
     public final Map<Class<?>, PetPetClass> classMap = new IdentityHashMap<>(); //keys are classes, identity works
     public final Map<String, Object> globals = new HashMap<>();
 
-    private Object[] stack = new Object[16];
-    private int stackTop = 0;
+    private final List<Object> stack = new ArrayList<>();
 
     public int maxStackFrames = 256; //256 default
-    private CallFrame[] callStack = new CallFrame[8];
-    private int callStackTop = 0;
-
-    public Interpreter() {
-        for (int i = 0; i < callStack.length; i++)
-            callStack[i] = new CallFrame();
-    }
-
-    private Upvalue upvalueList; //upvalues form a linked list
+    private final Deque<CallFrame> callStack = new ArrayDeque<>();
+    private OldUpvalue upvalueList; //upvalues are a linked list
 
     public int cost;
 
-    public Object run(PetPetClosure closure, Object... args) {
+    public Object run(OldPetPetClosure closure, Object... args) {
         if (closure.function.paramCount != args.length)
             runtimeException("Expected " + closure.function.paramCount + " args, got " + args.length);
         push(closure);
@@ -47,7 +42,7 @@ public class Interpreter {
     }
 
     private void run() {
-        CallFrame frame = peekCallStack();
+        CallFrame frame = callStack.peek();
         byte[] curBytes = frame.closure.function.chunk.bytes;
         Object[] constants = frame.closure.function.chunk.constants;
         while (true) {
@@ -86,13 +81,13 @@ public class Interpreter {
                 case RETURN -> {
                     Object result = pop();
                     closeUpvalues(frame.fp-1);
-                    popCallStack();
+                    callStack.pop();
 
-                    while (frame.fp < stackTop) stackTop--;
+                    while (frame.fp < stack.size()) stack.remove(stack.size()-1);
                     push(result);
 
                     if (frame.wasJavaCall) return; //return for real
-                    frame = peekCallStack();
+                    frame = callStack.peek();
                     curBytes = frame.closure.function.chunk.bytes;
                     constants = frame.closure.function.chunk.constants;
                 }
@@ -100,10 +95,10 @@ public class Interpreter {
                 case SET_GLOBAL -> globals.put((String) constants[curBytes[frame.ip++]], peek());
                 case LOAD_GLOBAL -> push(globals.get((String) constants[curBytes[frame.ip++]]));
 
-                case SET_LOCAL -> stack[frame.fp+curBytes[frame.ip++]] = peek();
-                case LOAD_LOCAL -> push(stack[frame.fp+curBytes[frame.ip++]]);
+                case SET_LOCAL -> stack.set(frame.fp+curBytes[frame.ip++], peek());
+                case LOAD_LOCAL -> push(stack.get(frame.fp+curBytes[frame.ip++]));
 
-                case POP_OFFSET_1 -> stack[stackTop-2] = stack[--stackTop];
+                case POP_OFFSET_1 -> stack.remove(stack.size()-2);
 
                 case JUMP -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); frame.ip += offset; }
                 case JUMP_IF_FALSE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isFalsy(peek())) frame.ip += offset;}
@@ -118,14 +113,14 @@ public class Interpreter {
                 case CALL -> {
                     int argCount = curBytes[frame.ip++];
                     if (makeCall(peek(argCount), argCount, false, false)) {
-                        frame = peekCallStack();
+                        frame = callStack.peek();
                         curBytes = frame.closure.function.chunk.bytes;
                         constants = frame.closure.function.chunk.constants;
                     }
                 }
 
                 case CLOSURE -> {
-                    PetPetClosure closure = new PetPetClosure((PetPetFunction) pop(), this);
+                    OldPetPetClosure closure = new OldPetPetClosure((PetPetFunction) pop(), this);
                     for (int i = 0; i < closure.upvalues.length; i++) {
                         boolean isLocal = curBytes[frame.ip++] > 0;
                         int index = curBytes[frame.ip++];
@@ -135,7 +130,7 @@ public class Interpreter {
                             closure.upvalues[i] = frame.closure.upvalues[index];
                         }
                     }
-                    pushNoCheck(closure);
+                    push(closure);
                 }
 
                 case SET_UPVALUE -> {
@@ -147,7 +142,7 @@ public class Interpreter {
                     push(frame.closure.upvalues[curBytes[frame.ip++]].get());
                 }
                 case CLOSE_UPVALUE -> {
-                    closeUpvalues(stackTop-1);
+                    closeUpvalues(stack.size()-1);
                 }
 
                 case GET -> {
@@ -181,7 +176,7 @@ public class Interpreter {
                         PetPetClass indexerClass = classMap.get(indexer.getClass());
                         if (indexerClass == null)
                             runtimeException("Environment error: java object of type " + indexer.getClass() + " is in the environment, but it has no PetPetClass associated.");
-                        indexerTypeName = indexerClass.name;
+                        indexerTypeName = classMap.get(indexer.getClass()).name;
                     }
 
                     String specialString = "__get_" + indexerTypeName;
@@ -250,8 +245,7 @@ public class Interpreter {
 
                     Object indexer = peek(argCount);
                     Object instance = peek(argCount+1);
-
-                    System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount+1);
+                    stack.remove(stack.size()-1-argCount);
                     if (instance == null)
                         runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
                     PetPetClass langClass = classMap.get(instance.getClass());
@@ -278,60 +272,20 @@ public class Interpreter {
         return !isFalsy(o);
     }
 
-    private void pushNoCheck(Object o) {
-        stack[stackTop++] = o;
-    }
-
     private void push(Object o) {
-        if (stackTop == stack.length) {
-            Object[] newStack = new Object[stackTop * 2];
-            System.arraycopy(stack, 0, newStack, 0, stackTop);
-            stack = newStack;
-        }
-        stack[stackTop++] = o;
+        stack.add(o);
     }
 
     private Object pop() {
-        return stack[--stackTop];
+        return stack.remove(stack.size()-1);
     }
 
     public Object peek() {
-        return stack[stackTop-1];
+        return peek(0);
     }
 
     public Object peek(int offset) {
-        return stack[stackTop-1-offset];
-    }
-
-    public Object get(int index) {
-        return stack[index];
-    }
-
-    public void set(int index, Object value) {
-        stack[index] = value;
-    }
-
-    public CallFrame peekCallStack() {
-        return callStack[callStackTop-1];
-    }
-
-    public void popCallStack() {
-        callStackTop--;
-    }
-
-    public void pushCallStack(PetPetClosure closure, int ip, int fp, boolean calledFromJava) {
-        if (callStackTop == callStack.length) {
-            CallFrame[] newStack = new CallFrame[callStackTop * 2];
-            System.arraycopy(callStack, 0, newStack, 0, callStackTop);
-            for (int i = callStackTop; i < newStack.length; i++)
-                newStack[i] = new CallFrame();
-            callStack = newStack;
-        }
-        CallFrame frame = callStack[callStackTop++];
-        frame.closure = closure;
-        frame.ip = ip;
-        frame.fp = fp;
-        frame.wasJavaCall = calledFromJava;
+        return stack.get(stack.size()-1-offset);
     }
 
     //Returns true if this was a petpet function, false if a java function
@@ -339,12 +293,12 @@ public class Interpreter {
 //        System.out.println(stack);
         if (callee == null)
             runtimeException("Attempt to call null value");
-        if (callee instanceof PetPetClosure closure) {
+        if (callee instanceof OldPetPetClosure closure) {
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
-            if (callStackTop == maxStackFrames)
+            if (callStack.size() == maxStackFrames)
                 runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
-            pushCallStack(closure, 0, stackTop-argCount-1, calledFromJava);
+            callStack.push(new CallFrame(closure, 0, stack.size() - argCount - 1, calledFromJava));
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount)
@@ -413,11 +367,11 @@ public class Interpreter {
         return false;
     }
 
-    private Upvalue captureUpvalue(int index) {
+    private OldUpvalue captureUpvalue(int index) {
         cost++; //cost for capturing an upvalue
         //Search if an open upvalue already exists for this local
-        Upvalue prev = null;
-        Upvalue cur = upvalueList;
+        OldUpvalue prev = null;
+        OldUpvalue cur = upvalueList;
 
         while (cur != null && upvalueList.idx > index) {
             prev = cur;
@@ -426,7 +380,7 @@ public class Interpreter {
         if (cur != null && upvalueList.idx == index)
             return cur;
 
-        Upvalue result = new Upvalue(this, index);
+        OldUpvalue result = new OldUpvalue(stack, index);
 
         result.next = cur;
         if (prev == null) {
@@ -459,20 +413,16 @@ public class Interpreter {
     }
 
     private static class CallFrame {
-        private PetPetClosure closure;
+        private OldPetPetClosure closure;
         private int ip; //instruction pointer
         private int fp; //frame pointer
         private boolean wasJavaCall; //whether this function was called from java itself, or inside the function
-
-        public CallFrame() {
-            //defaults
+        public CallFrame(OldPetPetClosure closure, int ip, int fp, boolean wasJavaCall) {
+            this.closure = closure;
+            this.ip = ip;
+            this.fp = fp;
+            this.wasJavaCall = wasJavaCall;
         }
-//        public CallFrame(PetPetClosure closure, int ip, int fp, boolean wasJavaCall) {
-//            this.closure = closure;
-//            this.ip = ip;
-//            this.fp = fp;
-//            this.wasJavaCall = wasJavaCall;
-//        }
 
         public int lineNumber() {
             int[] lines = closure.function.lineNumberTable;
