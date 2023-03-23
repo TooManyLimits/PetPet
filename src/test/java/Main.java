@@ -11,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String src = Files.readString(Path.of("src", "test", "resources", "petpet", "typetest.petpet"));
+        String src = Files.readString(Path.of("src", "test", "resources", "petpet", "not.petpet"));
 
         PetPetInstance instance = new PetPetInstance();
         instance.debugTime = true;

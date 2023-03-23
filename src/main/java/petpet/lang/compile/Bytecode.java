@@ -58,6 +58,7 @@ public class Bytecode {
     public static final byte LIST_ADD = 35;
     public static final byte NEW_TABLE = 34;
     public static final byte TABLE_SET = 36;
+    public static final byte NOT = 37;
 
 
     //Lookup for bytecode printouts

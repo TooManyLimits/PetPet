@@ -533,7 +533,7 @@ public abstract class Expression {
         }
 
         public enum Op {
-            NOT(Lexer.TokenType.NOT, (byte) 0),
+            NOT(Lexer.TokenType.NOT, Bytecode.NOT),
             NEGATE(Lexer.TokenType.MINUS, Bytecode.NEGATE);
 
             private final Lexer.TokenType t;

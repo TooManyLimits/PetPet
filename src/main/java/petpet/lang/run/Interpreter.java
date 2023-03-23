@@ -81,6 +81,7 @@ public class Interpreter {
                 case GTE -> push((Double) pop() <= (Double) pop());
 
                 case NEGATE -> push(-(Double) pop());
+                case NOT -> push(isFalsy(pop()));
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
