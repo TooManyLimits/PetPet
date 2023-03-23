@@ -1,0 +1,13 @@
+print(3.type())
+print("hi cutie".type())
+print($[].type())
+print(![].type())
+print(true.type())
+print((fun(x)x).type())
+print(print.type())
+
+print("-------BREAK--------")
+t = $[]
+t.type = fun() "my funni table"
+print(t.type())
+print(t:type())

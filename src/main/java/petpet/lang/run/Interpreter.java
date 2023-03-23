@@ -447,7 +447,8 @@ public class Interpreter {
 
     private void runtimeException(String message) {
         StringBuilder messageBuilder = new StringBuilder(message);
-        for (CallFrame frame : callStack) {
+        for (int i = 0; i < callStackTop; i++) {
+            CallFrame frame = callStack[i];
             messageBuilder.append("\n in: ")
                     .append(frame.closure.function)
                     .append(" at line ")

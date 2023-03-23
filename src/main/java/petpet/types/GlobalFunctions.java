@@ -26,5 +26,4 @@ public class GlobalFunctions {
         return Math.random() * (max - min) + min;
     }
 
-
 }

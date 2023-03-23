@@ -66,8 +66,8 @@ public class PetPetInstance {
         //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num"));
         interpreter.classMap.put(Boolean.class, new PetPetClass("bool"));
-        interpreter.classMap.put(JavaFunction.class, new PetPetClass("javaFunc"));
-        interpreter.classMap.put(PetPetClosure.class, new PetPetClass("function"));
+        interpreter.classMap.put(JavaFunction.class, new PetPetClass("jfunc"));
+        interpreter.classMap.put(PetPetClosure.class, new PetPetClass("func"));
 
         PetPetString.registerToInterpreter(this.interpreter);
         PetPetList.registerToInterpreter(this.interpreter);

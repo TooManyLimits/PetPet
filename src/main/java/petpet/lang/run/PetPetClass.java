@@ -13,6 +13,12 @@ public class PetPetClass {
     public final String name;
     public PetPetClass(String name) {
         this.name = name;
+        addMethod("type", new JavaFunction(false, 1) {
+            @Override
+            public Object invoke(Object arg0) {
+                return name;
+            }
+        });
     }
     //method object is JavaFunction or LangClosure
     //currently only JavaFunction, since user-defined classes aren't a thing yet

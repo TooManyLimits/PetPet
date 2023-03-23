@@ -26,6 +26,17 @@ public class JavaFunction implements PetPetCallable {
     //Return value is used to increment the cost.
     public final ToIntFunction<Interpreter> costPenalizer;
 
+    public JavaFunction(boolean isVoid, int paramCount, ToIntFunction<Interpreter> costPenalizer) {
+        this.isVoid = isVoid;
+        this.paramCount = paramCount;
+        this.backing = null;
+        this.costPenalizer = costPenalizer;
+    }
+
+    public JavaFunction(boolean isVoid, int paramCount) {
+        this(isVoid, paramCount, null);
+    }
+
     private static final int MAX_PARAMS = 15;
 
     public JavaFunction(Method method, boolean isMethod) {

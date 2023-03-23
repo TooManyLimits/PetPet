@@ -8,13 +8,6 @@ printBoard = fun(board) {
 printBoard(board)
 i = 0
 while (i = i + 1) < 1000 {
-    j = -1
-    //while (j = j + 1) < 100
-    //    board2[j] = if board[j-1]
-    //        board[j] != board[j+1]
-    //    else
-    //        board[j] || board[j+1]
-
     board2.eachIndexed(fun(i, v) {
         board2[i] = if board[i-1]
             board[i] != board[i+1]
