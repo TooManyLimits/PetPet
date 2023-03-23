@@ -1,4 +1,4 @@
-package main.java.petpet.external;
+package petpet.external;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,6 +1,6 @@
-package main.java.petpet.lang.compile;
+package petpet.lang.compile;
 
-import main.java.petpet.lang.run.PetPetFunction;
+import petpet.lang.run.PetPetFunction;
 
 import java.util.ArrayList;
 import java.util.List;

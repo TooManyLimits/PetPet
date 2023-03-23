@@ -1,8 +1,8 @@
-package main.java.petpet.types.libraries;
+package petpet.types.libraries;
 
-import main.java.petpet.lang.run.Interpreter;
-import main.java.petpet.lang.run.JavaFunction;
-import main.java.petpet.types.PetPetTable;
+import petpet.lang.run.Interpreter;
+import petpet.lang.run.JavaFunction;
+import petpet.types.PetPetTable;
 
 public class MathLibrary {
 

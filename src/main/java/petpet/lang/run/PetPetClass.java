@@ -1,6 +1,6 @@
-package main.java.petpet.lang.run;
+package petpet.lang.run;
 
-import main.java.petpet.external.PetPetReflector;
+import petpet.external.PetPetReflector;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

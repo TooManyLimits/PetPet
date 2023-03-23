@@ -1,15 +1,15 @@
-package main.java.petpet.external;
+package petpet.external;
 
-import main.java.petpet.types.libraries.GlobalFunctions;
-import main.java.petpet.types.PetPetList;
-import main.java.petpet.types.PetPetString;
-import main.java.petpet.types.PetPetTable;
-import main.java.petpet.lang.compile.Compiler;
-import main.java.petpet.lang.lex.Lexer;
-import main.java.petpet.lang.parse.Expression;
-import main.java.petpet.lang.parse.Parser;
-import main.java.petpet.lang.run.*;
-import main.java.petpet.types.libraries.MathLibrary;
+import petpet.types.libraries.GlobalFunctions;
+import petpet.types.PetPetList;
+import petpet.types.PetPetString;
+import petpet.types.PetPetTable;
+import petpet.lang.compile.Compiler;
+import petpet.lang.lex.Lexer;
+import petpet.lang.parse.Expression;
+import petpet.lang.parse.Parser;
+import petpet.lang.run.*;
+import petpet.types.libraries.MathLibrary;
 
 import java.util.List;
 import java.util.Map;

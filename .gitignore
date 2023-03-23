@@ -1,3 +1,17 @@
+### Maven ###
+### from https://stackoverflow.com/questions/51792830/what-files-in-a-maven-project-should-be-committed-to-git
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+.mvn/wrapper/maven-wrapper.jar
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/

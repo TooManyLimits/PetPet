@@ -1,4 +1,4 @@
-package main.java.petpet.lang.run;
+package petpet.lang.run;
 
 public class PetPetException extends RuntimeException {
     public PetPetException(Exception e) {

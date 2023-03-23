@@ -1,5 +1,0 @@
-print(!3)
-print(!null)
-print(!$[])
-print(!![])
-print(!0)

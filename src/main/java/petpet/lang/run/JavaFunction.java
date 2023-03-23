@@ -1,4 +1,4 @@
-package main.java.petpet.lang.run;
+package petpet.lang.run;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;

@@ -1,9 +1,9 @@
-package main.java.petpet.types;
+package petpet.types;
 
-import main.java.petpet.lang.run.Interpreter;
-import main.java.petpet.lang.run.JavaFunction;
-import main.java.petpet.lang.run.PetPetCallable;
-import main.java.petpet.lang.run.PetPetClass;
+import petpet.lang.run.Interpreter;
+import petpet.lang.run.JavaFunction;
+import petpet.lang.run.PetPetCallable;
+import petpet.lang.run.PetPetClass;
 
 import java.util.ArrayList;
 

@@ -1,7 +1,7 @@
-package main.java.petpet.lang.run.old;
+package petpet.lang.run.old;
 
-import main.java.petpet.lang.run.PetPetCallable;
-import main.java.petpet.lang.run.PetPetFunction;
+import petpet.lang.run.PetPetCallable;
+import petpet.lang.run.PetPetFunction;
 
 public class OldPetPetClosure implements PetPetCallable {
     public final PetPetFunction function;

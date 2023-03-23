@@ -1,7 +1,7 @@
-package main.java.petpet.external;
+package petpet.external;
 
-import main.java.petpet.lang.run.JavaFunction;
-import main.java.petpet.lang.run.PetPetClass;
+import petpet.lang.run.JavaFunction;
+import petpet.lang.run.PetPetClass;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Field;

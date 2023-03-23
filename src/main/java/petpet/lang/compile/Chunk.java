@@ -1,10 +1,10 @@
-package main.java.petpet.lang.compile;
+package petpet.lang.compile;
 
-import main.java.petpet.lang.run.PetPetFunction;
+import petpet.lang.run.PetPetFunction;
 
 import java.util.ArrayList;
 
-import static main.java.petpet.lang.compile.Bytecode.*;
+import static petpet.lang.compile.Bytecode.*;
 
 public class Chunk {
 

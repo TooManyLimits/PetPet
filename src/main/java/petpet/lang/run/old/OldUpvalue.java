@@ -1,4 +1,4 @@
-package main.java.petpet.lang.run.old;
+package petpet.lang.run.old;
 
 import java.util.List;
 

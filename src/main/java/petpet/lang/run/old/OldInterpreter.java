@@ -1,15 +1,15 @@
-package main.java.petpet.lang.run.old;
+package petpet.lang.run.old;
 
-import main.java.petpet.lang.run.*;
-import main.java.petpet.types.PetPetList;
-import main.java.petpet.types.PetPetString;
-import main.java.petpet.types.PetPetTable;
+import petpet.lang.run.*;
+import petpet.types.PetPetList;
+import petpet.types.PetPetString;
+import petpet.types.PetPetTable;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static main.java.petpet.lang.compile.Bytecode.*;
+import static petpet.lang.compile.Bytecode.*;
 
 /**
  * Runs functions and maintains a global state

@@ -1,4 +1,4 @@
-package main.java.petpet.lang.run;
+package petpet.lang.run;
 
 public class PetPetClosure implements PetPetCallable {
     public final PetPetFunction function;

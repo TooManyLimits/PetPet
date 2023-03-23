@@ -1,7 +1,7 @@
-package main.java.petpet.types.libraries;
+package petpet.types.libraries;
 
-import main.java.petpet.lang.run.JavaFunction;
-import main.java.petpet.types.PetPetList;
+import petpet.lang.run.JavaFunction;
+import petpet.types.PetPetList;
 
 import java.util.HashMap;
 
