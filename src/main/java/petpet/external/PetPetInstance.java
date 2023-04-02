@@ -81,5 +81,13 @@ public class PetPetInstance {
         MathLibrary.registerToInterpreter(this.interpreter);
     }
 
+    public void registerClass(Class<?> clazz, PetPetClass petPetClass) {
+        interpreter.classMap.put(clazz, petPetClass);
+    }
+
+    public void deregisterClass(Class<?> clazz) {
+        interpreter.classMap.remove(clazz);
+    }
+
     public void setMaxStackFrames(int cap) {interpreter.maxStackFrames = cap;}
 }

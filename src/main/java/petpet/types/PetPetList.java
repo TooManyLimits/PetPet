@@ -10,7 +10,7 @@ import java.util.ArrayList;
 /**
  * List type
  */
-public class PetPetList extends ArrayList<Object> {
+public class PetPetList<T> extends ArrayList<T> {
 
     //Equals, hashcode, toString() overwritten
     //Leaving them as-is led to stack overflow crashes
@@ -88,13 +88,23 @@ public class PetPetList extends ArrayList<Object> {
         return list;
     }
 
+    /**
+     * The generic may be inaccurate here! If this list is inside
+     * a script somewhere, then the script might have inserted objects
+     * of the incorrect generic into it, as PetPet does not consider
+     * the actual type of objects inserted into the list.
+     *
+     * The reason the generic exists is to make this class a simple
+     * drop-in replacement for ArrayList in the java-side code, when
+     * you want it accessible to the PetPet environment.
+     */
     @Override
-    public Object get(int index) {
+    public T get(int index) {
         return super.get((index % size() + size()) % size());
     }
 
     @Override
-    public Object set(int index, Object element) {
+    public T set(int index, T element) {
         return super.set((index % size() + size()) % size(), element);
     }
 
