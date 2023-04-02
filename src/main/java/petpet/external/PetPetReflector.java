@@ -28,7 +28,7 @@ public class PetPetReflector {
         PetPetClass result = new PetPetClass(name == null ? clazz.getSimpleName() : name);
         for (Field f : clazz.getFields()) {
             if (f.isAnnotationPresent(PetPetWhitelist.class)) {
-                result.addField(f.getName(), f);
+                result.addField(f.getName(), f, f.getAnnotation(PetPetWhitelist.class).forceImmutable());
             }
         }
         for (Method m : clazz.getMethods()) {

@@ -7,4 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE})
-public @interface PetPetWhitelist {}
+public @interface PetPetWhitelist {
+    boolean forceImmutable() default false;
+}

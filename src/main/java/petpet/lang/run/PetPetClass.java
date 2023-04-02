@@ -30,9 +30,9 @@ public class PetPetClass {
         methods.put(name, method);
     }
 
-    public void addField(String name, Field field) {
+    public void addField(String name, Field field, boolean forceImmutable) {
         fieldGetters.put(name, PetPetReflector.unreflectGetter(field));
-        if (!Modifier.isFinal(field.getModifiers()))
+        if (!forceImmutable && !Modifier.isFinal(field.getModifiers()))
             fieldSetters.put(name, PetPetReflector.unreflectSetter(field));
     }
 
