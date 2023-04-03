@@ -294,9 +294,16 @@ public class Interpreter {
                     if (langClass == null)
                         runtimeException("Invalid environment - object " + instance + "has no class. Contact developers of the application! (not petpet's fault... probably)");
                     if (indexer instanceof String name) {
-                        Object method = langClass.methods.get(name);
+                        //First try with __argCount
+                        Object method = langClass.methods.get(name + "__" + argCount);
+                        if (method != null) {
+                            makeCall(method, argCount+1, false, true);
+                            break;
+                        }
+                        //If there wasn't one with the given arg count, then just do it with the regular one
+                        method = langClass.methods.get(name);
                         if (method == null)
-                            runtimeException("Method " + name + " does not exist for type " + langClass.name);
+                            runtimeException("Method " + name + " does not exist for type " + langClass.name + " with " + argCount + " args");
                         makeCall(method, argCount+1, false, true);
                         break;
                     }

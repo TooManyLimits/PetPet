@@ -20,7 +20,7 @@ public class Test {
         PetPetInstance instance = new PetPetInstance();
         instance.debugBytecode = true;
         instance.setGlobal("funni", petPetList);
-        instance.runScript("script", script.toString());
+        instance.runScript("script", script);
         System.out.println(petPetList.get(2));
 
 

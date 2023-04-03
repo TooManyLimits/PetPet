@@ -97,6 +97,11 @@ public class JavaFunction implements PetPetCallable {
             throw new IllegalArgumentException("Cannot create JavaFunction from method with over " + MAX_PARAMS + " params!");
     }
 
+    @Override
+    public int paramCount() {
+        return paramCount;
+    }
+
     private void checkNumberConversion(MethodType invocType) {
         Class<?>[] paramTypes = invocType.parameterArray();
         byte[] req = new byte[paramTypes.length];

@@ -5,6 +5,11 @@ public class PetPetClosure implements PetPetCallable {
     public final Upvalue[] upvalues;
     public final Interpreter interpreter;
 
+    @Override
+    public int paramCount() {
+        return function.paramCount;
+    }
+
     public PetPetClosure(PetPetFunction function, Interpreter interpreter) {
         this.function = function;
         this.upvalues = new Upvalue[function.numUpvalues];

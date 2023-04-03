@@ -63,6 +63,10 @@ public class PetPetInstance {
         interpreter.globals.put(key, value);
     }
 
+    public Object getGlobal(String key) {
+        return interpreter.globals.get(key);
+    }
+
     private void loadBuiltinLibrary() {
         //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num"));
