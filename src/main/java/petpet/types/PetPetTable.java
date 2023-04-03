@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Table type
  */
-public class PetPetTable extends HashMap<Object, Object> {
+public class PetPetTable<K, V> extends HashMap<K, V> {
 
     //Equals, hashcode, toString() overwritten
     //Leaving them as-is led to stack overflow crashes
@@ -50,19 +50,19 @@ public class PetPetTable extends HashMap<Object, Object> {
         PETPET_CLASS.addMethod("eachValue", new JavaFunction(PetPetTable.class, "eachValue", false));
     }
 
-    public static HashMap each(HashMap<?,?> map, PetPetCallable func) {
-        for (Map.Entry<?,?> entry : map.entrySet())
+    public static <K, V> PetPetTable<K, V> each(PetPetTable<K, V> map, PetPetCallable func) {
+        for (Map.Entry<K, V> entry : map.entrySet())
             func.call(entry.getKey(), entry.getValue());
         return map;
     }
 
-    public static HashMap eachKey(HashMap<?,?> map, PetPetCallable func) {
+    public static <K, V> PetPetTable<K, V> eachKey(PetPetTable<K, V> map, PetPetCallable func) {
         for (Object key : map.keySet())
             func.call(key);
         return map;
     }
 
-    public static HashMap eachValue(HashMap<?,?> map, PetPetCallable func) {
+    public static <K, V> PetPetTable<K, V> eachValue(PetPetTable<K, V> map, PetPetCallable func) {
         for (Object value : map.values())
             func.call(value);
         return map;
