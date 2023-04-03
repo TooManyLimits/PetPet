@@ -1,9 +1,11 @@
 package petpet.lang.run;
 
 import petpet.types.PetPetList;
+import petpet.types.PetPetNull;
 import petpet.types.PetPetString;
 import petpet.types.PetPetTable;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -69,25 +71,86 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof String s)
-                        push(s + PetPetString.valueOf(r));
+                        push(s + getString(r));
                     else if (r instanceof String s)
-                        push(PetPetString.valueOf(l) + s);
-                    else
-                        push((Double) l + (Double) r);
+                        push(getString(l) + s);
+                    else if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl + dr);
+                    else {
+                        callMetaBinary(l, r, "add");
+                    }
                 }
-                case SUB -> {double r = (Double) pop(); double l = (Double) pop(); push(l-r);}
-                case MUL -> push((Double) pop() * (Double) pop());
-                case DIV -> {double r = (Double) pop(); double l = (Double) pop(); push(l/r);}
-                case MOD -> {double r = (Double) pop(); double l = (Double) pop(); push(l%r);}
+                case SUB -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl + dr);
+                    else callMetaBinary(l, r, "sub");
+                }
+                case MUL -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl * dr);
+                    else callMetaBinary(l, r, "mul");
+                }
+                case DIV -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl / dr);
+                    else callMetaBinary(l, r, "div");
+                }
+                case MOD -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl + dr);
+                    else callMetaBinary(l, r, "mod");
+                }
                 case EQ -> push(Objects.equals(pop(), pop()));
                 case NEQ -> push(!Objects.equals(pop(), pop()));
-                case LT -> push((Double) pop() > (Double) pop());
-                case GT -> push((Double) pop() < (Double) pop());
-                case LTE -> push((Double) pop() >= (Double) pop());
-                case GTE -> push((Double) pop() <= (Double) pop());
+                case LT -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl > dr);
+                    else callMetaBinary(l, r, "lt");
+                }
+                case GT -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl > dr);
+                    else callMetaBinary(l, r, "gt");
+                }
+                case LTE -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl <= dr);
+                    else callMetaBinary(l, r, "lte");
+                }
+                case GTE -> {
+                    Object r = pop();
+                    Object l = pop();
+                    if (l instanceof Double dl && r instanceof Double dr)
+                        push(dl >= dr);
+                    else callMetaBinary(l, r, "gte");
+                }
 
-                case NEGATE -> push(-(Double) pop());
-                case NOT -> push(isFalsy(pop()));
+                case NEGATE -> {
+                    Object o = pop();
+                    if (o instanceof Double dl)
+                        push(-dl);
+                    else callMetaUnary(o, "neg");
+                }
+                case NOT -> {
+                    Object o = pop();
+                    if (o instanceof Boolean b)
+                        push(!b);
+                    else callMetaUnary(o, "not");
+                }
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
@@ -261,9 +324,7 @@ public class Interpreter {
                     if (indexer == null) {
                         indexerTypeName = "null";
                     } else {
-                        PetPetClass indexerClass = classMap.get(indexer.getClass());
-                        if (indexerClass == null)
-                            runtimeException("Environment error: java object of type " + indexer.getClass() + " is in the environment, but it has no PetPetClass associated.");
+
                         indexerTypeName = classMap.get(indexer.getClass()).name;
                     }
 
@@ -287,30 +348,113 @@ public class Interpreter {
                     Object indexer = peek(argCount);
                     Object instance = peek(argCount+1);
 
-                    System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount+1);
-                    if (instance == null)
-                        runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
-                    PetPetClass langClass = classMap.get(instance.getClass());
-                    if (langClass == null)
-                        runtimeException("Invalid environment - object " + instance + "has no class. Contact developers of the application! (not petpet's fault... probably)");
-                    if (indexer instanceof String name) {
-                        //First try with __argCount
-                        Object method = langClass.methods.get(name + "__" + argCount);
-                        if (method != null) {
-                            makeCall(method, argCount+1, false, true);
-                            break;
-                        }
-                        //If there wasn't one with the given arg count, then just do it with the regular one
-                        method = langClass.methods.get(name);
-                        if (method == null)
-                            runtimeException("Method " + name + " does not exist for type " + langClass.name + " with " + argCount + " args");
-                        makeCall(method, argCount+1, false, true);
-                        break;
-                    }
-                    runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
+                    doInvoke(argCount, instance, indexer);
                 }
             }
         }
+    }
+
+    private void callMetaBinary(Object l, Object r, String name) {
+
+
+        PetPetClass leftClass = getPetPetClass(l);
+        PetPetClass rightClass = getPetPetClass(r);
+
+        String underscored = "__" + name;
+        String underscoredR = underscored + "R";
+        PetPetCallable func = leftClass.methods.get(underscored + "_" + rightClass.name);
+        if (func != null) {
+            push(l);
+            push(r);
+            makeCall(func, 2, false, true);
+            return;
+        }
+        func = leftClass.methods.get(underscored);
+        if (func != null) {
+            push(l);
+            push(r);
+            makeCall(func, 2, false, true);
+            return;
+        }
+        func = rightClass.methods.get(underscoredR + "_" + leftClass.name);
+        if (func != null) {
+            push(r);
+            push(l);
+            makeCall(func, 2, false, true);
+            return;
+        }
+        func = rightClass.methods.get(underscoredR);
+        if (func != null) {
+            push(r);
+            push(l);
+            makeCall(func, 2, false, true);
+            return;
+        }
+        runtimeException("Cannot " + name + " types " + leftClass.name + " and " + rightClass.name);
+    }
+
+    private void callMetaUnary(Object o, String name) {
+        PetPetClass objClass = getPetPetClass(o);
+        PetPetCallable func = objClass.methods.get("__" + name);
+        if (func != null) {
+            push(o);
+            makeCall(func, 1, false, true);
+            return;
+        }
+        runtimeException("Cannot perform operator " + name + " on type " + objClass.name);
+    }
+
+    /**
+     * Objects on the stack are:
+     * lastArg
+     * ...
+     * firstArg
+     * indexer
+     * instance
+     */
+    private void doInvoke(int argCount, Object instance, Object indexer) {
+        System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount+1);
+        if (instance == null)
+            runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
+        PetPetClass langClass = classMap.get(instance.getClass());
+        if (langClass == null)
+            runtimeException("Invalid environment - object " + instance + "has no class. Contact developers of the application! (not petpet's fault... probably)");
+        if (indexer instanceof String name) {
+            //First try with __argCount
+            Object method = langClass.methods.get(name + "__" + argCount);
+            if (method != null) {
+                makeCall(method, argCount+1, false, true);
+                return;
+            }
+            //If there wasn't one with the given arg count, then just do it with the regular one
+            method = langClass.methods.get(name);
+            if (method == null)
+                runtimeException("Method " + name + " does not exist for type " + langClass.name + " with " + argCount + " args");
+            makeCall(method, argCount+1, false, true);
+            return;
+        }
+        runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
+    }
+
+    /**
+     * Gets the string of the object, calling its metamethod if it exists
+     */
+    public String getString(Object o) {
+        if (o instanceof String || o instanceof Double || o instanceof Boolean || o == null)
+            return PetPetString.valueOf(o);
+        PetPetCallable method = classMap.get(o.getClass()).methods.get("__tostring");
+        if (method != null)
+            return (String) method.call();
+        return o.toString();
+    }
+
+    public PetPetClass getPetPetClass(Object o) {
+        if (o == null)
+            return PetPetNull.PET_PET_CLASS;
+        PetPetClass theClass = classMap.get(o.getClass());
+        if (theClass == null)
+            runtimeException("Environment error: java object of type " + o.getClass() + " is in the environment, but it has no PetPetClass associated.");
+        return theClass;
     }
 
     public boolean isFalsy(Object o) {
@@ -332,6 +476,12 @@ public class Interpreter {
             stack = newStack;
         }
         stack[stackTop++] = o;
+    }
+
+    private void swapTop() {
+        Object temp = stack[stackTop-1];
+        stack[stackTop-1] = stack[stackTop-2];
+        stack[stackTop-2] = temp;
     }
 
     private Object pop() {

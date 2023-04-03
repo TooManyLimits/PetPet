@@ -22,7 +22,7 @@ public class PetPetClass {
     }
     //method object is JavaFunction or LangClosure
     //currently only JavaFunction, since user-defined classes aren't a thing yet
-    public final Map<String, Object> methods = new HashMap<>();
+    public final Map<String, PetPetCallable> methods = new HashMap<>();
     public final Map<String, Function> fieldGetters = new HashMap<>();
     public final Map<String, BiConsumer> fieldSetters = new HashMap<>();
 

@@ -37,6 +37,11 @@ public class JavaFunction implements PetPetCallable {
         this(isVoid, paramCount, null);
     }
 
+    public JavaFunction(boolean isVoid, int paramCount, boolean needsNumberConversion) {
+        this(isVoid, paramCount, null);
+        this.needsNumberConversion = needsNumberConversion;
+    }
+
     private static final int MAX_PARAMS = 15;
 
     public JavaFunction(Method method, boolean isMethod) {
