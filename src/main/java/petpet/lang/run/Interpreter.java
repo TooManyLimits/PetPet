@@ -46,6 +46,10 @@ public class Interpreter {
         return pop();
     }
 
+    //Unsigned Byte: curBytes[frame.ip++] & 0xff
+    //Signed Short: (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff))
+    //Unsigned short: (((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff
+
     private void run() {
         CallFrame frame = peekCallStack();
         byte[] curBytes = frame.closure.function.chunk.bytes;
@@ -54,7 +58,9 @@ public class Interpreter {
             cost++;
 //            System.out.println(NAMES[curBytes[frame.ip]]);
             switch (curBytes[frame.ip++]) {
-                case CONSTANT -> push(constants[curBytes[frame.ip++]]);
+                case CONSTANT -> push(constants[curBytes[frame.ip++] & 0xff]);
+                case BIG_CONSTANT -> push(constants[(((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)) & 0xffff]);
+
                 case PUSH_NULL -> push(null);
                 case POP -> pop();
 
@@ -98,17 +104,24 @@ public class Interpreter {
                     constants = frame.closure.function.chunk.constants;
                 }
 
-                case SET_GLOBAL -> globals.put((String) constants[curBytes[frame.ip++]], peek());
-                case LOAD_GLOBAL -> push(globals.get((String) constants[curBytes[frame.ip++]]));
+                case SET_GLOBAL -> globals.put((String) constants[curBytes[frame.ip++] & 0xff], peek());
+                case BIG_SET_GLOBAL -> globals.put((String) constants[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff], peek());
 
-                case SET_LOCAL -> stack[frame.fp+curBytes[frame.ip++]] = peek();
-                case LOAD_LOCAL -> push(stack[frame.fp+curBytes[frame.ip++]]);
+                case LOAD_GLOBAL -> push(globals.get((String) constants[curBytes[frame.ip++] & 0xff]));
+                case BIG_LOAD_GLOBAL -> push(globals.get((String) constants[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff]));
+
+                case SET_LOCAL -> stack[frame.fp+(curBytes[frame.ip++] & 0xff)] = peek();
+                case BIG_SET_LOCAL -> stack[frame.fp+((((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff)] = peek();
+
+                case LOAD_LOCAL -> push(stack[frame.fp+(curBytes[frame.ip++] & 0xff)]);
+                case BIG_LOAD_LOCAL -> push(stack[frame.fp+((((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff)]);
 
                 case POP_OFFSET_1 -> stack[stackTop-2] = stack[--stackTop];
 
-                case JUMP -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); frame.ip += offset; }
-                case JUMP_IF_FALSE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isFalsy(peek())) frame.ip += offset;}
-                case JUMP_IF_TRUE -> {int offset = ((curBytes[frame.ip++] << 8) | (curBytes[frame.ip++])); if (isTruthy(peek())) frame.ip += offset;}
+                //Do not make the jumps unsigned
+                case JUMP -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); frame.ip += offset; }
+                case JUMP_IF_FALSE -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); if (isFalsy(peek())) frame.ip += offset;}
+                case JUMP_IF_TRUE -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); if (isTruthy(peek())) frame.ip += offset;}
 
                 case NEW_LIST -> push(new PetPetList());
                 case LIST_ADD -> ((PetPetList) peek(1)).add(pop());
@@ -117,7 +130,7 @@ public class Interpreter {
                 case TABLE_SET -> ((PetPetTable) peek(2)).put(pop(), pop()); //value was pushed, then key
 
                 case CALL -> {
-                    int argCount = curBytes[frame.ip++];
+                    int argCount = curBytes[frame.ip++] & 0xff;
                     if (makeCall(peek(argCount), argCount, false, false)) {
                         frame = peekCallStack();
                         curBytes = frame.closure.function.chunk.bytes;
@@ -129,7 +142,21 @@ public class Interpreter {
                     PetPetClosure closure = new PetPetClosure((PetPetFunction) pop(), this);
                     for (int i = 0; i < closure.upvalues.length; i++) {
                         boolean isLocal = curBytes[frame.ip++] > 0;
-                        int index = curBytes[frame.ip++];
+                        int index = curBytes[frame.ip++] & 0xff;
+                        if (isLocal) {
+                            closure.upvalues[i] = captureUpvalue(frame.fp + index);
+                        } else {
+                            closure.upvalues[i] = frame.closure.upvalues[index];
+                        }
+                    }
+                    pushNoCheck(closure);
+                }
+
+                case BIG_CLOSURE -> {
+                    PetPetClosure closure = new PetPetClosure((PetPetFunction) pop(), this);
+                    for (int i = 0; i < closure.upvalues.length; i++) {
+                        boolean isLocal = curBytes[frame.ip++] > 0;
+                        int index = (((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff; //Short read instead of byte, only difference
                         if (isLocal) {
                             closure.upvalues[i] = captureUpvalue(frame.fp + index);
                         } else {
@@ -140,12 +167,20 @@ public class Interpreter {
                 }
 
                 case SET_UPVALUE -> {
-                    cost++; //upvalues more expensive than locals
-                    frame.closure.upvalues[curBytes[frame.ip++]].set(peek());
+                    //cost++; //upvalues more expensive than locals
+                    frame.closure.upvalues[curBytes[frame.ip++] & 0xff].set(peek());
+                }
+                case BIG_SET_UPVALUE -> {
+                    //cost++; //upvalues more expensive than locals
+                    frame.closure.upvalues[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff].set(peek());
                 }
                 case LOAD_UPVALUE -> {
-                    cost++;
-                    push(frame.closure.upvalues[curBytes[frame.ip++]].get());
+                    //cost++;
+                    push(frame.closure.upvalues[curBytes[frame.ip++] & 0xff].get());
+                }
+                case BIG_LOAD_UPVALUE -> {
+                    //cost++;
+                    push(frame.closure.upvalues[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff].get());
                 }
                 case CLOSE_UPVALUE -> {
                     closeUpvalues(stackTop-1);

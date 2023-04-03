@@ -27,7 +27,7 @@ public class Chunk {
             byte code = bytes[i];
             switch (code) {
                 case CONSTANT -> {
-                    result.append("(").append(bytes[++i]).append(") = ");
+                    result.append("(").append(bytes[++i] & 0xff).append(") = ");
                     if (constants[bytes[i]] instanceof PetPetFunction func) {
                         result.append(func).append(":\n").append(func.chunk.toString(indent + digits + 1));
                         dontNewLine = true;
@@ -35,15 +35,40 @@ public class Chunk {
                     } else
                         result.append("'").append(constants[bytes[i]]).append("'");
                 }
-                case SET_GLOBAL,LOAD_GLOBAL -> result.append("(").append(bytes[++i]).append(") = '").append(constants[bytes[i]]).append("'");
-                case SET_LOCAL,LOAD_LOCAL,SET_UPVALUE,LOAD_UPVALUE -> result.append("(").append(bytes[++i]).append(")");
+                case SET_GLOBAL,LOAD_GLOBAL -> {
+                    int idx = bytes[++i] & 0xff;
+                    System.out.println(idx);
+                    result.append("(").append(idx).append(") = '").append(constants[idx]).append("'");
+                }
+                case BIG_SET_GLOBAL,BIG_LOAD_GLOBAL -> {
+                    int idx = readUnsignedShort(bytes, i); i += 2;
+//                    System.out.println(idx >> 8);
+//                    System.out.println(idx & 0xff);
+//                    System.out.println((short) idx);
+                    result.append("(").append(idx).append(") = '").append(constants[idx]).append("'");
+                }
+                case SET_LOCAL,LOAD_LOCAL,SET_UPVALUE,LOAD_UPVALUE -> {
+                    int idx = bytes[++i] & 0xff;
+                    result.append("(").append(idx).append(")");
+                }
+                case BIG_SET_LOCAL,BIG_LOAD_LOCAL,BIG_SET_UPVALUE,BIG_LOAD_UPVALUE -> {
+                    int idx = readUnsignedShort(bytes, i); i += 2;
+                    result.append("(").append(idx).append(")");
+                }
                 case JUMP, JUMP_IF_FALSE, JUMP_IF_TRUE -> result.append(" by ").append(extendSignwise(bytes[++i] << 8 | bytes[++i], 3));
-                case CALL, INVOKE -> result.append(" with ").append(bytes[++i]).append(" args");
+                case CALL, INVOKE -> result.append(" with ").append(bytes[++i] & 0xff).append(" args");
                 case CLOSURE -> {
                     if (constFunc == null) throw new RuntimeException("Failed to print closure bytecode");
                     result.append(" over: \n");
                     for (int j = 0; j < constFunc.numUpvalues; j++)
-                        result.append(bytes[++i] == 0 ? "| Upvalue " : "| Local ").append(bytes[++i]).append("\n");
+                        result.append((bytes[++i] & 0xff) == 0 ? "| Upvalue " : "| Local ").append(bytes[++i] & 0xff).append("\n");
+                    dontNewLine = true;
+                }
+                case BIG_CLOSURE -> {
+                    if (constFunc == null) throw new RuntimeException("Failed to print big closure bytecode");
+                    result.append(" over: \n");
+                    for (int j = 0; j < constFunc.numUpvalues; j++)
+                        result.append((bytes[++i]) == 0 ? "| BigUpvalue " : "| BigLocal ").append(((bytes[++i] << 8) | (bytes[++i])) & 0xffff).append("\n");
                     dontNewLine = true;
                 }
                 default -> {}
@@ -52,6 +77,10 @@ public class Chunk {
             if (!dontNewLine) result.append("\n");
         }
         return result.toString();
+    }
+
+    private static int readUnsignedShort(byte[] bytes, int i) {
+        return (((bytes[++i] << 8) & 0xffff) | (bytes[++i] & 0xff)) & 0xffff;
     }
 
     private static int extendSignwise(int v, int o) {
@@ -109,6 +138,11 @@ public class Chunk {
             bytes[cur++] = (byte) b;
         }
 
+        public void writeShort(int s) {
+            write(s >>> 8); //big endian
+            write(s);
+        }
+
         public void writeWithByteArg(int code, int operand) {
             write(code);
             write(operand);
@@ -116,7 +150,14 @@ public class Chunk {
 
         public void writeWithShortArg(int code, int operand) {
             write(code);
-            write(operand >>> 8); //big endian
+            writeShort(operand);
+        }
+
+        public void writeWithIntArg(int code, int operand) {
+            write(code);
+            write(operand >>> 24);
+            write(operand >>> 16);
+            write(operand >>> 8);
             write(operand);
         }
 

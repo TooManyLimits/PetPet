@@ -60,6 +60,18 @@ public class Bytecode {
     public static final byte TABLE_SET = 36;
     public static final byte NOT = 37;
 
+    //The "big" bytecodes correspond to the ones above, except with 16 bits instead of 8 for
+    //holding values
+    //In case of the jumps, it's an int instead of short
+    public static final byte BIG_CONSTANT = 38;
+    public static final byte BIG_SET_GLOBAL = 39;
+    public static final byte BIG_LOAD_GLOBAL = 40;
+    public static final byte BIG_SET_LOCAL = 41;
+    public static final byte BIG_LOAD_LOCAL = 42;
+    public static final byte BIG_CLOSURE = 43; //3 bytes per closed variable
+    public static final byte BIG_SET_UPVALUE = 44;
+    public static final byte BIG_LOAD_UPVALUE = 45;
+
 
     //Lookup for bytecode printouts
     public static final String[] NAMES = Arrays.stream(Bytecode.class.getFields()).filter(f -> Modifier.isStatic(f.getModifiers())).filter(f -> f.getType() == byte.class)

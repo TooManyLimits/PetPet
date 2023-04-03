@@ -25,7 +25,9 @@ public class Compiler {
     public Compiler(Compiler parent) {
         this.parent = parent;
         chunkBuilder = Chunk.builder();
-        try {registerLocal("");} catch (Exception ignored) {}
+        try {registerLocal("");} catch (Exception neverHappens) {
+            throw new RuntimeException("Something broke deep in PetPet, report this please");
+        }
     }
 
     public PetPetFunction finish(String name, int lineNumber, int paramCount) {
@@ -56,8 +58,8 @@ public class Compiler {
     }
 
     public void registerLocal(String varName) throws CompilationException {
-        if (locals.size() >= 256)
-            throw new CompilationException("Too many local variables!");
+        if (locals.size() >= 65500)
+            throw new CompilationException("Too many local variables! Max 65500", latestLine);
         locals.add(new Local(varName, scopeDepth));
     }
 
@@ -74,8 +76,8 @@ public class Compiler {
             if (upvalues.get(i).isLocal == isLocal && upvalues.get(i).index == index)
                 return i;
         }
-        if (upvalues.size() >= 255)
-            throw new CompilationException("Too many upvalues! Max 255");
+        if (upvalues.size() >= 65500)
+            throw new CompilationException("Too many upvalues! Max 65500", latestLine);
 
         upvalues.add(new CompileTimeUpvalue(index, isLocal));
         return upvalues.size()-1;
@@ -105,7 +107,7 @@ public class Compiler {
 
     public void patchJump(int jumpLocation) throws CompilationException {
         int jump = chunkBuilder.getByteIndex() - jumpLocation - 2;
-        if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over!");
+        if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over! Max 32k bytecodes either direction", latestLine);
         chunkBuilder.writeShortAt(jumpLocation, jump);
     }
 
@@ -116,15 +118,27 @@ public class Compiler {
     //loopstart is the index of the first bytecode of condition
     public void endLoop(int loopStart) throws CompilationException {
         int jump = loopStart - chunkBuilder.getByteIndex() - 3;
-        if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over!");
+        if (jump < Short.MIN_VALUE || jump > Short.MAX_VALUE) throw new CompilationException("Too much code to jump over! Max 32k bytecodes either direction", latestLine);
         chunkBuilder.writeWithShortArg(Bytecode.JUMP, jump);
     }
 
     public void emitClosure(Compiler finishedCompiler) throws CompilationException {
-        bytecode(Bytecode.CLOSURE);
+        //First, check if *all* upvalue indices are below 250
+        boolean allBelow250 = true;
+        for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues)
+            if (upvalue.index < 250) {
+                allBelow250 = false;
+                break;
+            }
+
+        //Then use that to decide if we use closure or big closure format.
+        bytecode(allBelow250 ? Bytecode.CLOSURE : Bytecode.BIG_CLOSURE);
         for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues) {
             bytecode(upvalue.isLocal ? (byte) 1 : 0);
-            bytecode((byte) upvalue.index);
+            if (allBelow250)
+                bytecode((byte) upvalue.index);
+            else
+                writeShort((short) upvalue.index);
         }
     }
 
@@ -140,6 +154,10 @@ public class Compiler {
         getChunkBuilder().write(code);
     }
 
+    public void writeShort(short s) {
+        getChunkBuilder().writeShort(s);
+    }
+
     public void bytecodeWithByteArg(byte code, byte arg) {
         getChunkBuilder().writeWithByteArg(code, arg);
     }
@@ -150,7 +168,7 @@ public class Compiler {
 
     public int registerConstant(Object value) throws CompilationException {
         int loc = getChunkBuilder().registerConstant(value);
-        if (loc > 255) throw new CompilationException("Too many literals!");
+        if (loc > 65500) throw new CompilationException("Too many literals! Max 65500", latestLine);
         return loc;
     }
 
@@ -160,8 +178,8 @@ public class Compiler {
 
     public static class CompilationException extends Exception {
 
-        public CompilationException(String str) {
-            super(str);
+        public CompilationException(String message, int approxLine) {
+            super(message + " (Approximate line: " + approxLine + ")");
         }
     }
 

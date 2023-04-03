@@ -149,10 +149,10 @@ public abstract class Expression {
         public void compile(Compiler compiler) throws Compiler.CompilationException {
             super.compile(compiler);
             int loc = compiler.registerConstant(value);
-            if (loc <= 255) {
+            if (loc < 250) {
                 compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) loc);
             } else {
-                throw new Compiler.CompilationException("Too many literals");
+                compiler.bytecodeWithShortArg(Bytecode.BIG_CONSTANT, (short) loc);
             }
         }
     }
@@ -233,16 +233,25 @@ public abstract class Expression {
             int localIndex = compiler.indexOfLocal(name);
             if (localIndex != -1) {
                 //If there's a local variable of this name in scope, then get local
-                compiler.bytecodeWithByteArg(Bytecode.LOAD_LOCAL, (byte) localIndex);
+                if (localIndex < 250)
+                    compiler.bytecodeWithByteArg(Bytecode.LOAD_LOCAL, (byte) localIndex);
+                else
+                    compiler.bytecodeWithShortArg(Bytecode.BIG_LOAD_LOCAL, (short) localIndex);
             } else {
                 int upvalueIndex = compiler.indexOfUpvalue(name);
                 if (upvalueIndex != -1) {
                     //Upvalue, get it
-                    compiler.bytecodeWithByteArg(Bytecode.LOAD_UPVALUE, (byte) upvalueIndex);
+                    if (upvalueIndex < 250)
+                        compiler.bytecodeWithByteArg(Bytecode.LOAD_UPVALUE, (byte) upvalueIndex);
+                    else
+                        compiler.bytecodeWithShortArg(Bytecode.BIG_LOAD_UPVALUE, (short) upvalueIndex);
                 } else {
                     //If neither local nor upvalue, get global
                     int loc = compiler.registerConstant(name);
-                    compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
+                    if (loc < 250)
+                        compiler.bytecodeWithByteArg(Bytecode.LOAD_GLOBAL, (byte) loc);
+                    else
+                        compiler.bytecodeWithShortArg(Bytecode.BIG_LOAD_GLOBAL, (short) loc);
                 }
             }
         }
@@ -389,7 +398,12 @@ public abstract class Expression {
             if (isGlobal) {
                 int loc = compiler.registerConstant(varName);
                 rhs.compile(compiler);
-                compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
+                if (loc < 250)
+                    compiler.bytecodeWithByteArg(Bytecode.SET_GLOBAL, (byte) loc);
+                else {
+                    compiler.bytecodeWithShortArg(Bytecode.BIG_SET_GLOBAL, (short) loc);
+                }
+
             } else {
                 int loc = compiler.indexOfLocal(varName);
                 if (loc == -1) {
@@ -398,12 +412,18 @@ public abstract class Expression {
                     //indexOfLocal would not return -1, as it
                     //would have been registered during scanForDeclarations().
                     int upValueLoc = compiler.indexOfUpvalue(varName);
-                    if (upValueLoc == -1) throw new Compiler.CompilationException("indexOfUpvalue shouldn't return -1, bug in compiler!");
+                    if (upValueLoc == -1) throw new Compiler.CompilationException("indexOfUpvalue shouldn't return -1, bug in compiler!", startLine);
                     rhs.compile(compiler);
-                    compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) upValueLoc);
+                    if (upValueLoc < 250)
+                        compiler.bytecodeWithByteArg(Bytecode.SET_UPVALUE, (byte) upValueLoc);
+                    else
+                        compiler.bytecodeWithShortArg(Bytecode.BIG_SET_UPVALUE, (short) upValueLoc);
                 } else {
                     rhs.compile(compiler);
-                    compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);
+                    if (loc < 250)
+                        compiler.bytecodeWithByteArg(Bytecode.SET_LOCAL, (byte) loc);
+                    else
+                        compiler.bytecodeWithShortArg(Bytecode.BIG_SET_LOCAL, (short) loc);
                 }
             }
         }
