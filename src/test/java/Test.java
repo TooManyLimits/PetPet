@@ -2,7 +2,7 @@ import petpet.external.PetPetInstance;
 import petpet.external.PetPetReflector;
 import petpet.external.PetPetWhitelist;
 import petpet.lang.run.JavaFunction;
-import petpet.types.PetPetList;
+import petpet.lang.run.PetPetClosure;
 
 public class Test {
 
@@ -11,14 +11,8 @@ public class Test {
 
         String script =
                 """
-                a = vec3(1,2,3)
-                b = vec3(4,5,6)
-                print(a)
-                print(a + b)
-                print(a * b)
-                print(6 * a)
-                print(a * 7)
-                print(a * 7 + " cutie")
+                global funy = 
+                    fun(a) print(a)
                 """;
 
         PetPetInstance instance = new PetPetInstance();
@@ -28,6 +22,8 @@ public class Test {
         instance.setGlobal("vec3", new JavaFunction(Vec3.class, "create", false));
 
         instance.runScript("script", script);
+
+        ((PetPetClosure) instance.getGlobal("funy")).call(5);
 
     }
 

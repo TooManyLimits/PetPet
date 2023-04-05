@@ -38,8 +38,8 @@ public class Interpreter {
     public int cost;
 
     public Object run(PetPetClosure closure, Object... args) {
-        if (closure.function.paramCount != args.length)
-            runtimeException("Expected " + closure.function.paramCount + " args, got " + args.length);
+//        if (closure.function.paramCount != args.length)
+//            runtimeException("Expected " + closure.function.paramCount + " args, got " + args.length);
         push(closure);
         for (Object arg : args)
             push(arg);
@@ -534,11 +534,11 @@ public class Interpreter {
         if (callee == null)
             runtimeException("Attempt to call null value");
         if (callee instanceof PetPetClosure closure) {
+            pushCallStack(closure, 0, stackTop-argCount-1, calledFromJava);
+            if (callStackTop > maxStackFrames)
+                runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
             if (argCount != closure.function.paramCount)
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
-            if (callStackTop == maxStackFrames)
-                runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
-            pushCallStack(closure, 0, stackTop-argCount-1, calledFromJava);
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount)

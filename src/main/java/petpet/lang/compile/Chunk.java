@@ -37,14 +37,10 @@ public class Chunk {
                 }
                 case SET_GLOBAL,LOAD_GLOBAL -> {
                     int idx = bytes[++i] & 0xff;
-                    System.out.println(idx);
                     result.append("(").append(idx).append(") = '").append(constants[idx]).append("'");
                 }
                 case BIG_SET_GLOBAL,BIG_LOAD_GLOBAL -> {
                     int idx = readUnsignedShort(bytes, i); i += 2;
-//                    System.out.println(idx >> 8);
-//                    System.out.println(idx & 0xff);
-//                    System.out.println((short) idx);
                     result.append("(").append(idx).append(") = '").append(constants[idx]).append("'");
                 }
                 case SET_LOCAL,LOAD_LOCAL,SET_UPVALUE,LOAD_UPVALUE -> {
