@@ -71,11 +71,11 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof String s)
-                        push(s + getString(r));
+                        pushNoCheck(s + getString(r));
                     else if (r instanceof String s)
-                        push(getString(l) + s);
+                        pushNoCheck(getString(l) + s);
                     else if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl + dr);
+                        pushNoCheck(dl + dr);
                     else {
                         callMetaBinary(l, r, "add");
                     }
@@ -84,28 +84,28 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl + dr);
+                        pushNoCheck(dl + dr);
                     else callMetaBinary(l, r, "sub");
                 }
                 case MUL -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl * dr);
+                        pushNoCheck(dl * dr);
                     else callMetaBinary(l, r, "mul");
                 }
                 case DIV -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl / dr);
+                        pushNoCheck(dl / dr);
                     else callMetaBinary(l, r, "div");
                 }
                 case MOD -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl + dr);
+                        pushNoCheck(dl + dr);
                     else callMetaBinary(l, r, "mod");
                 }
                 case EQ -> push(Objects.equals(pop(), pop()));
@@ -114,43 +114,38 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl > dr);
+                        pushNoCheck(dl > dr);
                     else callMetaBinary(l, r, "lt");
                 }
                 case GT -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl > dr);
+                        pushNoCheck(dl > dr);
                     else callMetaBinary(l, r, "gt");
                 }
                 case LTE -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl <= dr);
+                        pushNoCheck(dl <= dr);
                     else callMetaBinary(l, r, "lte");
                 }
                 case GTE -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        push(dl >= dr);
+                        pushNoCheck(dl >= dr);
                     else callMetaBinary(l, r, "gte");
                 }
 
                 case NEGATE -> {
                     Object o = pop();
                     if (o instanceof Double dl)
-                        push(-dl);
+                        pushNoCheck(-dl);
                     else callMetaUnary(o, "neg");
                 }
-                case NOT -> {
-                    Object o = pop();
-                    if (o instanceof Boolean b)
-                        push(!b);
-                    else callMetaUnary(o, "not");
-                }
+                case NOT -> pushNoCheck(isFalsy(pop()));
 
                 case PRINT -> System.out.println(pop());
                 case RETURN -> {
@@ -264,8 +259,8 @@ public class Interpreter {
                             try {
                                 Object result = field.apply(instance);
                                 if (result instanceof Number n)
-                                    push(n.doubleValue());
-                                else push(result);
+                                    pushNoCheck(n.doubleValue());
+                                else pushNoCheck(result);
                             } catch (Exception e) {
                                 runtimeException(e.toString());
                             }
@@ -315,7 +310,7 @@ public class Interpreter {
                             } catch (Exception e) {
                                 runtimeException(e.toString());
                             }
-                            push(value);
+                            pushNoCheck(value);
                             break;
                         }
                     }
@@ -355,7 +350,7 @@ public class Interpreter {
     }
 
     private void callMetaBinary(Object l, Object r, String name) {
-
+        //This function always runs after popping twice, so we have at least 2 spaces on the call stack left
 
         PetPetClass leftClass = getPetPetClass(l);
         PetPetClass rightClass = getPetPetClass(r);
@@ -364,29 +359,29 @@ public class Interpreter {
         String underscoredR = underscored + "R";
         PetPetCallable func = leftClass.methods.get(underscored + "_" + rightClass.name);
         if (func != null) {
-            push(l);
-            push(r);
+            pushNoCheck(l);
+            pushNoCheck(r);
             makeCall(func, 2, false, true);
             return;
         }
         func = leftClass.methods.get(underscored);
         if (func != null) {
-            push(l);
-            push(r);
+            pushNoCheck(l);
+            pushNoCheck(r);
             makeCall(func, 2, false, true);
             return;
         }
         func = rightClass.methods.get(underscoredR + "_" + leftClass.name);
         if (func != null) {
-            push(r);
-            push(l);
+            pushNoCheck(r);
+            pushNoCheck(l);
             makeCall(func, 2, false, true);
             return;
         }
         func = rightClass.methods.get(underscoredR);
         if (func != null) {
-            push(r);
-            push(l);
+            pushNoCheck(r);
+            pushNoCheck(l);
             makeCall(func, 2, false, true);
             return;
         }
@@ -394,10 +389,11 @@ public class Interpreter {
     }
 
     private void callMetaUnary(Object o, String name) {
+        //Called after popping 1 arg, so we have 1 arg of space on the stack, can pushNoCheck
         PetPetClass objClass = getPetPetClass(o);
         PetPetCallable func = objClass.methods.get("__" + name);
         if (func != null) {
-            push(o);
+            pushNoCheck(o);
             makeCall(func, 1, false, true);
             return;
         }
@@ -465,6 +461,11 @@ public class Interpreter {
         return !isFalsy(o);
     }
 
+    /**
+     * Usable when we just popped from the stack, so we know
+     * there must be space already allocated, so no need to
+     * check for fullness
+     */
     private void pushNoCheck(Object o) {
         stack[stackTop++] = o;
     }
