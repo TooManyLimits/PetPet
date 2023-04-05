@@ -84,7 +84,7 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        pushNoCheck(dl + dr);
+                        pushNoCheck(dl - dr);
                     else callMetaBinary(l, r, "sub");
                 }
                 case MUL -> {
@@ -105,7 +105,7 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        pushNoCheck(dl + dr);
+                        pushNoCheck(dl % dr);
                     else callMetaBinary(l, r, "mod");
                 }
                 case EQ -> push(Objects.equals(pop(), pop()));
@@ -114,7 +114,7 @@ public class Interpreter {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
-                        pushNoCheck(dl > dr);
+                        pushNoCheck(dl < dr);
                     else callMetaBinary(l, r, "lt");
                 }
                 case GT -> {
