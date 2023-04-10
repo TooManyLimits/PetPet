@@ -11,7 +11,7 @@ public class Test {
 
         String script =
                 """
-                global funy = fun(
+                global funy = fn(
                 
                     x
                     
@@ -28,6 +28,8 @@ public class Test {
                     =
                      
                     3
+                    
+                    print(x)
                 }
                 """;
 

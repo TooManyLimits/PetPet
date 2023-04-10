@@ -133,7 +133,7 @@ public class Lexer {
         THIS("this"),
         GLOBAL("global"),
 
-        FUN("fun"),
+        FUNCTION("fn"),
 
         NUMBER_LITERAL(), //double
         BOOLEAN_LITERAL(),

@@ -213,7 +213,7 @@ public class Parser {
             case NAME -> new Expression.Name(peek().line(), consume().getString());
             case THIS -> new Expression.This(consume().line());
             case NUMBER_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
-            case FUN -> parseFunction();
+            case FUNCTION -> parseFunction();
             case LEFT_PAREN -> { //Parenthesis for grouping
                 int leftLine = consume().line(); //Consume left paren
                 Expression inner = parseExpression(); //Read expression
@@ -232,7 +232,7 @@ public class Parser {
     }
 
     private Expression parseFunction() throws ParserException {
-        if (!check(FUN))
+        if (!check(FUNCTION))
             throw new ParserException("Expected function? Bug with the parser, contact devs");
         int funLine = consume().line();
         List<String> params = parseParams(funLine);
