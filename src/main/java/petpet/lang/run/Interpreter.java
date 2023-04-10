@@ -248,7 +248,7 @@ public class Interpreter {
                     Object indexer = peek();
                     Object instance = peek(1);
                     if (instance == null)
-                        runtimeException("Attempt to get from null value");
+                        runtimeException("Attempt to get from null value with key: " + getString(indexer));
 
                     PetPetClass langClass = classMap.get(instance.getClass());
 
@@ -262,7 +262,7 @@ public class Interpreter {
                                     pushNoCheck(n.doubleValue());
                                 else pushNoCheck(result);
                             } catch (Exception e) {
-                                runtimeException(e.toString());
+                                runtimeException("Should never happen unless poorly made environment function: " + e);
                             }
                             break;
                         }
@@ -290,14 +290,14 @@ public class Interpreter {
                         makeCall(getMethod, 2, false, true);
                         break;
                     }
-                    runtimeException("Tried to get from " + instance + " with illegal key " + indexer);
+                    runtimeException("Tried to get from (" + getString(instance) + ") with illegal key (" + getString(indexer) + ")");
                 }
                 case SET -> {
                     Object value = peek();
                     Object indexer = peek(1);
                     Object instance = peek(2);
                     if (instance == null)
-                        runtimeException("Attempt to set key " + PetPetString.valueOf(indexer) + " on null value");
+                        runtimeException("Attempt to set on null value with key: " + getString(indexer));
 
                     PetPetClass langClass = classMap.get(instance.getClass());
 
@@ -308,7 +308,7 @@ public class Interpreter {
                             try {
                                 field.accept(instance, value);
                             } catch (Exception e) {
-                                runtimeException(e.toString());
+                                runtimeException(e.getMessage());
                             }
                             pushNoCheck(value);
                             break;
@@ -319,7 +319,6 @@ public class Interpreter {
                     if (indexer == null) {
                         indexerTypeName = "null";
                     } else {
-
                         indexerTypeName = classMap.get(indexer.getClass()).name;
                     }
 
@@ -440,7 +439,7 @@ public class Interpreter {
             return PetPetString.valueOf(o);
         PetPetCallable method = classMap.get(o.getClass()).methods.get("__tostring");
         if (method != null)
-            return (String) method.call();
+            return (String) method.call(o);
         return o.toString();
     }
 
@@ -537,18 +536,23 @@ public class Interpreter {
             pushCallStack(closure, 0, stackTop-argCount-1, calledFromJava);
             if (callStackTop > maxStackFrames)
                 runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
-            if (argCount != closure.function.paramCount)
-                runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount));
+            if (argCount != closure.function.paramCount) {
+                int diff = isInvocation ? 1 : 0;
+                runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount - diff, argCount - diff));
+            }
+
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
-            if (jFunction.paramCount != argCount)
-                runtimeException(String.format("Expected %d args, got %d", jFunction.paramCount, argCount));
+            if (jFunction.paramCount != argCount) {
+                int diff = isInvocation ? 1 : 0;
+                runtimeException(String.format("Expected %d args, got %d", jFunction.paramCount - diff, argCount - diff));
+            }
             if (jFunction.costPenalizer != null)
                 cost += jFunction.costPenalizer.applyAsInt(this);
             try {
                 Object result;
                 if (jFunction.needsNumberConversion()) {
-                    result = switch(argCount) {
+                    result = switch (argCount) {
                         case 0 -> jFunction.invoke();
                         case 1 -> jFunction.invoke(jFunction.castNumber(peek(), 0));
                         case 2 -> jFunction.invoke(jFunction.castNumber(peek(1), 0), jFunction.castNumber(peek(), 1));
@@ -568,7 +572,7 @@ public class Interpreter {
                         default -> throw new IllegalStateException("function has too many args??");
                     };
                 } else {
-                    result = switch(argCount) {
+                    result = switch (argCount) {
                         case 0 -> jFunction.invoke();
                         case 1 -> jFunction.invoke(peek());
                         case 2 -> jFunction.invoke(peek(1), peek());
@@ -596,6 +600,9 @@ public class Interpreter {
                     pop();
                 cost += argCount;
                 push(result);
+            } catch (PetPetException e) {
+                e.printStackTrace();
+                runtimeException(e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
                 runtimeException("Java exception occurred: " + e.getMessage());
@@ -669,11 +676,18 @@ public class Interpreter {
 //            this.wasJavaCall = wasJavaCall;
 //        }
 
+//        public int lineNumber() {
+//            int[] lines = closure.function.lineNumberTable;
+//            int index = 0;
+//            while (++index < lines.length && lines[index] <= ip);
+//            return index + 0;//closure.function.lineNumberOffset;
+//        }
+
         public int lineNumber() {
             int[] lines = closure.function.lineNumberTable;
             int index = 0;
-            while (++index < lines.length && lines[index] <= ip);
-            return index + 0;//closure.function.lineNumberOffset;
+            while (index < lines.length && lines[index] < ip) index++;
+            return index;
         }
     }
 

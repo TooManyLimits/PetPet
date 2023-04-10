@@ -17,8 +17,13 @@ public class PetPetClosure implements PetPetCallable {
     }
 
     public Object call(Object... args) {
-        //calling a function this way might impose a great penalty unfortunately
-        interpreter.cost += args.length + 2;
+        //Convert numbers to double
+        for (int i = 0; i < args.length; i++)
+            if (args[i] instanceof Number n)
+                args[i] = n.doubleValue();
+        //calling a function this way might impose a penalty unfortunately
+        //i love randomly deciding on penalties without any testing or reason! yayy
+        interpreter.cost += args.length / 4 + 1;
         return interpreter.run(this, args);
     }
 

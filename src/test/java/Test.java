@@ -11,8 +11,24 @@ public class Test {
 
         String script =
                 """
-                global funy = 
-                    fun(a) print(a)
+                global funy = fun(
+                
+                    x
+                    
+                    )
+                    
+                    {
+                
+                    x
+                        
+                    .
+                    
+                    y
+                     
+                    =
+                     
+                    3
+                }
                 """;
 
         PetPetInstance instance = new PetPetInstance();
@@ -23,7 +39,7 @@ public class Test {
 
         instance.runScript("script", script);
 
-        ((PetPetClosure) instance.getGlobal("funy")).call(5);
+        ((PetPetClosure) instance.getGlobal("funy")).call(new Vec3(1,2,3));
 
     }
 

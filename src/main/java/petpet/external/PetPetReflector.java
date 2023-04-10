@@ -2,6 +2,7 @@ package petpet.external;
 
 import petpet.lang.run.JavaFunction;
 import petpet.lang.run.PetPetClass;
+import petpet.lang.run.PetPetException;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
@@ -102,7 +103,9 @@ public class PetPetReflector {
                     fieldName,
                     b.getClass().getSimpleName()
             );
-            throw new RuntimeException(message, e);
+            throw new PetPetException(message, e);
+        } catch (Exception e) {
+            throw new PetPetException(e);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
