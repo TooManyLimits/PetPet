@@ -40,6 +40,8 @@ public class MathLibrary {
         mathTable.put("atan", ATAN);
         mathTable.put("atan2", ATAN2);
         mathTable.put("tanh", TANH);
+        mathTable.put("pi", Math.PI);
+        mathTable.put("e", Math.E);
         i.globals.put("math", mathTable);
     }
 

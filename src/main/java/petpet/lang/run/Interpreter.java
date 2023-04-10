@@ -250,7 +250,7 @@ public class Interpreter {
                     if (instance == null)
                         runtimeException("Attempt to get from null value with key: " + getString(indexer));
 
-                    PetPetClass langClass = classMap.get(instance.getClass());
+                    PetPetClass langClass = getPetPetClass(instance);
 
                     if (indexer instanceof String name) {
                         Function field = langClass.fieldGetters.get(name);
@@ -268,15 +268,7 @@ public class Interpreter {
                         }
                         cost++;
                     }
-                    String indexerTypeName;
-                    if (indexer == null) {
-                        indexerTypeName = "null";
-                    } else {
-                        PetPetClass indexerClass = classMap.get(indexer.getClass());
-                        if (indexerClass == null)
-                            runtimeException("Environment error: java object of type " + indexer.getClass() + " is in the environment, but it has no PetPetClass associated.");
-                        indexerTypeName = indexerClass.name;
-                    }
+                    String indexerTypeName = getPetPetClass(indexer).name;
 
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
@@ -299,7 +291,7 @@ public class Interpreter {
                     if (instance == null)
                         runtimeException("Attempt to set on null value with key: " + getString(indexer));
 
-                    PetPetClass langClass = classMap.get(instance.getClass());
+                    PetPetClass langClass = getPetPetClass(instance);
 
                     if (indexer instanceof String name) {
                         BiConsumer field = langClass.fieldSetters.get(name);
@@ -315,12 +307,7 @@ public class Interpreter {
                         }
                     }
 
-                    String indexerTypeName;
-                    if (indexer == null) {
-                        indexerTypeName = "null";
-                    } else {
-                        indexerTypeName = classMap.get(indexer.getClass()).name;
-                    }
+                    String indexerTypeName = getPetPetClass(indexer).name;
 
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
@@ -411,9 +398,7 @@ public class Interpreter {
         System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount+1);
         if (instance == null)
             runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
-        PetPetClass langClass = classMap.get(instance.getClass());
-        if (langClass == null)
-            runtimeException("Invalid environment - object " + instance + "has no class. Contact developers of the application! (not petpet's fault... probably)");
+        PetPetClass langClass = getPetPetClass(instance);
         if (indexer instanceof String name) {
             //First try with _argCount
             Object method = langClass.methods.get(name + "_" + argCount);
@@ -437,7 +422,7 @@ public class Interpreter {
     public String getString(Object o) {
         if (o instanceof String || o instanceof Double || o instanceof Boolean || o == null)
             return PetPetString.valueOf(o);
-        PetPetCallable method = classMap.get(o.getClass()).methods.get("__tostring");
+        PetPetCallable method = getPetPetClass(o).methods.get("__tostring");
         if (method != null)
             return (String) method.call(o);
         return o.toString();
@@ -446,10 +431,18 @@ public class Interpreter {
     public PetPetClass getPetPetClass(Object o) {
         if (o == null)
             return PetPetNull.PET_PET_CLASS;
-        PetPetClass theClass = classMap.get(o.getClass());
-        if (theClass == null)
+        return classMap.computeIfAbsent(o.getClass(), c -> {
+            Class<?> cur = c.getSuperclass();
+            while (cur != null) {
+                if (classMap.containsKey(cur)) {
+                    classMap.put(c, classMap.get(cur));
+                    break;
+                }
+                cur = cur.getSuperclass();
+            }
             runtimeException("Environment error: java object of type " + o.getClass() + " is in the environment, but it has no PetPetClass associated.");
-        return theClass;
+            return null; //never happens, runtimeException() errors, but need anyway
+        });
     }
 
     public boolean isFalsy(Object o) {
