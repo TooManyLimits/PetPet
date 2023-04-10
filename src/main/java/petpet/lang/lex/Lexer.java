@@ -104,7 +104,7 @@ public class Lexer {
         DOT("."),
         ASSIGN("="),
 
-        NOT("!"),
+        NOT("!", "not"),
         EQUALS("=="),
         NOT_EQUALS("!="),
         GREATER_EQUAL(">="),
@@ -138,7 +138,6 @@ public class Lexer {
         NUMBER_LITERAL(), //double
         BOOLEAN_LITERAL(),
         NAME(),
-        CALL(),
         STRING_LITERAL(),
 
         ;public final String[] s;

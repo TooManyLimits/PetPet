@@ -11,26 +11,13 @@ public class Test {
 
         String script =
                 """
-                global funy = fn(
-                
-                    x
-                    
-                    )
-                    
-                    {
-                
-                    x
-                        
-                    .
-                    
-                    y
-                     
-                    =
-                     
-                    3
-                    
-                    print(x)
-                }
+                a = fn(x) print(x)
+                b = fn(x) a(x)
+                c = fn(x) b(x)
+                d = fn(x) c(x)
+                e = fn(x) d(x)
+                f = fn(x) e(x)
+                f(0)
                 """;
 
         PetPetInstance instance = new PetPetInstance();
@@ -40,8 +27,6 @@ public class Test {
         instance.setGlobal("vec3", new JavaFunction(Vec3.class, "create", false));
 
         instance.runScript("script", script);
-
-        ((PetPetClosure) instance.getGlobal("funy")).call(new Vec3(1,2,3));
 
     }
 
