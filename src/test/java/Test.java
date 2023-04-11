@@ -11,44 +11,12 @@ public class Test {
 
         String script =
                 """
-                //A solver for https://www.nytimes.com/games/digits
-                nums = ![5,6,9,11,20,25]
-                target = 259
-
-                contains = fn(list, value)
-                    list.copy()
-                    .map(fn(x) x == value)
-                    .foldR(fn(a, b) a or b, false)
-
-                result = null
-
-                try = fn(current_set, steps) {
-                    if contains(current_set, target) steps
-                    else {
-                        i = 0
-                        while result == null and i < current_set.len() {
-                            j = 0
-                            while result == null and j < current_set.len() {
-                                if i != j {
-                                    a = current_set[i]
-                                    b = current_set[j]
-                                    new_list = current_set.copy().del(i).del(if i < j j-1 else j)
-                                    if x = this(new_list.copy().push(a + b), steps.copy().push("add " + a + " " + b)) result = x
-                                    else if a - b >= 0 && (x = this(new_list.copy().push(a - b), steps.copy().push("sub " + a + " " + b))) result = x
-                                    else if x = this(new_list.copy().push(a * b), steps.copy().push("mul " + a + " " + b)) result = x
-                                    else if a % b == 0 and (x = this(new_list.copy().push(a / b), steps.copy().push("div " + a + " " + b))) result = x
-                                }
-                                j = j + 1
-                            }
-                            i = i + 1
-                        }
-                        false
-                    }
+                y = fn(x) {
+                    if x > 3 return 4
+                    print(5)
                 }
-
-                try(nums, ![])
-
-                result.each(print)
+                print(y(2))
+                print(y(7))
                 """;
 
         PetPetInstance instance = new PetPetInstance();

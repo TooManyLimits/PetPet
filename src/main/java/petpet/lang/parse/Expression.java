@@ -51,6 +51,21 @@ public abstract class Expression {
         }
     }
 
+    //No idea if this will work...
+    public static class Return extends Expression {
+        public final Expression retVal;
+        protected Return(int startLine, Expression retVal) {
+            super(startLine);
+            this.retVal = retVal;
+        }
+
+        @Override
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            retVal.compile(compiler);
+            compiler.bytecode(Bytecode.RETURN);
+        }
+    }
     public static class IfExpression extends Expression {
         public final Expression condition, ifTrue, ifFalse;
         public IfExpression(int startLine, Expression condition, Expression ifTrue, Expression ifFalse) {
@@ -154,6 +169,18 @@ public abstract class Expression {
             } else {
                 compiler.bytecodeWithShortArg(Bytecode.BIG_CONSTANT, (short) loc);
             }
+        }
+    }
+
+    public static class Null extends Expression {
+        protected Null(int startLine) {
+            super(startLine);
+        }
+
+        @Override
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            super.compile(compiler);
+            compiler.bytecode(Bytecode.PUSH_NULL);
         }
     }
 

@@ -227,6 +227,8 @@ public class Parser {
             case WHILE -> parseWhileExpression();
             case LIST_START -> parseListConstructor();
             case TABLE_START -> parseTableConstructor();
+            case NULL_LITERAL -> new Expression.Null(consume().line());
+            case RETURN -> parseReturn();
             default -> throw new ParserException(peek());
         };
     }
@@ -365,6 +367,12 @@ public class Parser {
             throw new ParserException("Expected ] to end table constructor on line " + startLine);
         consume(); //consume right square
         return new Expression.TableConstructor(startLine, keysValues);
+    }
+
+    private Expression parseReturn() throws ParserException {
+        int startLine = consume().line();
+        Expression retVal = parseExpression();
+        return new Expression.Return(startLine, retVal);
     }
 
     public static class ParserException extends Exception {

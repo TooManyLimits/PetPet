@@ -131,6 +131,7 @@ public class Lexer {
         ELSE("else"),
         WHILE("while"),
         THIS("this"),
+        RETURN("return"),
         GLOBAL("global"),
 
         FUNCTION("fn"),
@@ -139,6 +140,7 @@ public class Lexer {
         BOOLEAN_LITERAL(),
         NAME(),
         STRING_LITERAL(),
+        NULL_LITERAL("null"),
 
         ;public final String[] s;
         TokenType(String... s) {
