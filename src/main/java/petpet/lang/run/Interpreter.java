@@ -49,7 +49,7 @@ public class Interpreter {
     }
 
     //Unsigned Byte: curBytes[frame.ip++] & 0xff
-    //Signed Short: (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff))
+    //Signed Short: (short) (((curBytes[frame.ip++] & 0xff) << 8) + (curBytes[frame.ip++] & 0xff))
     //Unsigned short: (((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff
 
     private void run() {
@@ -177,9 +177,9 @@ public class Interpreter {
                 case POP_OFFSET_1 -> stack[stackTop-2] = stack[--stackTop];
 
                 //Do not make the jumps unsigned
-                case JUMP -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); frame.ip += offset; }
-                case JUMP_IF_FALSE -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); if (isFalsy(peek())) frame.ip += offset;}
-                case JUMP_IF_TRUE -> {int offset = (short) (((curBytes[frame.ip++] << 8) & 0xff) | (curBytes[frame.ip++] & 0xff)); if (isTruthy(peek())) frame.ip += offset;}
+                case JUMP -> {int offset = (short) (((curBytes[frame.ip++] & 0xff) << 8) + (curBytes[frame.ip++] & 0xff)); frame.ip += offset; }
+                case JUMP_IF_FALSE -> {int offset = (short) (((curBytes[frame.ip++] & 0xff) << 8) + (curBytes[frame.ip++] & 0xff)); if (isFalsy(peek())) frame.ip += offset;}
+                case JUMP_IF_TRUE -> {int offset = (short) (((curBytes[frame.ip++] & 0xff) << 8) + (curBytes[frame.ip++] & 0xff)); if (isTruthy(peek())) frame.ip += offset;}
 
                 case NEW_LIST -> push(new PetPetList());
                 case LIST_ADD -> ((PetPetList) peek(1)).add(pop());
@@ -395,7 +395,7 @@ public class Interpreter {
      * instance
      */
     private void doInvoke(int argCount, Object instance, Object indexer) {
-        System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount+1);
+        System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount);
         if (instance == null)
             runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
         PetPetClass langClass = getPetPetClass(instance);
@@ -460,6 +460,7 @@ public class Interpreter {
      */
     private void pushNoCheck(Object o) {
         stack[stackTop++] = o;
+//        printStack();
     }
 
     private void push(Object o) {
@@ -469,6 +470,7 @@ public class Interpreter {
             stack = newStack;
         }
         stack[stackTop++] = o;
+//        printStack();
     }
 
     private void swapTop() {
@@ -533,7 +535,6 @@ public class Interpreter {
                 int diff = isInvocation ? 1 : 0;
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount - diff, argCount - diff));
             }
-
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
             if (jFunction.paramCount != argCount) {
@@ -651,6 +652,16 @@ public class Interpreter {
         message = messageBuilder.toString();
 
         throw new PetPetException(message);
+    }
+
+    private void printStack() {
+        System.out.print("[");
+        for (int i = 0; i < stackTop; i++) {
+            System.out.print(stack[i]);
+            if (i != stackTop-1)
+                System.out.print(", ");
+        }
+        System.out.println("]");
     }
 
     private static class CallFrame {

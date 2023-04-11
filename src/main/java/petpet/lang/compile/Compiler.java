@@ -126,7 +126,7 @@ public class Compiler {
         //First, check if *all* upvalue indices are below 250
         boolean allBelow250 = true;
         for (CompileTimeUpvalue upvalue : finishedCompiler.upvalues)
-            if (upvalue.index < 250) {
+            if (upvalue.index >= 250) {
                 allBelow250 = false;
                 break;
             }

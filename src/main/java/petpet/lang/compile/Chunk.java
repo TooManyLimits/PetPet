@@ -21,7 +21,8 @@ public class Chunk {
         String numFormatString = " ".repeat(indent) + "%0" + digits + "d | ";
         PetPetFunction constFunc = null;
         for (int i = 0; i < bytes.length; i++) {
-            result.append(String.format(numFormatString, i));
+            String formattedStarter = String.format(numFormatString, i);
+            result.append(formattedStarter);
             result.append(Bytecode.NAMES[bytes[i]]);
             boolean dontNewLine = false;
             byte code = bytes[i];
@@ -51,20 +52,23 @@ public class Chunk {
                     int idx = readUnsignedShort(bytes, i); i += 2;
                     result.append("(").append(idx).append(")");
                 }
-                case JUMP, JUMP_IF_FALSE, JUMP_IF_TRUE -> result.append(" by ").append(extendSignwise(bytes[++i] << 8 | bytes[++i], 3));
+                case JUMP, JUMP_IF_FALSE, JUMP_IF_TRUE -> {
+                    result.append(" by ").append(extendSignwise(readSignedShort(bytes, i), 3));
+                    i += 2;
+                }
                 case CALL, INVOKE -> result.append(" with ").append(bytes[++i] & 0xff).append(" args");
                 case CLOSURE -> {
                     if (constFunc == null) throw new RuntimeException("Failed to print closure bytecode");
                     result.append(" over: \n");
                     for (int j = 0; j < constFunc.numUpvalues; j++)
-                        result.append((bytes[++i] & 0xff) == 0 ? "| Upvalue " : "| Local ").append(bytes[++i] & 0xff).append("\n");
+                        result.append(" ".repeat(formattedStarter.length()) + ((bytes[++i] & 0xff) == 0 ? "| Upvalue " : "| Local ")).append(bytes[++i] & 0xff).append("\n");
                     dontNewLine = true;
                 }
                 case BIG_CLOSURE -> {
                     if (constFunc == null) throw new RuntimeException("Failed to print big closure bytecode");
                     result.append(" over: \n");
                     for (int j = 0; j < constFunc.numUpvalues; j++)
-                        result.append((bytes[++i]) == 0 ? "| BigUpvalue " : "| BigLocal ").append(((bytes[++i] << 8) | (bytes[++i])) & 0xffff).append("\n");
+                        result.append(" ".repeat(formattedStarter.length()-2) + ((bytes[++i]) == 0 ? "| BigUpvalue " : "| BigLocal ")).append(((bytes[++i] << 8) | (bytes[++i])) & 0xffff).append("\n");
                     dontNewLine = true;
                 }
                 default -> {}
@@ -77,6 +81,10 @@ public class Chunk {
 
     private static int readUnsignedShort(byte[] bytes, int i) {
         return (((bytes[++i] << 8) & 0xffff) | (bytes[++i] & 0xff)) & 0xffff;
+    }
+
+    private static int readSignedShort(byte[] bytes, int i) {
+        return (short) (((bytes[++i] & 0xff) << 8) + (bytes[++i] & 0xff));
     }
 
     private static int extendSignwise(int v, int o) {

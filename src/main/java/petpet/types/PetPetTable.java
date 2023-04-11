@@ -1,16 +1,17 @@
 package petpet.types;
 
-import petpet.lang.run.Interpreter;
-import petpet.lang.run.JavaFunction;
-import petpet.lang.run.PetPetCallable;
-import petpet.lang.run.PetPetClass;
+import petpet.external.PetPetReflector;
+import petpet.external.PetPetWhitelist;
+import petpet.lang.run.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 
 /**
  * Table type
  */
+@PetPetWhitelist
 public class PetPetTable<K, V> extends HashMap<K, V> {
 
     //Equals, hashcode, toString() overwritten
@@ -31,41 +32,57 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         return "<table(entries=" + size() + ")>";
     }
 
-    public static void registerToInterpreter(Interpreter i) {
-        i.classMap.put(JAVA_CLASS, PETPET_CLASS);
-    }
-
-    private static final Class<?> JAVA_CLASS = PetPetTable.class;
-    private static final PetPetClass PETPET_CLASS = new PetPetClass("table");
+    public static final PetPetClass TABLE_CLASS;
 
     static {
-        PETPET_CLASS.addMethod("__get", new JavaFunction(PetPetTable.class, "get", true));
-        PETPET_CLASS.addMethod("__set", new JavaFunction(PetPetTable.class, "put", true));
+        TABLE_CLASS = PetPetReflector.reflect(PetPetTable.class, "table");
 
-        PETPET_CLASS.addMethod("remove", new JavaFunction(PetPetTable.class, "remove", true, Object.class));
-        PETPET_CLASS.addMethod("clear", new JavaFunction(PetPetTable.class, "clear", true));
+        TABLE_CLASS.addMethod("__get", new JavaFunction(PetPetTable.class, "get", true));
+        TABLE_CLASS.addMethod("__set", new JavaFunction(PetPetTable.class, "put", true));
 
-        PETPET_CLASS.addMethod("each", new JavaFunction(PetPetTable.class, "each", false));
-        PETPET_CLASS.addMethod("eachKey", new JavaFunction(PetPetTable.class, "eachKey", false));
-        PETPET_CLASS.addMethod("eachValue", new JavaFunction(PetPetTable.class, "eachValue", false));
+        TABLE_CLASS.addMethod("del", new JavaFunction(PetPetTable.class, "remove", true, Object.class));
+        TABLE_CLASS.addMethod("clear", new JavaFunction(PetPetTable.class, "clear", true));
+
+        //penalties
+        ((JavaFunction) TABLE_CLASS.methods.get("each")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.methods.get("eachK")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.methods.get("eachV")).costPenalizer = PetPetTable.costPenalty(1);
     }
 
-    public static <K, V> PetPetTable<K, V> each(PetPetTable<K, V> map, PetPetCallable func) {
-        for (Map.Entry<K, V> entry : map.entrySet())
+    //Penalty function, charging the caller (a small price) for each
+    //function call they make through the functional list methods
+    private static ToIntFunction<Interpreter> costPenalty(int args) {
+        return i -> ((PetPetTable) i.peek(args)).size() * 3;
+    }
+
+    private static void checkFunc(PetPetCallable func, int expectedArgs, String name) throws PetPetException {
+        if (func.paramCount() != expectedArgs)
+            throw new PetPetException("table." + name + "() expects " +
+                    expectedArgs + "-arg function, got " + func.paramCount() + "-arg");
+    }
+
+    @PetPetWhitelist
+    public PetPetTable<K, V> each(PetPetCallable func) {
+        checkFunc(func, 2, "each");
+        for (Map.Entry<K, V> entry : entrySet())
             func.call(entry.getKey(), entry.getValue());
-        return map;
+        return this;
     }
 
-    public static <K, V> PetPetTable<K, V> eachKey(PetPetTable<K, V> map, PetPetCallable func) {
-        for (Object key : map.keySet())
+    @PetPetWhitelist
+    public PetPetTable<K, V> eachK(PetPetCallable func) {
+        checkFunc(func, 1, "eachK");
+        for (Object key : keySet())
             func.call(key);
-        return map;
+        return this;
     }
 
-    public static <K, V> PetPetTable<K, V> eachValue(PetPetTable<K, V> map, PetPetCallable func) {
-        for (Object value : map.values())
+    @PetPetWhitelist
+    public PetPetTable<K, V> eachV(PetPetCallable func) {
+        checkFunc(func, 1, "eachV");
+        for (Object value : values())
             func.call(value);
-        return map;
+        return this;
     }
 
 }

@@ -7,6 +7,7 @@ import petpet.lang.run.PetPetException;
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -34,9 +35,10 @@ public class PetPetReflector {
         }
         for (Method m : clazz.getMethods()) {
             if (m.isAnnotationPresent(PetPetWhitelist.class)) {
+                boolean isMethod = !Modifier.isStatic(m.getModifiers()); //Static whitelisted methods are treated as non-methods
                 if (result.methods.containsKey(m.getName()))
                     throw new RuntimeException("Failed to reflect class " + clazz.getName() + ": unfortunately, method overloads are not implemented yet :(");
-                result.methods.put(m.getName(), new JavaFunction(m, true));
+                result.methods.put(m.getName(), new JavaFunction(m, isMethod));
             }
         }
         return result;

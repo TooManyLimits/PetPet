@@ -74,9 +74,10 @@ public class PetPetInstance {
         interpreter.classMap.put(JavaFunction.class, new PetPetClass("jfunc"));
         interpreter.classMap.put(PetPetClosure.class, new PetPetClass("func"));
 
+        interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS);
+        interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS);
+
         PetPetString.registerToInterpreter(this.interpreter);
-        PetPetList.registerToInterpreter(this.interpreter);
-        PetPetTable.registerToInterpreter(this.interpreter);
 
         //Global functions
         for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())

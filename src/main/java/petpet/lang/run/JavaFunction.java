@@ -24,7 +24,9 @@ public class JavaFunction implements PetPetCallable {
     //If non-null, is invoked with the interpreter as an argument when this function is called.
     //Currently, must read directly from the stack to find relevant args.
     //Return value is used to increment the cost.
-    public final ToIntFunction<Interpreter> costPenalizer;
+    //This is non-final because a user may decide to add java functions reflectively, but then
+    //add a cost penalizer on top of them later.
+    public ToIntFunction<Interpreter> costPenalizer;
 
     public JavaFunction(boolean isVoid, int paramCount, ToIntFunction<Interpreter> costPenalizer) {
         this.isVoid = isVoid;
@@ -171,7 +173,7 @@ public class JavaFunction implements PetPetCallable {
             List<Method> methods = Arrays.stream(clazz.getMethods())
                     .filter(m -> m.getName().equals(name)).toList();
             if (methods.size() != 1)
-                throw new RuntimeException("Ambiguous or incorrect JavaFunction constructor for method " + name);
+                throw new RuntimeException("Ambiguous or incorrect JavaFunction constructor for method " + name + " in class " + clazz);
             return methods.get(0);
         }
         try {

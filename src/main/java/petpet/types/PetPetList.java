@@ -1,15 +1,17 @@
 package petpet.types;
 
-import petpet.lang.run.Interpreter;
-import petpet.lang.run.JavaFunction;
-import petpet.lang.run.PetPetCallable;
-import petpet.lang.run.PetPetClass;
+import petpet.external.PetPetReflector;
+import petpet.external.PetPetWhitelist;
+import petpet.lang.run.*;
 
 import java.util.ArrayList;
+import java.util.function.IntFunction;
+import java.util.function.ToIntFunction;
 
 /**
  * List type
  */
+@PetPetWhitelist
 public class PetPetList<T> extends ArrayList<T> {
 
     //Equals, hashcode, toString() overwritten
@@ -33,59 +35,111 @@ public class PetPetList<T> extends ArrayList<T> {
         return "<List(size=" + size() + ")>";
     }
 
-    public static void registerToInterpreter(Interpreter i) {
-        i.classMap.put(PetPetList.class, PETPET_CLASS);
-    }
-
-    private static final PetPetClass PETPET_CLASS;
+    public static final PetPetClass LIST_CLASS;
 
     static {
-        PETPET_CLASS = new PetPetClass("list");
+        //All our whitelisted methods
+        LIST_CLASS = PetPetReflector.reflect(PetPetList.class, "list");
 
         //get and set by indices
-        PETPET_CLASS.addMethod("__get_num", new JavaFunction(PetPetList.class, "get", true));
-        PETPET_CLASS.addMethod("__set_num", new JavaFunction(PetPetList.class, "set", true));
+        LIST_CLASS.addMethod("__get_num", new JavaFunction(PetPetList.class, "get", true));
+        LIST_CLASS.addMethod("__set_num", new JavaFunction(PetPetList.class, "set", true));
 
         //other arraylist methods
-        PETPET_CLASS.addMethod("push", new JavaFunction(PetPetList.class, "add", true, Object.class));
-        PETPET_CLASS.addMethod("insert", new JavaFunction(PetPetList.class, "add", true, int.class, Object.class));
-        PETPET_CLASS.addMethod("len", new JavaFunction(PetPetList.class, "size", true));
-        PETPET_CLASS.addMethod("empty", new JavaFunction(PetPetList.class, "isEmpty", true));
-        PETPET_CLASS.addMethod("remove", new JavaFunction(PetPetList.class, "remove", true, int.class));
-        PETPET_CLASS.addMethod("clear", new JavaFunction(PetPetList.class, "clear", true));
-        PETPET_CLASS.addMethod("copy", new JavaFunction(PetPetList.class, "clone", true));
+        LIST_CLASS.addMethod("len", new JavaFunction(PetPetList.class, "size", true));
+        LIST_CLASS.addMethod("empty", new JavaFunction(PetPetList.class, "isEmpty", true));
+        LIST_CLASS.addMethod("clear", new JavaFunction(PetPetList.class, "clear", true));
+        LIST_CLASS.addMethod("copy", new JavaFunction(PetPetList.class, "clone", true));
 
-        //Our own methods
-        PETPET_CLASS.addMethod("take", new JavaFunction(PetPetList.class, "dequeue", false));
-        PETPET_CLASS.addMethod("pop", new JavaFunction(PetPetList.class, "pop", false));
-        PETPET_CLASS.addMethod("swap", new JavaFunction(PetPetList.class, "swap", false));
-        PETPET_CLASS.addMethod("map", new JavaFunction(PetPetList.class, "map", false));
-        PETPET_CLASS.addMethod("each", new JavaFunction(PetPetList.class, "each", false));
-        PETPET_CLASS.addMethod("eachIndexed", new JavaFunction(PetPetList.class, "eachIndexed", false));
+        //Add cost penalties
+        ((JavaFunction) LIST_CLASS.methods.get("map")).costPenalizer = PetPetList.costPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("each")).costPenalizer = PetPetList.costPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("eachI")).costPenalizer = PetPetList.costPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("foldR")).costPenalizer = PetPetList.costPenalty(2);
+        ((JavaFunction) LIST_CLASS.methods.get("foldL")).costPenalizer = PetPetList.costPenalty(2);
     }
 
-    public static Object pop(ArrayList list) { return list.remove(list.size()-1); }
-    public static Object dequeue(ArrayList list) { return list.remove(0); }
-    public static ArrayList swap(ArrayList list, int index1, int index2) {
-        Object temp = list.get(index1);
-        list.set(index1, list.get(index2));
-        list.set(index2, temp);
-        return list;
+    //Penalty function, charging the caller (a small price) for each
+    //function call they make through the functional list methods
+    private static ToIntFunction<Interpreter> costPenalty(int args) {
+        return i -> ((PetPetList) i.peek(args)).size() * 3;
     }
-    public static ArrayList map(ArrayList list, PetPetCallable func) {
-        for (int i = 0; i < list.size(); i++)
-            list.set(i, func.call(list.get(i)));
-        return list;
+
+    private static void checkFunc(PetPetCallable func, int expectedArgs, String name) throws PetPetException {
+        if (func.paramCount() != expectedArgs)
+            throw new PetPetException("list." + name + "() expects " +
+                    expectedArgs + "-arg function, got " + func.paramCount() + "-arg");
     }
-    public static ArrayList each(ArrayList list, PetPetCallable func) {
-        for (Object o : list)
+
+    @PetPetWhitelist
+    public T pop() {
+        return remove(size()-1);
+    }
+    @PetPetWhitelist
+    public T take() {
+        return remove(0);
+    }
+
+    @PetPetWhitelist
+    public PetPetList<T> swap(int index1, int index2) {
+        T temp = get(index1);
+        set(index1, get(index2));
+        set(index2, temp);
+        return this;
+    }
+    @PetPetWhitelist
+    public PetPetList<T> map(PetPetCallable func) {
+        checkFunc(func, 1, "map");
+        for (int i = 0; i < size(); i++)
+            set(i, (T) func.call(get(i)));
+        return this;
+    }
+    @PetPetWhitelist
+    public PetPetList<T> each(PetPetCallable func) {
+        checkFunc(func, 1, "each");
+        for (Object o : this)
             func.call(o);
-        return list;
+        return this;
     }
-    public static ArrayList eachIndexed(ArrayList list, PetPetCallable func) {
-        for (int i = 0; i < list.size(); i++)
-            func.call((double) i, list.get(i));
-        return list;
+    @PetPetWhitelist
+    public PetPetList<T> eachI(PetPetCallable func) {
+        checkFunc(func, 2, "eachI");
+        for (int i = 0; i < size(); i++)
+            func.call((double) i, get(i));
+        return this;
+    }
+    @PetPetWhitelist
+    public Object foldR(PetPetCallable func, Object accum) {
+        checkFunc(func, 2, "foldR");
+        Object res = accum;
+        for (int i = size()-1; i >= 0; i--) {
+            res = func.call(get(i), res);
+        }
+        return res;
+    }
+    @PetPetWhitelist
+    public Object foldL(Object accum, PetPetCallable func) {
+        checkFunc(func, 2, "foldL");
+        Object res = accum;
+        for (T t : this) res = func.call(res, t);
+        return res;
+    }
+
+    @PetPetWhitelist
+    public PetPetList<T> insert(int index, T value) {
+        add((index % size() + size()) % size(), value);
+        return this;
+    }
+    @PetPetWhitelist
+    public PetPetList<T> push(T value) {
+        super.add(value);
+        return this;
+    }
+
+    @PetPetWhitelist
+    public PetPetList<T> del(int index) {
+        super.remove(index);
+        return this;
     }
 
     /**
@@ -110,7 +164,7 @@ public class PetPetList<T> extends ArrayList<T> {
 
     @Override
     public Object clone() {
-        PetPetList newList = new PetPetList(this.size());
+        PetPetList<T> newList = new PetPetList<>(this.size());
         newList.addAll(this);
         return newList;
     }
