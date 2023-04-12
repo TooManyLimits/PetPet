@@ -1,39 +1,55 @@
 package petpet.types;
 
+import petpet.external.PetPetReflector;
+import petpet.external.PetPetWhitelist;
 import petpet.lang.run.Interpreter;
 import petpet.lang.run.JavaFunction;
 import petpet.lang.run.PetPetClass;
 
+import java.util.ArrayList;
+import java.util.function.ToIntFunction;
+
+@PetPetWhitelist
 public class PetPetString {
 
-    public static void registerToInterpreter(Interpreter i) {
-        i.classMap.put(String.class, PETPET_CLASS);
-        i.globals.put("str", STR);
-    }
-
-    private static final PetPetClass PETPET_CLASS;
-    private static final JavaFunction STR = new JavaFunction(PetPetString.class, "valueOf", false, Object.class);
+    public static final PetPetClass STRING_CLASS;
 
     static {
-        PETPET_CLASS = new PetPetClass("str");
+        STRING_CLASS = PetPetReflector.reflect(PetPetString.class, "str");
 
-        PETPET_CLASS.addMethod("__get_num", new JavaFunction(PetPetString.class, "charAt", false));
+        STRING_CLASS.addMethod("__get_num", new JavaFunction(PetPetString.class, "charAt", false));
 
         //i love arbitrarily guessing on cost penalties with no benchmarking whatsoever ! :D
-        PETPET_CLASS.addMethod("sub", new JavaFunction(String.class, "substring", true,
-                i -> Math.max(0, (int) ((Double) i.peek() - (Double) i.peek(1)) / 8),
-                int.class, int.class
-        ));
-        PETPET_CLASS.addMethod("len", new JavaFunction(String.class, "length", true));
-        PETPET_CLASS.addMethod("startsWith", new JavaFunction(String.class, "startsWith", true,
-                i -> ((String) i.peek()).length() / 16,
-                String.class
-        ));
-        PETPET_CLASS.addMethod("endsWith", new JavaFunction(String.class, "endsWith", true,
-                i -> ((String) i.peek()).length() / 16,
-                String.class
-        ));
 
+        STRING_CLASS.addMethod("sub", new JavaFunction(PetPetString.class, "sub", false,
+                i -> Math.max(0, (int) ((Double) i.peek() - (Double) i.peek(1)) / 8)
+        ));
+        STRING_CLASS.addMethod("len", new JavaFunction(String.class, "length", true));
+        STRING_CLASS.addMethod("starts", new JavaFunction(String.class, "startsWith", true, oneLengthPenalizer(8), String.class));
+        STRING_CLASS.addMethod("ends", new JavaFunction(String.class, "endsWith", true, oneLengthPenalizer(8), String.class));
+
+        ToIntFunction<Interpreter> indexOfPenalizer = i -> {
+            int argLen = ((String) i.peek()).length();
+            int instanceLen = ((String) i.peek(1)).length();
+            return Math.max(0, (instanceLen - argLen) * argLen / 16);
+        };
+
+        STRING_CLASS.addMethod("find", new JavaFunction(String.class, "indexOf", true, indexOfPenalizer, String.class));
+        STRING_CLASS.addMethod("has", new JavaFunction(String.class, "contains", true, indexOfPenalizer));
+
+        STRING_CLASS.addMethod("upper", new JavaFunction(String.class, "toUpperCase", true, oneLengthPenalizer(8), new Class[0]));
+        STRING_CLASS.addMethod("lower", new JavaFunction(String.class, "toLowerCase", true, oneLengthPenalizer(8), new Class[0]));
+
+        STRING_CLASS.addMethod("format", new JavaFunction(PetPetString.class, "format", false,
+                i ->
+                        ((PetPetList) i.peek()).size() / 2 +
+                        ((String) i.peek(1)).length() / 8
+        ));
+    }
+
+    //Penalizes based on the length of string on top of the stack, divided by the given divisor
+    private static ToIntFunction<Interpreter> oneLengthPenalizer(int divisor) {
+        return i -> ((String) i.peek()).length() / divisor;
     }
 
     //I didn't like that doubles without any decimal component printed with the .0
@@ -45,10 +61,20 @@ public class PetPetString {
 
     //fake charAt because can't be bothered to add a char class
     public static String charAt(String x, int i) {
-        return x.substring(i, i+1);
+        int len = x.length();
+        int wrapped = ((i % len) + len) % len;
+        return x.substring(wrapped, wrapped+1);
     }
 
-    public static String concatAny(String x, Object other) {
-        return x + other;
+    public static String sub(String x, int a, int b) {
+        int len = x.length();
+        if (a < 0) a += len;
+        if (b < 0) b += len;
+        if (a >= b) return "";
+        return x.substring(a, b);
+    }
+
+    public static String format(String x, ArrayList<?> objects) {
+        return String.format(x, objects.toArray());
     }
 }

@@ -58,4 +58,9 @@ public class PetPetListView<T> extends PetPetList<T> {
     public Iterator<T> iterator() {
         return backingList.iterator();
     }
+
+    @Override
+    public Object[] toArray() { //string format
+        return super.toArray();
+    }
 }

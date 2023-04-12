@@ -1,5 +1,6 @@
 package petpet.types.libraries;
 
+import petpet.external.PetPetInstance;
 import petpet.lang.run.Interpreter;
 import petpet.lang.run.JavaFunction;
 import petpet.types.PetPetTable;
@@ -83,5 +84,10 @@ public class MathLibrary {
     public static double randIn(double min, double max) {
         return Math.random() * (max - min) + min;
     }
+
+    public static final String EXTRA_MATH_FUNCTIONS = """
+            math:lerp=fn(a,b,t)a+(b-a)*t
+            math:map=fn(x,L1,R1,L2,R2)(x-L1)*(R2-L2)/(R1-L1)+L2
+            """;
 
 }

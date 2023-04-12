@@ -11,19 +11,16 @@ public class Test {
 
         String script =
                 """
-                //Cutie api
-                $[
-                    isCutie = fun(user) {
-                        if user.name == "auria"
-                            "Super cutie"
-                        else
-                            "Also very very cutie"
-                    }
-                ].view(); //now no one can edit the function :)
+                math:lerp=fn(a,b,t)a+(b-a)*t
+                math:map=fn(x,L1,R1,L2,R2)(x-L1)*(R2-L2)/(R1-L1)+L2
+                
+                print(math:lerp(0, 100, 0.36))
+                print(math:map(0, 0, 20, 3, 6))
                 """;
 
         PetPetInstance instance = new PetPetInstance();
-        instance.debugBytecode = true;
+        instance.debugBytecode = false;
+        instance.debugCost = true;
 
         instance.registerClass(Vec3.class, PetPetReflector.reflect(Vec3.class, "vec3"));
         instance.setGlobal("vec3", new JavaFunction(Vec3.class, "create", false));
@@ -50,6 +47,11 @@ public class Test {
         @PetPetWhitelist
         public Vec3 __add(Vec3 other) {
             return new Vec3(x + other.x, y + other.y, z + other.z);
+        }
+
+        @PetPetWhitelist
+        public Vec3 __sub(Vec3 other) {
+            return new Vec3(x - other.x, y - other.y, z - other.z);
         }
 
         @PetPetWhitelist

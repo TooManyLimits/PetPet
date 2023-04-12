@@ -73,6 +73,7 @@ public class PetPetInstance {
         //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num"));
         interpreter.classMap.put(Boolean.class, new PetPetClass("bool"));
+        interpreter.classMap.put(String.class, PetPetString.STRING_CLASS);
         interpreter.classMap.put(JavaFunction.class, new PetPetClass("jfunc"));
         interpreter.classMap.put(PetPetClosure.class, new PetPetClass("func"));
 
@@ -81,13 +82,15 @@ public class PetPetInstance {
         interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS);
         interpreter.classMap.put(PetPetTableView.class, PetPetTableView.TABLE_VIEW_CLASS);
 
-        PetPetString.registerToInterpreter(this.interpreter);
-
         //Global functions
         for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())
             setGlobal(entry.getKey(), entry.getValue());
 
         MathLibrary.registerToInterpreter(this.interpreter);
+        //Load the extra math functions as well which are better defined through
+        //petpet, such as math:lerp and math:map
+        try { runScript("mathExtras", MathLibrary.EXTRA_MATH_FUNCTIONS);
+        } catch (Exception impossible) {throw new IllegalStateException(impossible);}
     }
 
     public void registerClass(Class<?> clazz, PetPetClass petPetClass) {
