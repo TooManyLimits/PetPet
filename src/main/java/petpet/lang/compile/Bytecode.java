@@ -62,7 +62,6 @@ public class Bytecode {
 
     //The "big" bytecodes correspond to the ones above, except with 16 bits instead of 8 for
     //holding values
-    //In case of the jumps, it's an int instead of short
     public static final byte BIG_CONSTANT = 38;
     public static final byte BIG_SET_GLOBAL = 39;
     public static final byte BIG_LOAD_GLOBAL = 40;

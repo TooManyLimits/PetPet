@@ -11,12 +11,15 @@ public class Test {
 
         String script =
                 """
-                y = fn(x) {
-                    if x > 3 return 4
-                    print(5)
-                }
-                print(y(2))
-                print(y(7))
+                //Cutie api
+                $[
+                    isCutie = fun(user) {
+                        if user.name == "auria"
+                            "Super cutie"
+                        else
+                            "Also very very cutie"
+                    }
+                ].view(); //now no one can edit the function :)
                 """;
 
         PetPetInstance instance = new PetPetInstance();

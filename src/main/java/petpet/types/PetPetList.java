@@ -3,9 +3,9 @@ package petpet.types;
 import petpet.external.PetPetReflector;
 import petpet.external.PetPetWhitelist;
 import petpet.lang.run.*;
+import petpet.types.immutable.PetPetListView;
 
 import java.util.ArrayList;
-import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
 /**
@@ -49,20 +49,25 @@ public class PetPetList<T> extends ArrayList<T> {
         LIST_CLASS.addMethod("len", new JavaFunction(PetPetList.class, "size", true));
         LIST_CLASS.addMethod("empty", new JavaFunction(PetPetList.class, "isEmpty", true));
         LIST_CLASS.addMethod("clear", new JavaFunction(PetPetList.class, "clear", true));
-        LIST_CLASS.addMethod("copy", new JavaFunction(PetPetList.class, "clone", true));
+        LIST_CLASS.addMethod("copy", new JavaFunction(PetPetList.class, "clone", true, regularCostPenalty(0.5)));
+        LIST_CLASS.addMethod("contains", new JavaFunction(PetPetList.class, "contains", true, regularCostPenalty(2)));
 
         //Add cost penalties
-        ((JavaFunction) LIST_CLASS.methods.get("map")).costPenalizer = PetPetList.costPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("each")).costPenalizer = PetPetList.costPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("eachI")).costPenalizer = PetPetList.costPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("foldR")).costPenalizer = PetPetList.costPenalty(2);
-        ((JavaFunction) LIST_CLASS.methods.get("foldL")).costPenalizer = PetPetList.costPenalty(2);
+        ((JavaFunction) LIST_CLASS.methods.get("map")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("each")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("eachI")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("foldR")).costPenalizer = PetPetList.functionalCostPenalty(2);
+        ((JavaFunction) LIST_CLASS.methods.get("foldL")).costPenalizer = PetPetList.functionalCostPenalty(2);
     }
 
-    //Penalty function, charging the caller (a small price) for each
+    //Penalty function, charging the caller a (small) price for each
     //function call they make through the functional list methods
-    private static ToIntFunction<Interpreter> costPenalty(int args) {
+    private static ToIntFunction<Interpreter> functionalCostPenalty(int args) {
         return i -> ((PetPetList) i.peek(args)).size() * 3;
+    }
+
+    private static ToIntFunction<Interpreter> regularCostPenalty(double dividend) {
+        return i -> (int) (((PetPetList) i.peek(1)).size() / dividend);
     }
 
     private static void checkFunc(PetPetCallable func, int expectedArgs, String name) throws PetPetException {
@@ -140,6 +145,11 @@ public class PetPetList<T> extends ArrayList<T> {
     public PetPetList<T> del(int index) {
         super.remove(index);
         return this;
+    }
+
+    @PetPetWhitelist
+    public PetPetListView<T> view() {
+        return new PetPetListView<>(this);
     }
 
     /**

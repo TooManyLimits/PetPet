@@ -1,5 +1,7 @@
 package petpet.external;
 
+import petpet.types.immutable.PetPetListView;
+import petpet.types.immutable.PetPetTableView;
 import petpet.types.libraries.GlobalFunctions;
 import petpet.types.PetPetList;
 import petpet.types.PetPetString;
@@ -75,7 +77,9 @@ public class PetPetInstance {
         interpreter.classMap.put(PetPetClosure.class, new PetPetClass("func"));
 
         interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS);
+        interpreter.classMap.put(PetPetListView.class, PetPetListView.LIST_VIEW_CLASS);
         interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS);
+        interpreter.classMap.put(PetPetTableView.class, PetPetTableView.TABLE_VIEW_CLASS);
 
         PetPetString.registerToInterpreter(this.interpreter);
 

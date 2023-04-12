@@ -3,6 +3,7 @@ package petpet.types;
 import petpet.external.PetPetReflector;
 import petpet.external.PetPetWhitelist;
 import petpet.lang.run.*;
+import petpet.types.immutable.PetPetTableView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +14,12 @@ import java.util.function.ToIntFunction;
  */
 @PetPetWhitelist
 public class PetPetTable<K, V> extends HashMap<K, V> {
+
+    public PetPetTable(int initialCapacity) {
+        super(initialCapacity);
+    }
+
+    public PetPetTable() {}
 
     //Equals, hashcode, toString() overwritten
     //Leaving them as-is led to stack overflow crashes
@@ -83,6 +90,11 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         for (Object value : values())
             func.call(value);
         return this;
+    }
+
+    @PetPetWhitelist
+    public PetPetTableView<K, V> view() {
+        return new PetPetTableView<>(this);
     }
 
 }
