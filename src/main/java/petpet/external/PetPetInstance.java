@@ -23,7 +23,7 @@ import java.util.Map;
  * the class that users should... well, use.
  */
 public class PetPetInstance {
-    private final Interpreter interpreter;
+    public final Interpreter interpreter;
     public boolean debugTime, debugBytecode, debugCost;
 
     public PetPetInstance() {
