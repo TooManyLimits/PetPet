@@ -174,7 +174,7 @@ public class Interpreter {
                 case LOAD_LOCAL -> push(stack[frame.fp+(curBytes[frame.ip++] & 0xff)]);
                 case BIG_LOAD_LOCAL -> push(stack[frame.fp+((((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff)]);
 
-                case POP_OFFSET_1 -> stack[stackTop-2] = stack[--stackTop];
+                case POP_OFFSET_1 -> stack[stackTop-2] = pop();
 
                 //Do not make the jumps unsigned
                 case JUMP -> {int offset = (short) (((curBytes[frame.ip++] & 0xff) << 8) + (curBytes[frame.ip++] & 0xff)); frame.ip += offset; }
@@ -241,7 +241,7 @@ public class Interpreter {
                     push(frame.closure.upvalues[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff].get());
                 }
                 case CLOSE_UPVALUE -> {
-                    closeUpvalues(stackTop-1);
+                    closeUpvalues(stackTop-2); //element on top of the stack is the result of the block expression
                 }
 
                 case GET -> {
@@ -480,6 +480,7 @@ public class Interpreter {
     }
 
     private Object pop() {
+        stack[stackTop] = null; //to allow GC
         return stack[--stackTop];
     }
 

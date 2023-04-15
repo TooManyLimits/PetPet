@@ -1,28 +1,23 @@
 import petpet.external.PetPetInstance;
-import petpet.external.PetPetReflector;
 import petpet.external.PetPetWhitelist;
-import petpet.lang.run.JavaFunction;
-import petpet.lang.run.PetPetClosure;
+import petpet.lang.run.PetPetCallable;
 
 public class Test {
 
     public static void main(String[] args) throws Exception {
+        testHelloWorld();
+    }
 
-
-        String script =
-                """
-                x = fn() {print("cutie") this}
-                x()()()()()()()()()()()()()()()()()
-                """;
-
+    private static void testHelloWorld() throws Exception {
+        //Set up the script and instance
+        String script = "fn() print(\"Hello, world!\")";
         PetPetInstance instance = new PetPetInstance();
-        instance.debugBytecode = false;
-        instance.debugCost = true;
 
-        instance.registerClass(Vec3.class, PetPetReflector.reflect(Vec3.class, "vec3"));
-        instance.setGlobal("vec3", new JavaFunction(Vec3.class, "create", false));
+        //"Call" the file, which returns this result
+        Object fileResult = instance.runScript("script", script);
 
-        instance.runScript("script", script);
+        //The result is a PetPetCallable, which when called, prints "Hello, World!"
+        ((PetPetCallable) fileResult).call(); //Prints
     }
 
     @PetPetWhitelist
