@@ -11,11 +11,8 @@ public class Test {
 
         String script =
                 """
-                math:lerp=fn(a,b,t)a+(b-a)*t
-                math:map=fn(x,L1,R1,L2,R2)(x-L1)*(R2-L2)/(R1-L1)+L2
-                
-                print(math:lerp(0, 100, 0.36))
-                print(math:map(0, 0, 20, 3, 6))
+                x = fn() {print("cutie") this}
+                x()()()()()()()()()()()()()()()()()
                 """;
 
         PetPetInstance instance = new PetPetInstance();

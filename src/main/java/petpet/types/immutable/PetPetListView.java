@@ -6,6 +6,7 @@ import petpet.types.PetPetTable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class PetPetListView<T> extends PetPetList<T> {
 
@@ -14,9 +15,9 @@ public class PetPetListView<T> extends PetPetList<T> {
         return "<ListView(size=" + size() + ")>";
     }
     public static final PetPetClass LIST_VIEW_CLASS = new PetPetClass("list_view");
-    private final ArrayList<T> backingList;
+    private final List<T> backingList;
 
-    public PetPetListView(ArrayList<T> backingList) {
+    public PetPetListView(List<T> backingList) {
         super(0);
         this.backingList = backingList;
     }

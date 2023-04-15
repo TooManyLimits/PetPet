@@ -22,9 +22,9 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
     }
 
     public static final PetPetClass TABLE_VIEW_CLASS = new PetPetClass("table_view");
-    private final HashMap<K, V> backingMap;
+    private final Map<K, V> backingMap;
 
-    public PetPetTableView(HashMap<K, V> backingMap) {
+    public PetPetTableView(Map<K, V> backingMap) {
         super(0);
         this.backingMap = backingMap;
     }
