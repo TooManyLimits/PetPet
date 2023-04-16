@@ -6,14 +6,6 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                fn printList(list) {
-                    res = "["
-                    list.each(fn(x) res = res + x + ",")
-                    print(res.sub(0, -1) + "]")
-                }
-                
-                immutable = ![1, 2, 3, 4].view()
-                printList(immutable)
                 
                 """;
         PetPetInstance instance = new PetPetInstance();
