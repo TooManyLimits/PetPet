@@ -464,7 +464,7 @@ public class Interpreter {
     }
 
     private void push(Object o) {
-        if (stackTop == stack.length) {
+        if (stackTop >= stack.length - 1) { //expand 1 earlier so pop() never needs to check
             Object[] newStack = new Object[stackTop * 2];
             System.arraycopy(stack, 0, newStack, 0, stackTop);
             stack = newStack;
