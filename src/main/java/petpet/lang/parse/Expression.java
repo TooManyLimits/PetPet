@@ -225,9 +225,11 @@ public abstract class Expression {
     public static class Function extends Expression {
         public final List<String> paramNames;
         public final Expression body;
+        public final String funcName;
 
-        public Function(int startLine, List<String> argNames, Expression body) {
+        public Function(int startLine, String funcName, List<String> argNames, Expression body) {
             super(startLine);
+            this.funcName = funcName;
             this.paramNames = argNames; this.body = body;
         }
 
@@ -238,7 +240,7 @@ public abstract class Expression {
             for (String param : paramNames)
                 thisCompiler.registerLocal(param);
             body.compile(thisCompiler);
-            String name = "function (line=" + startLine + ")";
+            String name = "fn" + (funcName == null ? "" : " " + funcName) + "(line=" + startLine + ")";
             PetPetFunction f = thisCompiler.finish(name, startLine-1, paramNames.size());
 
             int idx = compiler.registerConstant(f);

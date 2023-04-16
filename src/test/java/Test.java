@@ -5,7 +5,19 @@ import petpet.lang.run.PetPetCallable;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        testHelloWorld();
+        String script = """
+                global fn x() print("i am fn x")
+                t = $[]
+                fn t.y() print("im inside a table")
+                fn t.z() print("oops error", "too many arg")
+                x()
+                t:y()
+                t:z()
+                """;
+        PetPetInstance instance = new PetPetInstance();
+        instance.debugBytecode = true;
+
+        instance.runScript("script", script);
     }
 
     private static void testHelloWorld() throws Exception {

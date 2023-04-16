@@ -1,5 +1,7 @@
 package petpet.lang.parse;
 
+import petpet.lang.run.PetPetFunction;
+
 import static petpet.lang.lex.Lexer.*;
 import static petpet.lang.lex.Lexer.TokenType.*;
 
@@ -63,6 +65,16 @@ public class Parser {
         return false;
     }
 
+    //checks further ahead
+    private boolean checkAhead(int offset, TokenType... types) {
+        if (pos + offset >= len) return false;
+        TokenType checked = toks[pos + offset].type();
+        for (TokenType t : types)
+            if (t == checked)
+                return true;
+        return false;
+    }
+
     public List<Expression> parseChunk() throws ParserException {
         List<Expression> exprs = new ArrayList<>();
         while (pos != len)
@@ -77,7 +89,12 @@ public class Parser {
 
     private Expression parseAssignment() throws ParserException {
         boolean global = check(GLOBAL);
-        if (global) consume();
+        if (global) {
+            if (!checkAhead(1, FUNCTION)) //"global fn ..." should not be parsed here, but instead later on!
+                consume();
+            else //This is a "global fn" situation, just return and let the later function handle it
+                return parseOr();
+        }
         Expression lhs = parseOr();
         if (check(ASSIGN)) {
             int tokline = consume().line(); //consume the '='
@@ -213,7 +230,7 @@ public class Parser {
             case NAME -> new Expression.Name(peek().line(), consume().getString());
             case THIS -> new Expression.This(consume().line());
             case NUMBER_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL -> new Expression.Literal(peek().line(), consume().value()); //Literals
-            case FUNCTION -> parseFunction();
+            case GLOBAL, FUNCTION -> parseFunction(); //Global as well, since "global fn ..."
             case LEFT_PAREN -> { //Parenthesis for grouping
                 int leftLine = consume().line(); //Consume left paren
                 Expression inner = parseExpression(); //Read expression
@@ -234,12 +251,49 @@ public class Parser {
     }
 
     private Expression parseFunction() throws ParserException {
+        boolean global = check(GLOBAL);
+        if (global)
+            consume();
         if (!check(FUNCTION))
             throw new ParserException("Expected function? Bug with the parser, contact devs");
         int funLine = consume().line();
-        List<String> params = parseParams(funLine);
-        Expression body = parseExpression();
-        return new Expression.Function(funLine, params, body);
+
+        if (check(LEFT_PAREN)) {
+            //anonymous function, a "fn() ..." situation. ensure not global
+            if (global) throw new ParserException("Cannot have global anonymous function! line = " + funLine);
+            List<String> params = parseParams(funLine);
+            Expression body = parseExpression();
+            return new Expression.Function(funLine, null, params, body);
+        } else {
+            //This function has a name! It's a "global? fn <name>()" situation here.
+            //Some strangeness is done here to allow interesting function defining abilities like Lua has.
+            if (!check(NAME))
+                throw new ParserException("Expected either a name (named) or parentheses (anonymous) for function declaration on line " + funLine);
+            int nameLine = peek().line();
+            Expression funcNameExpr = new Expression.Name(nameLine, consume().getString());
+            while (check(DOT, COLON)) {
+                if (global)
+                    throw new ParserException("Cannot create \"global fn\" with indexing in name. line = " + funLine);
+                int dotLine = peek().line();
+                char c = consume().type() == DOT ? '.' : ':';
+                if (!check(NAME))
+                    throw new ParserException("Expected name after " + c + " for function declaration on line " + funLine);
+                funcNameExpr = new Expression.Get(dotLine, funcNameExpr, new Expression.Literal(peek().line(), consume().getString()));
+            }
+
+            List<String> params = parseParams(funLine);
+            Expression body = parseExpression();
+            //If the funcNameExpr is just a name, use that name, otherwise, use the last name in the chain
+            if (funcNameExpr instanceof Expression.Name nameExpr) {
+                Expression func = new Expression.Function(funLine, nameExpr.name, params, body);
+                return new Expression.Assign(funLine, global, nameExpr.name, func);
+            } else {
+                Expression.Get getExpr = (Expression.Get) funcNameExpr;
+                Expression.Literal nameExpr = (Expression.Literal) getExpr.indexer;
+                Expression func = new Expression.Function(funLine, (String) nameExpr.value, params, body);
+                return new Expression.Set(funLine, getExpr.left, getExpr.indexer, func);
+            }
+        }
     }
 
     private List<String> parseParams(int funLine) throws ParserException {
