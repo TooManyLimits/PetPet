@@ -74,6 +74,47 @@ These compound expressions are a bit more esoteric, so they're moved to the adva
   - The first name can be any sequence of "get" operators. For example, `fn a:b.c(x) x+2` will be the same as `a:b.c = fn(x) x+2`, and the function will be given the name "c".
   - Placing `global` before the word `fn` will make the variable global.
 
+## Variables and Scopes
+
+Many languages have concepts of **local** vs **global** scope, and PetPet is no exception. Variables are created in PetPet simply by using the assignment operator, `=`. Take the code
+```
+x = 3
+y = 4
+print(x + y) //prints 7
+```
+This code creates two variables, called x and y, and assigns them values. Unlike many languages, variables do not need to be "declared" before they are used. If the variable does not already exist, it is created when assigned to.
+
+### Scope 
+
+Now for an explanation of scope. Simplifying, a scope is a duration of the program during which a variable is said to exist. If variables exist for longer than they need to, it can lead to messy programs where lots of unused things are left strewn around. If we want to clean up after ourselves with these variables, we can introduce a scope using the block expression `{}`.
+```
+{
+    x = 3
+    y = 4
+    print(x + y) //prints 7
+}
+print(x) //prints null
+```
+In this version, x and y are created between some `{}`. Since x and y are local variables, when the block ends, they are destroyed. The `print(x)` at the end prints null, as the variable x no longer exists as far as it's concerned.
+
+### Global Variables
+
+What if we *want* certain variables to live forever and not be cleaned up? The solution to this is to make those variables *global*. Global variables, unlike local ones, are not destroyed when a scope ends.
+```
+{
+    global x = 3
+    y = 4
+    print(x + y) //prints 7
+}
+print(x) //prints 3
+print(y) //prints null
+```
+As you can see, the value we assigned to x has continued to live after the block ends. However, since y was not global, it is destroyed as usual. Global variables are not needed for most things, and using too many of them can start to make your code conventionally disorganized. That is why making variables global requires a special keyword `global`, while the default is to make variables local.
+
+### Scope in Functions
+
+Scopes are not only created through block expressions `{}`, they are also created when defining a function. The body of a function is always in its own scope, even if the function body is not a block expression. Parameters to the function are local variables inside this new scope of the function body.
+
 ## Examples
 
 TODO
