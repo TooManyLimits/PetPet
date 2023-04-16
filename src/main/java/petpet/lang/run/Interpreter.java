@@ -436,7 +436,7 @@ public class Interpreter {
             while (cur != null) {
                 if (classMap.containsKey(cur)) {
                     classMap.put(c, classMap.get(cur));
-                    break;
+                    return classMap.get(cur);
                 }
                 cur = cur.getSuperclass();
             }

@@ -1,19 +1,26 @@
 package petpet.lang.run;
 
+import petpet.external.PetPetWhitelist;
+
+@PetPetWhitelist
 public class PetPetClosure implements PetPetCallable {
     public final PetPetFunction function;
     public final Upvalue[] upvalues;
     public final Interpreter interpreter;
 
+    @PetPetWhitelist
+    public final int paramCount;
+
     @Override
     public int paramCount() {
-        return function.paramCount;
+        return paramCount;
     }
 
     public PetPetClosure(PetPetFunction function, Interpreter interpreter) {
         this.function = function;
         this.upvalues = new Upvalue[function.numUpvalues];
         this.interpreter = interpreter;
+        paramCount = function.paramCount;
     }
 
     public Object call(Object... args) {
@@ -27,5 +34,10 @@ public class PetPetClosure implements PetPetCallable {
     @Override
     public String toString() {
         return "closure(function=" + function + ")";
+    }
+
+    @PetPetWhitelist
+    public String getName() {
+        return function.name;
     }
 }

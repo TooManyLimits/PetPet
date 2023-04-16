@@ -1,6 +1,9 @@
 package petpet.lang.run;
 
 import petpet.external.PetPetReflector;
+import petpet.types.PetPetList;
+import petpet.types.PetPetTable;
+import petpet.types.immutable.PetPetTableView;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -17,6 +20,22 @@ public class PetPetClass {
             @Override
             public Object invoke(Object arg0) {
                 return name;
+            }
+        });
+        addMethod("getMethods", new JavaFunction(false, 1, i -> methods.size()) {
+            @Override
+            public Object invoke(Object arg0) {
+                return new PetPetTableView<>(methods);
+            }
+        });
+        addMethod("getFields", new JavaFunction(false, 1, i -> fieldGetters.size()) {
+            @Override
+            public Object invoke(Object arg0) {
+                PetPetTable<String, Boolean> fields = new PetPetTable<>();
+                for (Map.Entry<String, Function> field : fieldGetters.entrySet()) {
+                    fields.put(field.getKey(), fieldSetters.containsKey(field.getKey()));
+                }
+                return fields;
             }
         });
     }

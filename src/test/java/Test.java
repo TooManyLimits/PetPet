@@ -6,13 +6,11 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                global fn x() print("i am fn x")
-                t = $[]
-                fn t.y() print("im inside a table")
-                fn t.z() print("oops error", "too many arg")
-                x()
-                t:y()
-                t:z()
+                fn print2(k, v) print(k + " = " + v)
+                print("Table methods:")
+                $[].getMethods().each(print2)
+                print("List methods:")
+                ![].getMethods().getMethods().each(print2)
                 """;
         PetPetInstance instance = new PetPetInstance();
         instance.debugBytecode = true;
