@@ -10,10 +10,10 @@ An extension for Visual Studio Code is available on the marketplace which provid
 The "Technical Overview" section describes the different types of expressions that PetPet has to offer, along with their grammar, in detail. If you'd like to skip ahead to a later section which shows some examples, go for it. You'll likely pick it up quick!
 
 ### Useful terminology
-- An **expression** is a piece of code which resolves to some value. Here are some examples of basic expressions:
+- An **expression** is a piece of code which resolves to some value. 
 - A **name** is a sequence of uppercase or lowercase letters, underscores, or digits. The first character cannot be a digit, and the name cannot be a reserved word in PetPet.
 
-PetPet is what is known as an *expression-based* language, which means that everything that happens in your code is based around these expressions.
+PetPet is what is known as an *expression-based* language, which means that everything that happens in your code is based around these expressions. Here are some examples of basic expressions:
 
 ### Basic Expressions
 
