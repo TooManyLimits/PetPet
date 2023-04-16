@@ -6,6 +6,7 @@ import petpet.lang.run.*;
 import petpet.types.immutable.PetPetListView;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.function.ToIntFunction;
 
 /**
@@ -56,6 +57,7 @@ public class PetPetList<T> extends ArrayList<T> {
         ((JavaFunction) LIST_CLASS.methods.get("map")).costPenalizer = PetPetList.functionalCostPenalty(1);
         ((JavaFunction) LIST_CLASS.methods.get("each")).costPenalizer = PetPetList.functionalCostPenalty(1);
         ((JavaFunction) LIST_CLASS.methods.get("eachI")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.methods.get("filter")).costPenalizer = PetPetList.functionalCostPenalty(1);
         ((JavaFunction) LIST_CLASS.methods.get("foldR")).costPenalizer = PetPetList.functionalCostPenalty(2);
         ((JavaFunction) LIST_CLASS.methods.get("foldL")).costPenalizer = PetPetList.functionalCostPenalty(2);
     }
@@ -100,6 +102,16 @@ public class PetPetList<T> extends ArrayList<T> {
         return this;
     }
     @PetPetWhitelist
+    public PetPetList<T> filter(PetPetCallable func) {
+        checkFunc(func, 1, "filter");
+        Iterator<T> iter = iterator();
+        while (iter.hasNext()) {
+            Boolean x = (Boolean) func.call(iter.next());
+            if (!x) iter.remove();
+        }
+        return this;
+    }
+    @PetPetWhitelist
     public PetPetList<T> each(PetPetCallable func) {
         checkFunc(func, 1, "each");
         for (Object o : this)
@@ -129,6 +141,7 @@ public class PetPetList<T> extends ArrayList<T> {
         for (T t : this) res = func.call(res, t);
         return res;
     }
+
 
     @PetPetWhitelist
     public PetPetList<T> insert(int index, T value) {
