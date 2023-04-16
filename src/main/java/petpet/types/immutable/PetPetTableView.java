@@ -1,6 +1,7 @@
 package petpet.types.immutable;
 
 import petpet.lang.run.PetPetClass;
+import petpet.lang.run.PetPetException;
 import petpet.types.PetPetTable;
 
 import java.util.Collection;
@@ -45,9 +46,10 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
         return backingMap.size();
     }
 
+    //Disallowed methods for table view
     @Override
     public V put(K key, V value) {
-        throw new UnsupportedOperationException("Cannot put in table view");
+        throw new PetPetException("nice try, can't set in table view");
     }
 
     @Override
@@ -57,7 +59,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
 
     @Override
     public V remove(Object key) {
-        throw new UnsupportedOperationException("Cannot remove from table view");
+        throw new PetPetException("nice try, can't remove in table view");
     }
 
     @Override
@@ -67,7 +69,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("Cannot clear table view");
+        throw new PetPetException("nice try, can't clear table view");
     }
 
     @Override
@@ -88,5 +90,10 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
     @Override
     public Set<Entry<K, V>> entrySet() {
         return backingMap.entrySet();
+    }
+
+    @Override
+    public PetPetTableView<K, V> view() {
+        throw new PetPetException("nice try, can't view a table view");
     }
 }

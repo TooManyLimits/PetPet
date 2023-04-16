@@ -1,6 +1,8 @@
 package petpet.types.immutable;
 
+import petpet.lang.run.PetPetCallable;
 import petpet.lang.run.PetPetClass;
+import petpet.lang.run.PetPetException;
 import petpet.types.PetPetList;
 import petpet.types.PetPetTable;
 
@@ -44,9 +46,50 @@ public class PetPetListView<T> extends PetPetList<T> {
         return backingList.size();
     }
 
+    //Disallowed methods for list view
     @Override
     public T set(int index, T element) {
-        throw new UnsupportedOperationException("Cannot set in list view");
+        throw new PetPetException("nice try, can't set in list view");
+    }
+    @Override
+    public void clear() {
+        throw new PetPetException("nice try, can't clear list view");
+    }
+    @Override
+    public PetPetList<T> map(PetPetCallable func) {
+        throw new PetPetException("nice try, can't map list view");
+    }
+    @Override
+    public PetPetList<T> filter(PetPetCallable func) {
+        throw new PetPetException("nice try, can't filter list view");
+    }
+    @Override
+    public T pop() {
+        throw new PetPetException("nice try, can't pop list view");
+    }
+    @Override
+    public T take() {
+        throw new PetPetException("nice try, can't take from list view");
+    }
+    @Override
+    public PetPetList<T> swap(int index1, int index2) {
+        throw new PetPetException("nice try, can't swap in list view");
+    }
+    @Override
+    public PetPetList<T> insert(int index, T value) {
+        throw new PetPetException("nice try, can't insert in list view");
+    }
+    @Override
+    public PetPetList<T> push(T value) {
+        throw new PetPetException("nice try, can't push to list view");
+    }
+    @Override
+    public T remove(int index) {
+        throw new PetPetException("nice try, can't remove from list view");
+    }
+    @Override
+    public PetPetListView<T> view() {
+        throw new PetPetException("You found an easter egg!");
     }
 
     @Override
