@@ -1,5 +1,5 @@
 # PetPet
-A sandboxed, dynamically typed scripting language that runs embedded in Java. Being created for my upcoming Minecraft mod!
+A sandboxed, dynamically typed scripting language that runs embedded in Java. Being created for my Minecraft mod [Aspect](https://github.com/Moonlight-Maya/Aspect)!
 
 Huge, *huge* thanks to Robert Nystrom, the creator of [Crafting Interpreters](https://craftinginterpreters.com/). Without that resource, this language would never have been made.
 
