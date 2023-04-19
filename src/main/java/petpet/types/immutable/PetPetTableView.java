@@ -59,7 +59,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
 
     @Override
     public V remove(Object key) {
-        throw new PetPetException("nice try, can't remove in table view");
+        throw new PetPetException("nice try, can't delete in table view");
     }
 
     @Override

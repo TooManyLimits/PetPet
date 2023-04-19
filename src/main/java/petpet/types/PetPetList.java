@@ -177,12 +177,21 @@ public class PetPetList<T> extends ArrayList<T> {
      */
     @Override
     public T get(int index) {
-        return super.get((index % size() + size()) % size());
+        if (index < 0) index += size();
+        if (index >= size() || index < 0) return null;
+        return super.get(index);
     }
 
     @Override
     public T set(int index, T element) {
-        return super.set((index % size() + size()) % size(), element);
+        int i = index < 0 ? index + size() : index;
+        if (i == size())
+            push(element);
+        else if (i > size() || i < 0)
+            throw new PetPetException("Attempt to set in list of length " + size() + " at illegal index " + index);
+        else
+            super.set(i, element);
+        return element;
     }
 
     @Override

@@ -89,13 +89,16 @@ public class PetPetListView<T> extends PetPetList<T> {
     }
     @Override
     public PetPetListView<T> view() {
-        throw new PetPetException("You found an easter egg!");
+        throw new PetPetException("You found an easter egg! trying to view a view");
     }
 
     @Override
     public T get(int index) {
-        int size = size();
-        return backingList.get((index % size + size) % size);
+        if (!(backingList instanceof PetPetList<?>)) {
+            if (index < 0) index += size();
+            if (index < 0 || index >= size()) return null;
+        }
+        return backingList.get(index);
     }
 
     @Override
