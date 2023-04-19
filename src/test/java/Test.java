@@ -6,6 +6,17 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
+                false.class().methods()["__mul_num"] = fn a(n) if this n else 0
+                print(false * 5)
+                print(true * 6)
+                
+                numMethods = 0.class().methods()
+                fn numMethods.sqrt() math:sqrt(this)
+                numMethods.sqrtAlternate = math:sqrt
+                0.class().methods().square = fn() this*this
+                print(3.square()) //9
+                print(16.sqrt()) //4
+                print(25.sqrtAlternate()) //5
                 
                 """;
         PetPetInstance instance = new PetPetInstance();

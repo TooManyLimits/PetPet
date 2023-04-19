@@ -71,22 +71,25 @@ public class PetPetInstance {
 
     private void loadBuiltinLibrary() {
         //Num class
-        interpreter.classMap.put(Double.class, new PetPetClass("num"));
-        interpreter.classMap.put(Boolean.class, new PetPetClass("bool"));
-        interpreter.classMap.put(String.class, PetPetString.STRING_CLASS);
-        interpreter.classMap.put(JavaFunction.class, PetPetReflector.reflect(JavaFunction.class, "jfn"));
-        interpreter.classMap.put(PetPetClosure.class, PetPetReflector.reflect(PetPetClosure.class, "fn"));
+        interpreter.classMap.put(Double.class, new PetPetClass("num").makeEditable());
+        interpreter.classMap.put(Boolean.class, new PetPetClass("bool").makeEditable());
+        interpreter.classMap.put(String.class, PetPetString.STRING_CLASS.copy().makeEditable());
+        interpreter.classMap.put(JavaFunction.class, PetPetReflector.reflect(JavaFunction.class, "jfn").copy().makeEditable());
+        interpreter.classMap.put(PetPetClosure.class, PetPetReflector.reflect(PetPetClosure.class, "fn").copy().makeEditable());
+        interpreter.classMap.put(PetPetClass.class, PetPetClass.PET_PET_CLASS_CLASS.copy().makeEditable());
 
-        interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS);
-        interpreter.classMap.put(PetPetListView.class, PetPetListView.LIST_VIEW_CLASS);
-        interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS);
-        interpreter.classMap.put(PetPetTableView.class, PetPetTableView.TABLE_VIEW_CLASS);
+        interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS.copy().makeEditable());
+        interpreter.classMap.put(PetPetListView.class, PetPetListView.LIST_VIEW_CLASS.copy().makeEditable());
+        interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS.copy().makeEditable());
+        interpreter.classMap.put(PetPetTableView.class, PetPetTableView.TABLE_VIEW_CLASS.copy().makeEditable());
 
-        //Global functions
+
+        //Global values
         for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())
             setGlobal(entry.getKey(), entry.getValue());
+        setGlobal("math", MathLibrary.createNewMathTable());
+        setGlobal("_G", interpreter.globals);
 
-        MathLibrary.registerToInterpreter(this.interpreter);
         //Load the extra math functions as well which are better defined through
         //petpet, such as math:lerp and math:map
         try { runScript("mathExtras", MathLibrary.EXTRA_MATH_FUNCTIONS);

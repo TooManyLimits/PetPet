@@ -1,17 +1,15 @@
 package petpet.types.libraries;
 
-import petpet.external.PetPetInstance;
-import petpet.lang.run.Interpreter;
 import petpet.lang.run.JavaFunction;
 import petpet.types.PetPetTable;
 
 public class MathLibrary {
 
-    public static void registerToInterpreter(Interpreter i) {
+    public static PetPetTable<String, Object> createNewMathTable() {
         //create a new math table each time, as it can be edited
         //we don't want one script to edit the math table,
         //and have that affect another script that runs after
-        PetPetTable mathTable = new PetPetTable();
+        PetPetTable<String, Object> mathTable = new PetPetTable<>();
         mathTable.put("min", MIN);
         mathTable.put("max", MAX);
         mathTable.put("abs", ABS);
@@ -43,7 +41,7 @@ public class MathLibrary {
         mathTable.put("tanh", TANH);
         mathTable.put("pi", Math.PI);
         mathTable.put("e", Math.E);
-        i.globals.put("math", mathTable);
+        return mathTable;
     }
 
     //General

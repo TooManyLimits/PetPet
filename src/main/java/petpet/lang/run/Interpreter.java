@@ -1,9 +1,6 @@
 package petpet.lang.run;
 
-import petpet.types.PetPetList;
-import petpet.types.PetPetNull;
-import petpet.types.PetPetString;
-import petpet.types.PetPetTable;
+import petpet.types.*;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -19,7 +16,7 @@ public class Interpreter {
 
     //temp public
     public final Map<Class<?>, PetPetClass> classMap = new IdentityHashMap<>(); //keys are classes, identity works
-    public final Map<String, Object> globals = new HashMap<>();
+    public final Map<String, Object> globals = new PetPetTable<>();
 
     private Object[] stack = new Object[16];
     private int stackTop = 0;
@@ -77,7 +74,11 @@ public class Interpreter {
                     else if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl + dr);
                     else {
-                        callMetaBinary(l, r, "add");
+                        if (callMetaBinary(l, r, "add")) {
+                            frame = peekCallStack();
+                            curBytes = frame.closure.function.chunk.bytes;
+                            constants = frame.closure.function.chunk.constants;
+                        }
                     }
                 }
                 case SUB -> {
@@ -85,28 +86,44 @@ public class Interpreter {
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl - dr);
-                    else callMetaBinary(l, r, "sub");
+                    else if (callMetaBinary(l, r, "sub")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case MUL -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl * dr);
-                    else callMetaBinary(l, r, "mul");
+                    else if (callMetaBinary(l, r, "mul")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case DIV -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl / dr);
-                    else callMetaBinary(l, r, "div");
+                    else if (callMetaBinary(l, r, "div")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case MOD -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl % dr);
-                    else callMetaBinary(l, r, "mod");
+                    else if (callMetaBinary(l, r, "mod")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case EQ -> push(Objects.equals(pop(), pop()));
                 case NEQ -> push(!Objects.equals(pop(), pop()));
@@ -115,35 +132,55 @@ public class Interpreter {
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl < dr);
-                    else callMetaBinary(l, r, "lt");
+                    else if (callMetaBinary(l, r, "lt")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case GT -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl > dr);
-                    else callMetaBinary(l, r, "gt");
+                    else if (callMetaBinary(l, r, "gt")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case LTE -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl <= dr);
-                    else callMetaBinary(l, r, "lte");
+                    else if (callMetaBinary(l, r, "lte")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case GTE -> {
                     Object r = pop();
                     Object l = pop();
                     if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl >= dr);
-                    else callMetaBinary(l, r, "gte");
+                    else if (callMetaBinary(l, r, "gte")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
 
                 case NEGATE -> {
                     Object o = pop();
                     if (o instanceof Double dl)
                         pushNoCheck(-dl);
-                    else callMetaUnary(o, "neg");
+                    else if (callMetaUnary(o, "neg")) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
                 case NOT -> pushNoCheck(isFalsy(pop()));
 
@@ -273,13 +310,21 @@ public class Interpreter {
                     String specialString = "__get_" + indexerTypeName;
                     Object getMethod = langClass.methods.get(specialString);
                     if (getMethod != null) {
-                        makeCall(getMethod, 2, false, true);
+                        if (makeCall(getMethod, 2, false, true)) {
+                            frame = peekCallStack();
+                            curBytes = frame.closure.function.chunk.bytes;
+                            constants = frame.closure.function.chunk.constants;
+                        }
                         break;
                     }
                     cost++;
                     getMethod = langClass.methods.get("__get");
                     if (getMethod != null) {
-                        makeCall(getMethod, 2, false, true);
+                        if (makeCall(getMethod, 2, false, true)) {
+                            frame = peekCallStack();
+                            curBytes = frame.closure.function.chunk.bytes;
+                            constants = frame.closure.function.chunk.constants;
+                        }
                         break;
                     }
                     runtimeException("Tried to get from (" + getString(instance) + ") with illegal key (" + getString(indexer) + ")");
@@ -312,12 +357,20 @@ public class Interpreter {
                     String specialString = "__set_" + indexerTypeName;
                     Object setMethod = langClass.methods.get(specialString);
                     if (setMethod != null) {
-                        makeCall(setMethod, 3, false, true);
+                        if (makeCall(setMethod, 3, false, true)) {
+                            frame = peekCallStack();
+                            curBytes = frame.closure.function.chunk.bytes;
+                            constants = frame.closure.function.chunk.constants;
+                        }
                         break;
                     }
                     setMethod = langClass.methods.get("__set");
                     if (setMethod != null) {
-                        makeCall(setMethod, 3, false, true);
+                        if (makeCall(setMethod, 3, false, true)) {
+                            frame = peekCallStack();
+                            curBytes = frame.closure.function.chunk.bytes;
+                            constants = frame.closure.function.chunk.constants;
+                        }
                         break;
                     }
                     runtimeException("Tried to set to " + instance + " with illegal key " + indexer);
@@ -329,13 +382,17 @@ public class Interpreter {
                     Object indexer = peek(argCount);
                     Object instance = peek(argCount+1);
 
-                    doInvoke(argCount, instance, indexer);
+                    if (doInvoke(argCount, instance, indexer)) {
+                        frame = peekCallStack();
+                        curBytes = frame.closure.function.chunk.bytes;
+                        constants = frame.closure.function.chunk.constants;
+                    }
                 }
             }
         }
     }
 
-    private void callMetaBinary(Object l, Object r, String name) {
+    private boolean callMetaBinary(Object l, Object r, String name) {
         //This function always runs after popping twice, so we have at least 2 spaces on the call stack left
 
         PetPetClass leftClass = getPetPetClass(l);
@@ -343,47 +400,42 @@ public class Interpreter {
 
         String underscored = "__" + name;
         String underscoredR = underscored + "R";
-        PetPetCallable func = leftClass.methods.get(underscored + "_" + rightClass.name);
-        if (func != null) {
-            pushNoCheck(l);
-            pushNoCheck(r);
-            makeCall(func, 2, false, true);
-            return;
-        }
-        func = leftClass.methods.get(underscored);
-        if (func != null) {
-            pushNoCheck(l);
-            pushNoCheck(r);
-            makeCall(func, 2, false, true);
-            return;
-        }
-        func = rightClass.methods.get(underscoredR + "_" + leftClass.name);
-        if (func != null) {
-            pushNoCheck(r);
-            pushNoCheck(l);
-            makeCall(func, 2, false, true);
-            return;
-        }
-        func = rightClass.methods.get(underscoredR);
-        if (func != null) {
-            pushNoCheck(r);
-            pushNoCheck(l);
-            makeCall(func, 2, false, true);
-            return;
-        }
+
+        Boolean done;
+
+        done = metaBinaryHelper(l, r, leftClass.methods.get(underscored + "_" + rightClass.name));
+        if (done != null) return done;
+        done = metaBinaryHelper(l, r, leftClass.methods.get(underscored));
+        if (done != null) return done;
+        done = metaBinaryHelper(r, l, leftClass.methods.get(underscoredR + "_" + leftClass.name));
+        if (done != null) return done;
+        done = metaBinaryHelper(r, l, leftClass.methods.get(underscoredR));
+        if (done != null) return done;
+
         runtimeException("Cannot " + name + " types " + leftClass.name + " and " + rightClass.name);
+        return false; //return value unimportant
     }
 
-    private void callMetaUnary(Object o, String name) {
+    //return null if nothing happened, return false if it was a java function, return true if petpet function
+    private Boolean metaBinaryHelper(Object first, Object second, Object func) {
+        if (func != null) {
+            pushNoCheck(first);
+            pushNoCheck(second);
+            return makeCall(func, 2, false, true);
+        }
+        return null;
+    }
+
+    private boolean callMetaUnary(Object o, String name) {
         //Called after popping 1 arg, so we have 1 arg of space on the stack, can pushNoCheck
         PetPetClass objClass = getPetPetClass(o);
         PetPetCallable func = objClass.methods.get("__" + name);
         if (func != null) {
             pushNoCheck(o);
-            makeCall(func, 1, false, true);
-            return;
+            return makeCall(func, 1, false, true);
         }
         runtimeException("Cannot perform operator " + name + " on type " + objClass.name);
+        return false; //doesnt matter
     }
 
     /**
@@ -393,8 +445,10 @@ public class Interpreter {
      * firstArg
      * indexer
      * instance
+     *
+     * return true if it was a petpet function
      */
-    private void doInvoke(int argCount, Object instance, Object indexer) {
+    private boolean doInvoke(int argCount, Object instance, Object indexer) {
         System.arraycopy(stack, stackTop-argCount, stack, (stackTop--)-argCount-1, argCount);
         if (instance == null)
             runtimeException("Attempt to invoke method on null value (key = " + indexer + ")");
@@ -403,17 +457,16 @@ public class Interpreter {
             //First try with _argCount
             Object method = langClass.methods.get(name + "_" + argCount);
             if (method != null) {
-                makeCall(method, argCount+1, false, true);
-                return;
+                return makeCall(method, argCount+1, false, true);
             }
             //If there wasn't one with the given arg count, then just do it with the regular one
             method = langClass.methods.get(name);
             if (method == null)
                 runtimeException("Method " + name + " does not exist for type " + langClass.name + " with " + argCount + " args");
-            makeCall(method, argCount+1, false, true);
-            return;
+            return makeCall(method, argCount+1, false, true);
         }
         runtimeException("Attempt to invoke " + instance + " with non-string method name, " + indexer);
+        return false; //doesnt matter
     }
 
     /**
@@ -431,6 +484,8 @@ public class Interpreter {
     public PetPetClass getPetPetClass(Object o) {
         if (o == null)
             return PetPetNull.PET_PET_CLASS;
+        if (o instanceof PetPetObject obj)
+            return obj.type;
         return classMap.computeIfAbsent(o.getClass(), c -> {
             Class<?> cur = c.getSuperclass();
             while (cur != null) {
@@ -524,16 +579,32 @@ public class Interpreter {
     }
 
     //Returns true if this was a petpet function, false if a java function
+    //Stack contract:
+    //INVOCATION:
+    //lastArg
+    //...
+    //firstArg (the instance, or "this")
+    //argCount is equal to the number of args, including the instance
+    //After invocation, everything listed above is gone, and the result of the call is left in its place.
+    //NOT INVOCATION
+    //lastArg
+    //...
+    //firstArg
+    //function itself (this)
+    //argCount is equal to the number of args, not including the function
+    //after invocation, everything listed above is gone, and the result of the call is left in its place.
     private boolean makeCall(Object callee, int argCount, boolean calledFromJava, boolean isInvocation) {
+//        printStack();
+//        System.out.println(argCount);
 //        System.out.println(stack);
         if (callee == null)
             runtimeException("Attempt to call null value");
         if (callee instanceof PetPetClosure closure) {
-            pushCallStack(closure, 0, stackTop-argCount-1, calledFromJava);
+            int diff = isInvocation ? 1 : 0;
+            pushCallStack(closure, 0, stackTop-argCount-1+diff, calledFromJava);
             if (callStackTop > maxStackFrames)
                 runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
-            if (argCount != closure.function.paramCount) {
-                int diff = isInvocation ? 1 : 0;
+            if (argCount != closure.function.paramCount + diff) {
                 runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount - diff, argCount - diff));
             }
             return true;
@@ -604,7 +675,7 @@ public class Interpreter {
             }
             return false;
         } else {
-            runtimeException("Attempt to call non-callable value: " + callee);
+            runtimeException("Attempt to call non-callable value: " + getString(callee));
         }
         return false;
     }
