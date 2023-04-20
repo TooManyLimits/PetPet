@@ -16,7 +16,6 @@ import java.util.function.ToIntFunction;
 @PetPetWhitelist
 public class JavaFunction implements PetPetCallable {
     public final boolean isVoid;
-    @PetPetWhitelist
     public final int paramCount;
     private final Backing backing;
 
@@ -109,6 +108,7 @@ public class JavaFunction implements PetPetCallable {
     }
 
     @Override
+    @PetPetWhitelist
     public int paramCount() {
         return paramCount;
     }
@@ -189,6 +189,10 @@ public class JavaFunction implements PetPetCallable {
 
     public Object invoke() {if (isVoid) {backing.callVoid();return null;}return backing.callReturning();}public Object invoke(Object arg0) {if (isVoid) {backing.callVoid(arg0);return null;}return backing.callReturning(arg0);}public Object invoke(Object arg0, Object arg1) {if (isVoid) {backing.callVoid(arg0, arg1);return null;}return backing.callReturning(arg0, arg1);}public Object invoke(Object arg0, Object arg1, Object arg2) {if (isVoid) {backing.callVoid(arg0, arg1, arg2);return null;}return backing.callReturning(arg0, arg1, arg2);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3);return null;}return backing.callReturning(arg0, arg1, arg2, arg3);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);}public Object invoke(Object arg0, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14) {if (isVoid) {backing.callVoid(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);return null;}return backing.callReturning(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);}
 
+    @Override
+    public Object callInvoking(Object... args) {
+        return call(args); //as a java function, doesn't care about invocation or not
+    }
     @Override
     public Object call(Object... args) {
         if (args.length != paramCount)

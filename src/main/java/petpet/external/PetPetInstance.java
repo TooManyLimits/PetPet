@@ -85,8 +85,10 @@ public class PetPetInstance {
 
 
         //Global values
-        for (Map.Entry<String, JavaFunction> entry : GlobalFunctions.DEFAULT_GLOBALS.entrySet())
-            setGlobal(entry.getKey(), entry.getValue());
+        setGlobal("class", GlobalFunctions.CLASS_FUNC);
+        setGlobal("extend", GlobalFunctions.EXTEND_FUNC);
+        setGlobal("print", GlobalFunctions.getPrintFunction(interpreter));
+        setGlobal("printStack", GlobalFunctions.getPrintStackFunction(interpreter));
         setGlobal("math", MathLibrary.createNewMathTable());
         setGlobal("_G", interpreter.globals);
 

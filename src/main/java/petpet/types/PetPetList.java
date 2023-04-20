@@ -54,12 +54,12 @@ public class PetPetList<T> extends ArrayList<T> {
         LIST_CLASS.addMethod("contains", new JavaFunction(PetPetList.class, "contains", true, regularCostPenalty(2)));
 
         //Add cost penalties
-        ((JavaFunction) LIST_CLASS.methods.get("map")).costPenalizer = PetPetList.functionalCostPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("each")).costPenalizer = PetPetList.functionalCostPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("eachI")).costPenalizer = PetPetList.functionalCostPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("filter")).costPenalizer = PetPetList.functionalCostPenalty(1);
-        ((JavaFunction) LIST_CLASS.methods.get("foldR")).costPenalizer = PetPetList.functionalCostPenalty(2);
-        ((JavaFunction) LIST_CLASS.methods.get("foldL")).costPenalizer = PetPetList.functionalCostPenalty(2);
+        ((JavaFunction) LIST_CLASS.getMethod("map")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.getMethod("each")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.getMethod("eachI")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.getMethod("filter")).costPenalizer = PetPetList.functionalCostPenalty(1);
+        ((JavaFunction) LIST_CLASS.getMethod("foldR")).costPenalizer = PetPetList.functionalCostPenalty(2);
+        ((JavaFunction) LIST_CLASS.getMethod("foldL")).costPenalizer = PetPetList.functionalCostPenalty(2);
     }
 
     //Penalty function, charging the caller a (small) price for each

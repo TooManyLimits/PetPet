@@ -9,7 +9,9 @@ import petpet.types.immutable.PetPetTableView;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -21,23 +23,24 @@ public class PetPetClass {
     static {
         PET_PET_CLASS_CLASS = PetPetReflector.reflect(PetPetClass.class, "class");
 
-        ((JavaFunction) PET_PET_CLASS_CLASS.methods.get("fieldInfo")).costPenalizer =
-                i -> ((PetPetClass) i.peek()).fieldGetters.size();
+//        ((JavaFunction) PET_PET_CLASS_CLASS.methods.get("fieldInfo")).costPenalizer =
+//                i -> ((PetPetClass) i.peek()).fieldGetters.size();
     }
 
-    @PetPetWhitelist
     public final String name;
+    public final PetPetClass parent;
+
+    @PetPetWhitelist
+    public String name() {return name;}
+    @PetPetWhitelist
+    public PetPetClass parent() {return parent;}
+
 
     private boolean isEditable;
 
-    public PetPetClass(String name) {
+    public PetPetClass(String name, PetPetClass parent) {
         this.name = name;
-        addMethod("type", new JavaFunction(false, 1) {
-            @Override
-            public Object invoke(Object arg0) {
-                return name;
-            }
-        });
+        this.parent = parent;
         addMethod("class", new JavaFunction(false, 1) {
             @Override
             public Object invoke(Object arg0) {
@@ -45,42 +48,53 @@ public class PetPetClass {
             }
         });
     }
+
+    public PetPetClass(String name) {
+        this(name, null);
+    }
+
     //method object is JavaFunction or LangClosure
     //currently only JavaFunction, since user-defined classes aren't a thing yet
     public final PetPetTable<String, PetPetCallable> methods = new PetPetTable<>();
-    public final PetPetTable<String, Function> fieldGetters = new PetPetTable<>();
-    public final PetPetTable<String, BiConsumer> fieldSetters = new PetPetTable<>();
+//    public final PetPetTable<String, Function> fieldGetters = new PetPetTable<>();
+//    public final PetPetTable<String, BiConsumer> fieldSetters = new PetPetTable<>();
+
+    public Object getMethod(String name) {
+        Object result = methods.get(name);
+        if (result == null)
+            return parent == null ? null : parent.getMethod(name);
+        return result;
+    }
+
+    public boolean doesExtend(PetPetClass possibleParent) {
+        PetPetClass cur = this;
+        while (cur != null) {
+            if (cur == possibleParent)
+                return true;
+            cur = cur.parent;
+        }
+        return false;
+    }
 
     public void addMethod(String name, PetPetCallable method) {
         methods.put(name, method);
     }
 
-    public void addField(String name, Field field, boolean forceImmutable) {
-        fieldGetters.put(name, PetPetReflector.unreflectGetter(field));
-        if (!forceImmutable && !Modifier.isFinal(field.getModifiers()))
-            fieldSetters.put(name, PetPetReflector.unreflectSetter(field));
-    }
-
     public PetPetClass copy() {
         PetPetClass newClass = new PetPetClass(name);
         newClass.methods.putAll(methods);
-        newClass.fieldGetters.putAll(fieldGetters);
-        newClass.fieldSetters.putAll(fieldSetters);
+        newClass.addMethod("class", new JavaFunction(false, 1) {
+            @Override
+            public Object invoke(Object arg0) {
+                return newClass;
+            }
+        });
         return newClass;
     }
 
     @PetPetWhitelist
     public PetPetTable<String, PetPetCallable> methods() {
         return isEditable ? methods : new PetPetTableView<>(methods);
-    }
-
-    @PetPetWhitelist
-    public PetPetTable<String, Boolean> fieldInfo() {
-        PetPetTable<String, Boolean> fields = new PetPetTable<>();
-        for (Map.Entry<String, Function> field : fieldGetters.entrySet()) {
-            fields.put(field.getKey(), fieldSetters.containsKey(field.getKey()));
-        }
-        return fields;
     }
 
     /**
@@ -92,4 +106,8 @@ public class PetPetClass {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "class(name=" + name + ")";
+    }
 }

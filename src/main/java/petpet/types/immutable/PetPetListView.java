@@ -16,6 +16,8 @@ public class PetPetListView<T> extends PetPetList<T> {
     public String toString() {
         return "<ListView(size=" + size() + ")>";
     }
+
+    //don't actually extend table, even though we do java side
     public static final PetPetClass LIST_VIEW_CLASS = new PetPetClass("list_view");
     private final List<T> backingList;
 
@@ -38,7 +40,7 @@ public class PetPetListView<T> extends PetPetList<T> {
     }
 
     private static void allowMethod(String name) {
-        LIST_VIEW_CLASS.methods.put(name, PetPetList.LIST_CLASS.methods.get(name));
+        LIST_VIEW_CLASS.addMethod(name, (PetPetCallable) PetPetList.LIST_CLASS.getMethod(name));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package petpet.types.immutable;
 
+import petpet.lang.run.PetPetCallable;
 import petpet.lang.run.PetPetClass;
 import petpet.lang.run.PetPetException;
 import petpet.types.PetPetTable;
@@ -22,6 +23,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
         return o instanceof PetPetTableView<?,?> tableView && tableView.backingMap == backingMap;
     }
 
+    //don't actually extend table, even though we do java side
     public static final PetPetClass TABLE_VIEW_CLASS = new PetPetClass("table_view");
     private final Map<K, V> backingMap;
 
@@ -38,7 +40,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
     }
 
     private static void allowMethod(String name) {
-        TABLE_VIEW_CLASS.methods.put(name, PetPetTable.TABLE_CLASS.methods.get(name));
+        TABLE_VIEW_CLASS.addMethod(name, (PetPetCallable) PetPetTable.TABLE_CLASS.getMethod(name));
     }
 
     @Override

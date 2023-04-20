@@ -6,23 +6,47 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                false.class().methods()["__mul_num"] = fn a(n) if this n else 0
-                print(false * 5)
-                print(true * 6)
+                bug()
+                vec3 = class("vec3", $[
+                	__init = fn() {
+                		this.x = this.y = this.z = 0
+                		this
+                	},
+                	__tostring = fn() {
+                		"{" + this.x + ", " + this.y + ", " + this.z + "}"
+                	}
+                ])
+                print(vec3())
+                                
+                vec4 = extend(vec3, "vec4", $[
+                	super_init = vec3.methods().__init,
+                	__init = fn() {
+                		this.super_init()
+                		this.w = 0
+                		this
+                	},
+                	super_tostring = vec3.methods().__tostring,
+                	__tostring = fn() {
+                		this.super_tostring().sub(0, -1) + ", " + this.w + "}"
+                	}
+                ])
+                print(vec4())
                 
-                numMethods = 0.class().methods()
-                fn numMethods.sqrt() math:sqrt(this)
-                numMethods.sqrtAlternate = math:sqrt
-                0.class().methods().square = fn() this*this
-                print(3.square()) //9
-                print(16.sqrt()) //4
-                print(25.sqrtAlternate()) //5
+                global x = 3
+                _G.eachK(print)
+                bug()
                 
                 """;
         PetPetInstance instance = new PetPetInstance();
-        instance.debugBytecode = true;
+        //instance.debugBytecode = true;
 
-        instance.runScript("script", script);
+        for (int i = 0; i < 10; i++)
+            try {
+                instance.runScript("script", script);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+
     }
 
     private static void testHelloWorld() throws Exception {

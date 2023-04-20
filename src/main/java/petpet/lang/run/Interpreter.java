@@ -2,10 +2,7 @@ package petpet.lang.run;
 
 import petpet.types.*;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static petpet.lang.compile.Bytecode.*;
 
@@ -34,13 +31,14 @@ public class Interpreter {
 
     public int cost;
 
-    public Object run(PetPetClosure closure, Object... args) {
+    public Object run(PetPetClosure closure, boolean invocation, Object... args) {
 //        if (closure.function.paramCount != args.length)
 //            runtimeException("Expected " + closure.function.paramCount + " args, got " + args.length);
-        push(closure);
+        if (!invocation)
+            push(closure);
         for (Object arg : args)
             push(arg);
-        makeCall(closure, args.length, true, false);
+        makeCall(closure, args.length, true, invocation);
         run();
         return pop();
     }
@@ -288,27 +286,10 @@ public class Interpreter {
                         runtimeException("Attempt to get from null value with key: " + getString(indexer));
 
                     PetPetClass langClass = getPetPetClass(instance);
-
-                    if (indexer instanceof String name) {
-                        Function field = langClass.fieldGetters.get(name);
-                        if (field != null)  {
-                            pop(); pop();
-                            try {
-                                Object result = field.apply(instance);
-                                if (result instanceof Number n)
-                                    pushNoCheck(n.doubleValue());
-                                else pushNoCheck(result);
-                            } catch (Exception e) {
-                                runtimeException("Should never happen unless poorly made environment function: " + e);
-                            }
-                            break;
-                        }
-                        cost++;
-                    }
                     String indexerTypeName = getPetPetClass(indexer).name;
 
                     String specialString = "__get_" + indexerTypeName;
-                    Object getMethod = langClass.methods.get(specialString);
+                    Object getMethod = langClass.getMethod(specialString);
                     if (getMethod != null) {
                         if (makeCall(getMethod, 2, false, true)) {
                             frame = peekCallStack();
@@ -318,7 +299,7 @@ public class Interpreter {
                         break;
                     }
                     cost++;
-                    getMethod = langClass.methods.get("__get");
+                    getMethod = langClass.getMethod("__get");
                     if (getMethod != null) {
                         if (makeCall(getMethod, 2, false, true)) {
                             frame = peekCallStack();
@@ -338,24 +319,10 @@ public class Interpreter {
 
                     PetPetClass langClass = getPetPetClass(instance);
 
-                    if (indexer instanceof String name) {
-                        BiConsumer field = langClass.fieldSetters.get(name);
-                        if (field != null) {
-                            pop(); pop(); pop();
-                            try {
-                                field.accept(instance, value);
-                            } catch (Exception e) {
-                                runtimeException(e.getMessage());
-                            }
-                            pushNoCheck(value);
-                            break;
-                        }
-                    }
-
                     String indexerTypeName = getPetPetClass(indexer).name;
 
                     String specialString = "__set_" + indexerTypeName;
-                    Object setMethod = langClass.methods.get(specialString);
+                    Object setMethod = langClass.getMethod(specialString);
                     if (setMethod != null) {
                         if (makeCall(setMethod, 3, false, true)) {
                             frame = peekCallStack();
@@ -364,7 +331,7 @@ public class Interpreter {
                         }
                         break;
                     }
-                    setMethod = langClass.methods.get("__set");
+                    setMethod = langClass.getMethod("__set");
                     if (setMethod != null) {
                         if (makeCall(setMethod, 3, false, true)) {
                             frame = peekCallStack();
@@ -403,13 +370,13 @@ public class Interpreter {
 
         Boolean done;
 
-        done = metaBinaryHelper(l, r, leftClass.methods.get(underscored + "_" + rightClass.name));
+        done = metaBinaryHelper(l, r, leftClass.getMethod(underscored + "_" + rightClass.name));
         if (done != null) return done;
-        done = metaBinaryHelper(l, r, leftClass.methods.get(underscored));
+        done = metaBinaryHelper(l, r, leftClass.getMethod(underscored));
         if (done != null) return done;
-        done = metaBinaryHelper(r, l, leftClass.methods.get(underscoredR + "_" + leftClass.name));
+        done = metaBinaryHelper(r, l, leftClass.getMethod(underscoredR + "_" + leftClass.name));
         if (done != null) return done;
-        done = metaBinaryHelper(r, l, leftClass.methods.get(underscoredR));
+        done = metaBinaryHelper(r, l, leftClass.getMethod(underscoredR));
         if (done != null) return done;
 
         runtimeException("Cannot " + name + " types " + leftClass.name + " and " + rightClass.name);
@@ -429,7 +396,7 @@ public class Interpreter {
     private boolean callMetaUnary(Object o, String name) {
         //Called after popping 1 arg, so we have 1 arg of space on the stack, can pushNoCheck
         PetPetClass objClass = getPetPetClass(o);
-        PetPetCallable func = objClass.methods.get("__" + name);
+        Object func = objClass.getMethod("__" + name);
         if (func != null) {
             pushNoCheck(o);
             return makeCall(func, 1, false, true);
@@ -455,12 +422,12 @@ public class Interpreter {
         PetPetClass langClass = getPetPetClass(instance);
         if (indexer instanceof String name) {
             //First try with _argCount
-            Object method = langClass.methods.get(name + "_" + argCount);
+            Object method = langClass.getMethod(name + "_" + argCount);
             if (method != null) {
                 return makeCall(method, argCount+1, false, true);
             }
             //If there wasn't one with the given arg count, then just do it with the regular one
-            method = langClass.methods.get(name);
+            method = langClass.getMethod(name);
             if (method == null)
                 runtimeException("Method " + name + " does not exist for type " + langClass.name + " with " + argCount + " args");
             return makeCall(method, argCount+1, false, true);
@@ -475,9 +442,14 @@ public class Interpreter {
     public String getString(Object o) {
         if (o instanceof String || o instanceof Double || o instanceof Boolean || o == null)
             return PetPetString.valueOf(o);
-        PetPetCallable method = getPetPetClass(o).methods.get("__tostring");
-        if (method != null)
-            return (String) method.call(o);
+        Object method = getPetPetClass(o).getMethod("__tostring");
+        if (method != null) {
+            if (method instanceof PetPetCallable callable) {
+                return (String) callable.callInvoking(o); //invoke
+            } else {
+                runtimeException("Your __tostring() method isn't a function?");
+            }
+        }
         return o.toString();
     }
 
@@ -485,7 +457,7 @@ public class Interpreter {
         if (o == null)
             return PetPetNull.PET_PET_CLASS;
         if (o instanceof PetPetObject obj)
-            return obj.type;
+            return obj.clazz;
         return classMap.computeIfAbsent(o.getClass(), c -> {
             Class<?> cur = c.getSuperclass();
             while (cur != null) {
@@ -585,12 +557,13 @@ public class Interpreter {
     //...
     //firstArg (the instance, or "this")
     //argCount is equal to the number of args, including the instance
+    //Callee is not on the stack
     //After invocation, everything listed above is gone, and the result of the call is left in its place.
     //NOT INVOCATION
     //lastArg
     //...
     //firstArg
-    //function itself (this)
+    //function itself (this) (also callee)
     //argCount is equal to the number of args, not including the function
     //after invocation, everything listed above is gone, and the result of the call is left in its place.
     private boolean makeCall(Object callee, int argCount, boolean calledFromJava, boolean isInvocation) {
@@ -674,6 +647,25 @@ public class Interpreter {
                 runtimeException("Java exception occurred: " + e.getMessage());
             }
             return false;
+        } else if (callee instanceof PetPetClass petPetClass) {
+            if (isInvocation)
+                throw new PetPetException("I don't know what cursed things you're doing. Calling a *class* as an *invocation*? What? You're unhinged! I can't let you go on like this. Sorry.");
+            //calling a class:
+            PetPetObject newInstance = new PetPetObject(petPetClass);
+            Object initMethod = petPetClass.getMethod("__init");
+            if (initMethod != null) {
+                if (initMethod instanceof PetPetCallable callable) {
+                    set(stackTop-argCount-1, newInstance);
+                    return makeCall(initMethod, argCount + 1, false, true);
+                } else {
+                    runtimeException("Method object isn't a callable?");
+                }
+            }
+            //There was no init method, so just pop off all the args and leave the new instance on the stack
+            for (int i = 0; i < argCount + 1; i++)
+                pop();
+            push(newInstance);
+            return false;
         } else {
             runtimeException("Attempt to call non-callable value: " + getString(callee));
         }
@@ -714,7 +706,7 @@ public class Interpreter {
 
     private void runtimeException(String message) {
         StringBuilder messageBuilder = new StringBuilder(message);
-        for (int i = 0; i < callStackTop; i++) {
+        for (int i = callStackTop - 1; i >= 0; i--) {
             CallFrame frame = callStack[i];
             messageBuilder.append("\n in: ")
                     .append(frame.closure.function)
@@ -723,10 +715,12 @@ public class Interpreter {
         }
         message = messageBuilder.toString();
 
+        callStackTop = 0;
+
         throw new PetPetException(message);
     }
 
-    private void printStack() {
+    public void printStack() {
         System.out.print("[");
         for (int i = 0; i < stackTop; i++) {
             System.out.print(stack[i]);

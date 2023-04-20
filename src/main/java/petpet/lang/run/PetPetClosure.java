@@ -8,10 +8,10 @@ public class PetPetClosure implements PetPetCallable {
     public final Upvalue[] upvalues;
     public final Interpreter interpreter;
 
-    @PetPetWhitelist
     public final int paramCount;
 
     @Override
+    @PetPetWhitelist
     public int paramCount() {
         return paramCount;
     }
@@ -28,7 +28,21 @@ public class PetPetClosure implements PetPetCallable {
         for (int i = 0; i < args.length; i++)
             if (args[i] instanceof Number n)
                 args[i] = n.doubleValue();
-        return interpreter.run(this, args);
+        return interpreter.run(this, false, args);
+    }
+
+    @Override
+    public Object callInvoking(Object... args) { //same as otherwise, change boolean variable
+        //Convert numbers to double
+        for (int i = 0; i < args.length; i++)
+            if (args[i] instanceof Number n)
+                args[i] = n.doubleValue();
+        return interpreter.run(this, true, args);
+    }
+
+    @PetPetWhitelist
+    public String __tostring() {
+        return name();
     }
 
     @Override
@@ -37,7 +51,7 @@ public class PetPetClosure implements PetPetCallable {
     }
 
     @PetPetWhitelist
-    public String getName() {
+    public String name() {
         return function.name;
     }
 }

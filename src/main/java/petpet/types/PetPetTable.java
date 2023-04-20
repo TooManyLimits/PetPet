@@ -51,9 +51,9 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         TABLE_CLASS.addMethod("clear", new JavaFunction(PetPetTable.class, "clear", true));
 
         //penalties
-        ((JavaFunction) TABLE_CLASS.methods.get("each")).costPenalizer = PetPetTable.costPenalty(1);
-        ((JavaFunction) TABLE_CLASS.methods.get("eachK")).costPenalizer = PetPetTable.costPenalty(1);
-        ((JavaFunction) TABLE_CLASS.methods.get("eachV")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.getMethod("each")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.getMethod("eachK")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.getMethod("eachV")).costPenalizer = PetPetTable.costPenalty(1);
     }
 
     //Penalty function, charging the caller (a small price) for each
@@ -66,6 +66,12 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         if (func.paramCount() != expectedArgs)
             throw new PetPetException("table." + name + "() expects " +
                     expectedArgs + "-arg function, got " + func.paramCount() + "-arg");
+    }
+
+    @Override
+    public V put(K key, V value) {
+        super.put(key, value);
+        return value;
     }
 
     @PetPetWhitelist
