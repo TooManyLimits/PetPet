@@ -6,41 +6,40 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                bug()
+                //bug()
                 vec3 = class("vec3", $[
-                	__init = fn() {
+                	__init_0 = fn() {
                 		this.x = this.y = this.z = 0
                 		this
                 	},
-                	__tostring = fn() {
-                		"{" + this.x + ", " + this.y + ", " + this.z + "}"
-                	}
-                ])
-                print(vec3())
-                                
-                vec4 = extend(vec3, "vec4", $[
-                	super_init = vec3.methods().__init,
-                	__init = fn() {
-                		this.super_init()
-                		this.w = 0
+                	__init_3 = fn(x, y, z) {
+                		this.x = x
+                		this.y = y
+                		this.z = z
                 		this
                 	},
-                	super_tostring = vec3.methods().__tostring,
+                	__init = fn(a) {
+                	    this.x = this.y = this.z = a
+                	    this
+                	},
                 	__tostring = fn() {
-                		this.super_tostring().sub(0, -1) + ", " + this.w + "}"
-                	}
+                		"{" + this.x + ", " + this.y + ", " + this.z + "}"
+                	},
+                	dot = fn(o) this.x * o.x + this.y * o.y + this.z * o.z
                 ])
-                print(vec4())
+                print(vec3())
+                print(vec3(1, 2, 3))
+                //print(vec3(1, 2))
+                
+                print(vec3(4,5,6).dot(vec3(1,2,3), 5))
                 
                 global x = 3
                 _G.eachK(print)
-                bug()
-                
                 """;
         PetPetInstance instance = new PetPetInstance();
         //instance.debugBytecode = true;
 
-        for (int i = 0; i < 10; i++)
+//        for (int i = 0; i < 10; i++)
             try {
                 instance.runScript("script", script);
             } catch (Exception e) {

@@ -578,7 +578,7 @@ public class Interpreter {
             if (callStackTop > maxStackFrames)
                 runtimeException("Stack overflow! More than the max stack frames of " + maxStackFrames);
             if (argCount != closure.function.paramCount + diff) {
-                runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount - diff, argCount - diff));
+                runtimeException(String.format("Expected %d args, got %d", closure.function.paramCount, argCount - diff));
             }
             return true;
         } else if (callee instanceof JavaFunction jFunction) {
@@ -649,10 +649,19 @@ public class Interpreter {
             return false;
         } else if (callee instanceof PetPetClass petPetClass) {
             if (isInvocation)
-                throw new PetPetException("I don't know what cursed things you're doing. Calling a *class* as an *invocation*? What? You're unhinged! I can't let you go on like this. Sorry.");
+                runtimeException("I don't know what cursed things you're doing. Calling a *class* as an *invocation*? What? You're unhinged! I can't let you go on like this. Sorry.");
             //calling a class:
             PetPetObject newInstance = new PetPetObject(petPetClass);
-            Object initMethod = petPetClass.getMethod("__init");
+            Object initMethod = petPetClass.getMethod("__init_" + argCount);
+            if (initMethod != null) {
+                if (initMethod instanceof PetPetCallable callable) {
+                    set(stackTop-argCount-1, newInstance);
+                    return makeCall(initMethod, argCount + 1, false, true);
+                } else {
+                    runtimeException("Method object isn't a callable?");
+                }
+            }
+            initMethod = petPetClass.getMethod("__init");
             if (initMethod != null) {
                 if (initMethod instanceof PetPetCallable callable) {
                     set(stackTop-argCount-1, newInstance);
