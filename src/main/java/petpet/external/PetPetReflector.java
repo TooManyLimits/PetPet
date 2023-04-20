@@ -13,6 +13,12 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+
+//Cached classes do not have parents, because you generally would
+//want to make copies of the classes, and also you wouldn't want
+//reference copies of the parents, you'd want deep copies, so you
+//would need to set the parents of the copy to be your own copy of
+//the superclass which is likely a local variable
 public class PetPetReflector {
     //Ensuring that things don't need to be reflected twice to generate the classes
     public static final Map<Class<?>, PetPetClass> CACHE = new IdentityHashMap<>();

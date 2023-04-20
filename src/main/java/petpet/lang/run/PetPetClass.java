@@ -28,7 +28,7 @@ public class PetPetClass {
     }
 
     public final String name;
-    public final PetPetClass parent;
+    public PetPetClass parent;
 
     @PetPetWhitelist
     public String name() {return name;}
@@ -103,6 +103,11 @@ public class PetPetClass {
      */
     public PetPetClass makeEditable() {
         isEditable = true;
+        return this;
+    }
+
+    public PetPetClass setParent(PetPetClass parent) {
+        this.parent = parent;
         return this;
     }
 

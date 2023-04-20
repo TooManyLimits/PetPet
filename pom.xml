@@ -6,7 +6,7 @@
 
     <groupId>io.github.moonlight_maya</groupId>
     <artifactId>petpet</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 
     <build>
         <plugins>
