@@ -714,11 +714,11 @@ public class Interpreter {
         Upvalue prev = null;
         Upvalue cur = upvalueList;
 
-        while (cur != null && upvalueList.idx > index) {
+        while (cur != null && cur.idx > index) {
             prev = cur;
             cur = cur.next;
         }
-        if (cur != null && upvalueList.idx == index)
+        if (cur != null && cur.idx == index)
             return cur;
 
         Upvalue result = new Upvalue(this, index);
