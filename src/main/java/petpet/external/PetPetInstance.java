@@ -74,15 +74,14 @@ public class PetPetInstance {
         interpreter.classMap.put(Double.class, new PetPetClass("num").makeEditable());
         interpreter.classMap.put(Boolean.class, new PetPetClass("bool").makeEditable());
         interpreter.classMap.put(String.class, PetPetString.STRING_CLASS.copy().makeEditable());
-        interpreter.classMap.put(JavaFunction.class, PetPetReflector.reflect(JavaFunction.class, "jfn").copy().makeEditable());
-        interpreter.classMap.put(PetPetClosure.class, PetPetReflector.reflect(PetPetClosure.class, "fn").copy().makeEditable());
+        interpreter.classMap.put(JavaFunction.class, PetPetReflector.reflect(JavaFunction.class, "func").copy().makeEditable());
+        interpreter.classMap.put(PetPetClosure.class, PetPetReflector.reflect(PetPetClosure.class, "func").copy().makeEditable());
         interpreter.classMap.put(PetPetClass.class, PetPetClass.PET_PET_CLASS_CLASS.copy().makeEditable());
 
         interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS.copy().makeEditable());
         interpreter.classMap.put(PetPetListView.class, PetPetListView.LIST_VIEW_CLASS.copy().makeEditable());
         interpreter.classMap.put(PetPetTable.class, PetPetTable.TABLE_CLASS.copy().makeEditable());
         interpreter.classMap.put(PetPetTableView.class, PetPetTableView.TABLE_VIEW_CLASS.copy().makeEditable());
-
 
         //Global values
         setGlobal("class", GlobalFunctions.CLASS_FUNC);

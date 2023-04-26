@@ -277,6 +277,7 @@ public class Interpreter {
                 }
                 case CLOSE_UPVALUE -> {
                     closeUpvalues(stackTop-2); //element on top of the stack is the result of the block expression
+                    stack[stackTop-2] = pop(); //pop offset 1, remove the thing we just closed
                 }
 
                 case GET -> {
@@ -374,9 +375,9 @@ public class Interpreter {
         if (done != null) return done;
         done = metaBinaryHelper(l, r, leftClass.getMethod(underscored));
         if (done != null) return done;
-        done = metaBinaryHelper(r, l, leftClass.getMethod(underscoredR + "_" + leftClass.name));
+        done = metaBinaryHelper(r, l, rightClass.getMethod(underscoredR + "_" + leftClass.name));
         if (done != null) return done;
-        done = metaBinaryHelper(r, l, leftClass.getMethod(underscoredR));
+        done = metaBinaryHelper(r, l, rightClass.getMethod(underscoredR));
         if (done != null) return done;
 
         runtimeException("Cannot " + name + " types " + leftClass.name + " and " + rightClass.name);
@@ -642,6 +643,32 @@ public class Interpreter {
             } catch (PetPetException e) {
                 e.printStackTrace();
                 runtimeException(e.getMessage());
+            } catch (ClassCastException e) {
+                //Class cast exceptions are annoying, in that the object
+                //doesn't have the actual classes involved, just their (java) names.
+                //Need to extract them and convert to petpet side names.
+                try {
+                    String[] message = e.getMessage().split(" ");
+                    Class<?> receivedClass = Class.forName(message[1]);
+                    Class<?> expectedClass = Class.forName(message[7]);
+                    String receivedName = classMap.get(receivedClass).name;
+                    String expectedName;
+                    if (expectedClass == PetPetCallable.class) {
+                        expectedName = "func";
+                    } else if (expectedClass.isPrimitive() && expectedClass != boolean.class && expectedClass != char.class) {
+                        expectedName = "num";
+                    } else if (Number.class.isAssignableFrom(expectedClass)) {
+                        expectedName = "num";
+                    } else {
+                        expectedName = classMap.get(expectedClass).name;
+                    }
+                    e.printStackTrace();
+                    runtimeException("Expected " + expectedName + ", got " + receivedName);
+                } catch (ClassNotFoundException | NullPointerException e2) {
+                    e.printStackTrace();
+                    e2.printStackTrace();
+                    runtimeException("Java exception occurred: " + e.getMessage() + ". Failed to translate names");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 runtimeException("Java exception occurred: " + e.getMessage());

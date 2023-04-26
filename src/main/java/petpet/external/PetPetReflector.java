@@ -37,7 +37,6 @@ public class PetPetReflector {
         for (Field f : clazz.getFields()) {
             if (f.isAnnotationPresent(PetPetWhitelist.class)) {
                 throw new IllegalArgumentException("Cannot whitelist fields - unsupported");
-//                result.addField(f.getName(), f, f.getAnnotation(PetPetWhitelist.class).forceImmutable());
             }
         }
         for (Method m : clazz.getDeclaredMethods()) {

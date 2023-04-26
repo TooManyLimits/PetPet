@@ -6,35 +6,21 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                //bug()
-                vec3 = class("vec3", $[
-                	__init_0 = fn() {
-                		this.x = this.y = this.z = 0
-                		this
-                	},
-                	__init_3 = fn(x, y, z) {
-                		this.x = x
-                		this.y = y
-                		this.z = z
-                		this
-                	},
-                	__init = fn(a) {
-                	    this.x = this.y = this.z = a
-                	    this
-                	},
-                	__tostring = fn() {
-                		"{" + this.x + ", " + this.y + ", " + this.z + "}"
-                	},
-                	dot = fn(o) this.x * o.x + this.y * o.y + this.z * o.z
-                ])
-                print(vec3())
-                print(vec3(1, 2, 3))
-                //print(vec3(1, 2))
+                z = {
+                    x = 10
+                    y = 5
+                    
+                    z = fn(a) {
+                        x = x + 1
+                        y = "" + a
+                        print(x + ", " + y)
+                    }
+                    1 + 2 + 3 + 4 + 5 * 297 - 581 / 128 * 185
+                    z
+                }
                 
-                print(vec3(4,5,6).dot(vec3(1,2,3), 5))
-                
-                global x = 3
-                _G.eachK(print)
+                _G.eachK(z)
+                print(z)
                 """;
         PetPetInstance instance = new PetPetInstance();
         //instance.debugBytecode = true;
