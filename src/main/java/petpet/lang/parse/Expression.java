@@ -65,6 +65,11 @@ public abstract class Expression {
             retVal.compile(compiler);
             compiler.bytecode(Bytecode.RETURN);
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            retVal.scanForDeclarations(compiler);
+        }
     }
     public static class IfExpression extends Expression {
         public final Expression condition, ifTrue, ifFalse;
@@ -85,7 +90,7 @@ public abstract class Expression {
             compiler.bytecode(Bytecode.POP);
             ifTrue.compile(compiler);
 
-            if (ifFalse != null) //if we have an else statement, emit an unconditional jump to skip it
+//            if (ifFalse != null) //if we have an else statement, emit an unconditional jump to skip it
                 jumpOut = compiler.emitJump(Bytecode.JUMP);
 
             //Always patch the jumpElse
@@ -94,10 +99,11 @@ public abstract class Expression {
 
             if (ifFalse != null) {
                 ifFalse.compile(compiler);
-                compiler.patchJump(jumpOut);
+//                compiler.patchJump(jumpOut);
             } else {
                 compiler.bytecode(Bytecode.PUSH_NULL);
             }
+            compiler.patchJump(jumpOut);
         }
 
         @Override

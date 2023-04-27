@@ -6,24 +6,10 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         String script = """
-                z = {
-                    x = 10
-                    y = 5
-                    
-                    z = fn(a) {
-                        x = x + 1
-                        y = "" + a
-                        print(x + ", " + y)
-                    }
-                    1 + 2 + 3 + 4 + 5 * 297 - 581 / 128 * 185
-                    z
-                }
-                
-                _G.eachK(z)
-                print(z)
+                return a = 2
                 """;
         PetPetInstance instance = new PetPetInstance();
-        //instance.debugBytecode = true;
+        instance.debugBytecode = true;
 
 //        for (int i = 0; i < 10; i++)
             try {
