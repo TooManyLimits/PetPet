@@ -69,7 +69,7 @@ public class PetPetList<T> extends ArrayList<T> {
     }
 
     private static ToIntFunction<Interpreter> regularCostPenalty(double dividend) {
-        return i -> (int) (((PetPetList) i.peek(1)).size() / dividend);
+        return i -> (int) (((PetPetList) i.peek()).size() / dividend);
     }
 
     private static void checkFunc(PetPetCallable func, int expectedArgs, String name) throws PetPetException {

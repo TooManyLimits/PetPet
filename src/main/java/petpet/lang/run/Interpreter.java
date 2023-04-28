@@ -587,9 +587,9 @@ public class Interpreter {
                 int diff = isInvocation ? 1 : 0;
                 runtimeException(String.format("Expected %d args, got %d", jFunction.paramCount - diff, argCount - diff));
             }
-            if (jFunction.costPenalizer != null)
-                cost += jFunction.costPenalizer.applyAsInt(this);
             try {
+                if (jFunction.costPenalizer != null)
+                    cost += jFunction.costPenalizer.applyAsInt(this);
                 Object result;
                 if (jFunction.needsNumberConversion()) {
                     result = switch (argCount) {
@@ -643,6 +643,8 @@ public class Interpreter {
             } catch (PetPetException e) {
                 e.printStackTrace();
                 runtimeException(e.getMessage());
+            } catch (NullPointerException e) {
+                runtimeException("Unexpected null value");
             } catch (ClassCastException e) {
                 //Class cast exceptions are annoying, in that the object
                 //doesn't have the actual classes involved, just their (java) names.
