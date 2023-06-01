@@ -21,9 +21,17 @@ public class Compiler {
     private final Chunk.Builder chunkBuilder;
 
     private final Compiler parent;
+    public final String fileName;
 
-    public Compiler(Compiler parent) {
+    public Compiler(Compiler parent, String fileName) { //So functions know which file they were defined in
         this.parent = parent;
+
+        //Inherit file name from parent if it has one
+        if (this.parent != null)
+            this.fileName = this.parent.fileName;
+        else
+            this.fileName = fileName;
+
         chunkBuilder = Chunk.builder();
         try {registerLocal("");} catch (Exception neverHappens) {
             throw new RuntimeException("Something broke deep in PetPet, report this please");

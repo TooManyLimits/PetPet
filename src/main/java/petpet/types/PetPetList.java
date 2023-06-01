@@ -33,7 +33,7 @@ public class PetPetList<T> extends ArrayList<T> {
 
     @Override
     public String toString() {
-        return "<List(size=" + size() + ")>";
+        return "list[" + size() + "]";
     }
 
     public static final PetPetClass LIST_CLASS;
@@ -51,7 +51,7 @@ public class PetPetList<T> extends ArrayList<T> {
         LIST_CLASS.addMethod("empty", new JavaFunction(PetPetList.class, "isEmpty", true));
         LIST_CLASS.addMethod("clear", new JavaFunction(PetPetList.class, "clear", true));
         LIST_CLASS.addMethod("copy", new JavaFunction(PetPetList.class, "clone", true, regularCostPenalty(0.5)));
-        LIST_CLASS.addMethod("contains", new JavaFunction(PetPetList.class, "contains", true, regularCostPenalty(2)));
+        LIST_CLASS.addMethod("has", new JavaFunction(PetPetList.class, "contains", true, regularCostPenalty(2)));
 
         //Add cost penalties
         ((JavaFunction) LIST_CLASS.getMethod("map")).costPenalizer = PetPetList.functionalCostPenalty(1);

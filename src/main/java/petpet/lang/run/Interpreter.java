@@ -746,10 +746,10 @@ public class Interpreter {
         StringBuilder messageBuilder = new StringBuilder(message);
         for (int i = callStackTop - 1; i >= 0; i--) {
             CallFrame frame = callStack[i];
-            messageBuilder.append("\n in: ")
-                    .append(frame.closure.function)
-                    .append(" at line ")
-                    .append(frame.lineNumber());
+            messageBuilder.append("\n at: line ")
+                    .append(frame.lineNumber())
+                    .append(" inside ")
+                    .append(frame.closure.function.name);
         }
         message = messageBuilder.toString();
 

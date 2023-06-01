@@ -36,7 +36,7 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
 
     @Override
     public String toString() {
-        return "<table(entries=" + size() + ")>";
+        return "table[" + size() + "]";
     }
 
     public static final PetPetClass TABLE_CLASS;

@@ -84,8 +84,9 @@ public class MathLibrary {
     }
 
     public static final String EXTRA_MATH_FUNCTIONS = """
-            math:lerp=fn(a,b,t)a+(b-a)*t
-            math:map=fn(x,L1,R1,L2,R2)(x-L1)*(R2-L2)/(R1-L1)+L2
+            fn math:lerp(a,b,t) a + (b-a)*t
+            fn math:map(x,L1,R1,L2,R2) (x-L1)*(R2-L2)/(R1-L1) + L2
+            fn math:clamp(v, a, b) if v < a a else if v > b b else v
             """;
 
 }

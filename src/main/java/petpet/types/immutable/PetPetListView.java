@@ -18,7 +18,7 @@ public class PetPetListView<T> extends PetPetList<T> {
     }
 
     //don't actually extend table, even though we do java side
-    public static final PetPetClass LIST_VIEW_CLASS = new PetPetClass("list_view");
+    public static final PetPetClass LIST_VIEW_CLASS = new PetPetClass("ListView");
     private final List<T> backingList;
 
     public PetPetListView(List<T> backingList) {

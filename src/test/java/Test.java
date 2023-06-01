@@ -5,18 +5,31 @@ import petpet.lang.run.PetPetCallable;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        String script = """
-                return a = 2
-                """;
+
+
         PetPetInstance instance = new PetPetInstance();
         instance.debugBytecode = true;
 
-//        for (int i = 0; i < 10; i++)
-            try {
-                instance.runScript("script", script);
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
+        String badLib = """
+                
+                fn() null.x = 3 //error !! meany
+                
+                """;
+        String main = """
+                fn a() {
+                    badLibOutput()
+                }
+                print(a.paramCount())
+                a()
+                """;
+
+        try {
+            Object res = instance.runScript("badLib", badLib);
+            instance.setGlobal("badLibOutput", res);
+            instance.runScript("main", main);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 
     }
 

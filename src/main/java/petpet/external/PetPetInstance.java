@@ -52,7 +52,7 @@ public class PetPetInstance {
 
         Lexer.Token[] toks = Lexer.lex(script);
         List<Expression> exprs = new Parser(toks).parseChunk();
-        Compiler comp = new Compiler(null);
+        Compiler comp = new Compiler(null, name);
         new Expression.BlockExpression(0, exprs).compile(comp);
         PetPetFunction compiled = comp.finish(name, 0, 0);
 
@@ -70,12 +70,10 @@ public class PetPetInstance {
     }
 
     private void loadBuiltinLibrary() {
-        //Num class
         interpreter.classMap.put(Double.class, new PetPetClass("num").makeEditable());
         interpreter.classMap.put(Boolean.class, new PetPetClass("bool").makeEditable());
         interpreter.classMap.put(String.class, PetPetString.STRING_CLASS.copy().makeEditable());
-        interpreter.classMap.put(JavaFunction.class, PetPetReflector.reflect(JavaFunction.class, "func").copy().makeEditable());
-        interpreter.classMap.put(PetPetClosure.class, PetPetReflector.reflect(PetPetClosure.class, "func").copy().makeEditable());
+        interpreter.classMap.put(PetPetCallable.class, PetPetReflector.reflect(PetPetCallable.class, "fn").copy().makeEditable());
         interpreter.classMap.put(PetPetClass.class, PetPetClass.PET_PET_CLASS_CLASS.copy().makeEditable());
 
         interpreter.classMap.put(PetPetList.class, PetPetList.LIST_CLASS.copy().makeEditable());

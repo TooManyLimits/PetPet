@@ -1,7 +1,12 @@
 package petpet.lang.run;
 
-public interface PetPetCallable {
-    Object call(Object... args);
-    Object callInvoking(Object... args);
-    int paramCount();
+import petpet.external.PetPetWhitelist;
+
+@PetPetWhitelist
+public abstract class PetPetCallable {
+    public abstract Object call(Object... args);
+    public abstract Object callInvoking(Object... args);
+
+    @PetPetWhitelist
+    public abstract int paramCount();
 }

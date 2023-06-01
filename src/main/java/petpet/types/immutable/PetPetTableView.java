@@ -24,7 +24,7 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
     }
 
     //don't actually extend table, even though we do java side
-    public static final PetPetClass TABLE_VIEW_CLASS = new PetPetClass("table_view");
+    public static final PetPetClass TABLE_VIEW_CLASS = new PetPetClass("TableView");
     private final Map<K, V> backingMap;
 
     public PetPetTableView(Map<K, V> backingMap) {

@@ -242,11 +242,17 @@ public abstract class Expression {
         @Override
         public void compile(Compiler compiler) throws Compiler.CompilationException {
             super.compile(compiler);
-            Compiler thisCompiler = new Compiler(compiler);
+            Compiler thisCompiler = new Compiler(compiler, null);
             for (String param : paramNames)
                 thisCompiler.registerLocal(param);
             body.compile(thisCompiler);
-            String name = "fn" + (funcName == null ? "" : " " + funcName) + "(line=" + startLine + ")";
+            //Get the name
+            String name;
+            if (funcName == null) {
+                name = "fn <anon> at " + thisCompiler.fileName + ":" + startLine;
+            } else {
+                name = "fn " + funcName + " at " + thisCompiler.fileName + ":" + startLine;
+            }
             PetPetFunction f = thisCompiler.finish(name, startLine-1, paramNames.size());
 
             int idx = compiler.registerConstant(f);

@@ -82,7 +82,9 @@ public class PetPetClass {
 
     public PetPetClass copy() {
         PetPetClass newClass = new PetPetClass(name);
-        newClass.methods.putAll(methods);
+        newClass.methods.putAll(this.methods);
+        newClass.parent = this.parent;
+        newClass.isEditable = this.isEditable;
         newClass.addMethod("class", new JavaFunction(false, 1) {
             @Override
             public Object invoke(Object arg0) {
@@ -113,6 +115,6 @@ public class PetPetClass {
 
     @Override
     public String toString() {
-        return "class(name=" + name + ")";
+        return "class[" + name + "]";
     }
 }
