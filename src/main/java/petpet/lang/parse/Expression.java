@@ -616,6 +616,22 @@ public abstract class Expression {
 
     }
 
+    public static class ParenExpression extends Expression {
+        private final Expression inside;
+        protected ParenExpression(int startLine, Expression inside) {
+            super(startLine);
+            this.inside = inside;
+        }
+        @Override
+        public void compile(Compiler compiler) throws Compiler.CompilationException {
+            inside.compile(compiler);
+        }
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            inside.scanForDeclarations(compiler);
+        }
+    }
+
 
 
 }

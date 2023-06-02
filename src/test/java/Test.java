@@ -9,16 +9,13 @@ public class Test {
         PetPetInstance instance = new PetPetInstance();
 
         String code = """
-                fn meany() (fn()
-                    if math:rand() > 0.5
-                        error("meany!")
-                    else
-                        return "happi")();
+                tab = $[]
+                tab.x = fn() print("cutie")
                 
-                (fn() {
-                    print(meany())
-                })()
-                print("helo")
+                print(tab["x"])
+                {tab["x"]}();
+                (tab["x"])()
+                tab["x"]()
                 """;
 
         instance.debugBytecode = true;

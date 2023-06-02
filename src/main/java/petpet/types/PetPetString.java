@@ -45,6 +45,7 @@ public class PetPetString {
                         ((PetPetList) i.peek()).size() / 2 +
                         ((String) i.peek(1)).length() / 8
         ));
+        STRING_CLASS.addMethod("parseNum", new JavaFunction(PetPetString.class, "parseNum", false));
     }
 
     //Penalizes based on the length of string on top of the stack, divided by the given divisor
@@ -72,6 +73,17 @@ public class PetPetString {
         if (b < 0) b += len;
         if (a >= b) return "";
         return x.substring(a, b);
+    }
+
+    /**
+     * Return the parsed number, or null if it failed
+     */
+    public static Double parseNum(String str) {
+        try {
+            return Double.parseDouble(str);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public static String format(String x, ArrayList<?> objects) {

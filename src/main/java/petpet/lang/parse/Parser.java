@@ -239,7 +239,7 @@ public class Parser {
                 if (!check(RIGHT_PAREN))
                     throw new ParserException("Expected closing right parenthesis to match left parenthesis on line " + leftLine);
                 consume(); //consume right paren
-                yield inner;
+                yield new Expression.ParenExpression(leftLine, inner);
             }
             case LEFT_CURLY -> parseBlockExpression();
             case IF -> parseIfExpression();
