@@ -37,6 +37,10 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
         allowMethod("each");
         allowMethod("eachK");
         allowMethod("eachV");
+
+        allowMethod("size");
+        allowMethod("has");
+        allowMethod("empty");
     }
 
     private static void allowMethod(String name) {
@@ -75,8 +79,18 @@ public class PetPetTableView<K, V> extends PetPetTable<K, V> {
     }
 
     @Override
+    public boolean containsKey(Object key) {
+        return backingMap.containsKey(key);
+    }
+
+    @Override
     public V get(Object key) {
         return backingMap.get(key);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return backingMap.isEmpty();
     }
 
     @Override

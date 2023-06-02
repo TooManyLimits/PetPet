@@ -30,8 +30,7 @@ public class PetPetListView<T> extends PetPetList<T> {
         allowMethod("__get_num");
         allowMethod("len");
         allowMethod("empty");
-        allowMethod("copy");
-        allowMethod("contains");
+        allowMethod("has");
 
         allowMethod("each");
         allowMethod("eachI");
@@ -82,6 +81,10 @@ public class PetPetListView<T> extends PetPetList<T> {
         throw new PetPetException("nice try, can't insert in list view");
     }
     @Override
+    public boolean contains(Object o) {
+        return backingList.contains(o);
+    }
+    @Override
     public PetPetList<T> push(T value) {
         throw new PetPetException("nice try, can't push to list view");
     }
@@ -104,12 +107,17 @@ public class PetPetListView<T> extends PetPetList<T> {
     }
 
     @Override
+    public boolean isEmpty() {
+        return backingList.isEmpty();
+    }
+
+    @Override
     public Iterator<T> iterator() {
         return backingList.iterator();
     }
 
     @Override
     public Object[] toArray() { //string format
-        return super.toArray();
+        return backingList.toArray();
     }
 }

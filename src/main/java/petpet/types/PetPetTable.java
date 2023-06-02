@@ -50,10 +50,17 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         TABLE_CLASS.addMethod("del", new JavaFunction(PetPetTable.class, "remove", true, Object.class));
         TABLE_CLASS.addMethod("clear", new JavaFunction(PetPetTable.class, "clear", true));
 
+        TABLE_CLASS.addMethod("empty", new JavaFunction(PetPetTable.class, "isEmpty", true));
+        TABLE_CLASS.addMethod("size", new JavaFunction(PetPetTable.class, "size", true));
+        TABLE_CLASS.addMethod("copy", new JavaFunction(PetPetTable.class, "clone", true));
+
+        TABLE_CLASS.addMethod("has", new JavaFunction(PetPetTable.class, "containsKey", true));
+
         //penalties
         ((JavaFunction) TABLE_CLASS.getMethod("each")).costPenalizer = PetPetTable.costPenalty(1);
         ((JavaFunction) TABLE_CLASS.getMethod("eachK")).costPenalizer = PetPetTable.costPenalty(1);
         ((JavaFunction) TABLE_CLASS.getMethod("eachV")).costPenalizer = PetPetTable.costPenalty(1);
+        ((JavaFunction) TABLE_CLASS.getMethod("copy")).costPenalizer = PetPetTable.costPenalty(0);
     }
 
     //Penalty function, charging the caller (a small price) for each
@@ -103,4 +110,10 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
         return new PetPetTableView<>(this);
     }
 
+    @Override
+    public Object clone() {
+        PetPetTable<K, V> res = new PetPetTable<>();
+        res.putAll(this);
+        return res;
+    }
 }
