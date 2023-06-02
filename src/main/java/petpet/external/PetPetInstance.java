@@ -84,6 +84,7 @@ public class PetPetInstance {
         //Global values
         setGlobal("class", GlobalFunctions.CLASS_FUNC);
         setGlobal("extend", GlobalFunctions.EXTEND_FUNC);
+        setGlobal("error", GlobalFunctions.ERROR_FUNC);
         setGlobal("print", GlobalFunctions.getPrintFunction(interpreter));
         setGlobal("printStack", GlobalFunctions.getPrintStackFunction(interpreter));
         setGlobal("math", MathLibrary.createNewMathTable());

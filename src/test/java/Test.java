@@ -6,9 +6,41 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-
         PetPetInstance instance = new PetPetInstance();
+
+        String code = """
+                fn meany() (fn()
+                    if math:rand() > 0.5
+                        error("meany!")
+                    else
+                        return "happi")();
+                
+                (fn() {
+                    print(meany())
+                })()
+                print("helo")
+                """;
+
         instance.debugBytecode = true;
+        instance.runScript("code", code);
+
+
+    }
+
+    private static void testHelloWorld() throws Exception {
+        //Set up the script and instance
+        String script = "fn() print(\"Hello, world!\")";
+        PetPetInstance instance = new PetPetInstance();
+
+        //"Call" the file, which returns this result
+        Object fileResult = instance.runScript("script", script);
+
+        //The result is a PetPetCallable, which when called, prints "Hello, World!"
+        ((PetPetCallable) fileResult).call(); //Prints
+    }
+
+    private static void testErrorMessages() {
+        PetPetInstance instance = new PetPetInstance();
 
         String badLib = """
                 
@@ -30,19 +62,6 @@ public class Test {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-
-    }
-
-    private static void testHelloWorld() throws Exception {
-        //Set up the script and instance
-        String script = "fn() print(\"Hello, world!\")";
-        PetPetInstance instance = new PetPetInstance();
-
-        //"Call" the file, which returns this result
-        Object fileResult = instance.runScript("script", script);
-
-        //The result is a PetPetCallable, which when called, prints "Hello, World!"
-        ((PetPetCallable) fileResult).call(); //Prints
     }
 
     @PetPetWhitelist

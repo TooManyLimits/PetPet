@@ -641,7 +641,7 @@ public class Interpreter {
                 cost += argCount;
                 push(result);
             } catch (PetPetException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 runtimeException(e.getMessage());
             } catch (NullPointerException e) {
                 runtimeException("Unexpected null value");
@@ -664,15 +664,15 @@ public class Interpreter {
                     } else {
                         expectedName = classMap.get(expectedClass).name;
                     }
-                    e.printStackTrace();
+//                    e.printStackTrace();
                     runtimeException("Expected " + expectedName + ", got " + receivedName);
                 } catch (ClassNotFoundException | NullPointerException e2) {
-                    e.printStackTrace();
-                    e2.printStackTrace();
-                    runtimeException("Java exception occurred: " + e.getMessage() + ". Failed to translate names");
+//                    e.printStackTrace();
+//                    e2.printStackTrace();
+                    runtimeException("Java exception occurred: " + e.getMessage() + ", " + e2.getMessage() + ". Failed to translate names");
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 runtimeException("Java exception occurred: " + e.getMessage());
             }
             return false;
@@ -751,11 +751,8 @@ public class Interpreter {
                     .append(" inside ")
                     .append(frame.closure.function.name);
         }
-        message = messageBuilder.toString();
-
         callStackTop = 0;
-
-        throw new PetPetException(message);
+        throw new PetPetException(messageBuilder.toString());
     }
 
     public void printStack() {

@@ -83,6 +83,8 @@ public class Parser {
     }
 
     private Expression parseExpression() throws ParserException {
+        while (check(SEMICOLON))
+            consume(); //consume any semis
         //highest priority is assignment
         return parseAssignment();
     }
@@ -201,7 +203,7 @@ public class Parser {
                 lhs = new Expression.Get(openSquareLine, lhs, indexer);
             }
         }
-        if (check(SEMICOLON)) consume(); //consume the semi
+
         return lhs;
     }
 

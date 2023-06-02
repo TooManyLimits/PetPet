@@ -1,9 +1,6 @@
 package petpet.types.libraries;
 
-import petpet.lang.run.Interpreter;
-import petpet.lang.run.JavaFunction;
-import petpet.lang.run.PetPetCallable;
-import petpet.lang.run.PetPetClass;
+import petpet.lang.run.*;
 import petpet.types.PetPetList;
 import petpet.types.PetPetString;
 import petpet.types.PetPetTable;
@@ -29,6 +26,21 @@ public class GlobalFunctions {
             PetPetClass clazz = new PetPetClass((String) name, (PetPetClass) superclass);
             clazz.methods.putAll((PetPetTable<String, PetPetCallable>) methodsTable);
             return clazz.makeEditable();
+        }
+    };
+
+    /**
+     * Errors with the given string message. Message must be a string, or the "error" call will
+     * itself error.
+     */
+    public static final JavaFunction ERROR_FUNC = new JavaFunction(false, 1) {
+        @Override
+        public Object invoke(Object message) {
+            if (message instanceof String s) {
+                throw new PetPetException(s);
+            } else {
+                throw new PetPetException("Argument to error() must be a string");
+            }
         }
     };
 
