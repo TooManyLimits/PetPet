@@ -29,7 +29,11 @@ public class Interpreter {
 
     private Upvalue upvalueList; //upvalues form a linked list
 
-    public int cost;
+    public long cost = 0; //The current cost counter
+    public long maxCost = Long.MAX_VALUE; //The max cost allowed before the runnable is called
+
+    //Called when hitting the max cost, default is to throw exception
+    public Runnable onHitMaxCost = () -> runtimeException("Hit the max allowed instructions of " + maxCost);
 
     public Object run(PetPetClosure closure, boolean invocation, Object... args) {
 //        if (closure.function.paramCount != args.length)
@@ -52,7 +56,7 @@ public class Interpreter {
         byte[] curBytes = frame.closure.function.chunk.bytes;
         Object[] constants = frame.closure.function.chunk.constants;
         while (true) {
-            cost++;
+            incCost();
 //            System.out.println(NAMES[curBytes[frame.ip]]);
             switch (curBytes[frame.ip++]) {
                 case CONSTANT -> push(constants[curBytes[frame.ip++] & 0xff]);
@@ -65,11 +69,16 @@ public class Interpreter {
                 case ADD -> {
                     Object r = pop();
                     Object l = pop();
-                    if (l instanceof String s)
-                        pushNoCheck(s + getString(r));
-                    else if (r instanceof String s)
-                        pushNoCheck(getString(l) + s);
-                    else if (l instanceof Double dl && r instanceof Double dr)
+                    //String concat is (total length / 16) penalty
+                    if (l instanceof String s) {
+                        String other = getString(r);
+                        penalizeCost(((long) s.length() + other.length()) / 16);
+                        pushNoCheck(s + other);
+                    } else if (r instanceof String s) {
+                        String other = getString(l);
+                        penalizeCost(((long) other.length() + s.length()) / 16);
+                        pushNoCheck(other + s);
+                    } else if (l instanceof Double dl && r instanceof Double dr)
                         pushNoCheck(dl + dr);
                     else {
                         if (callMetaBinary(l, r, "add")) {
@@ -260,19 +269,15 @@ public class Interpreter {
                 }
 
                 case SET_UPVALUE -> {
-                    //cost++; //upvalues more expensive than locals
                     frame.closure.upvalues[curBytes[frame.ip++] & 0xff].set(peek());
                 }
                 case BIG_SET_UPVALUE -> {
-                    //cost++; //upvalues more expensive than locals
                     frame.closure.upvalues[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff].set(peek());
                 }
                 case LOAD_UPVALUE -> {
-                    //cost++;
                     push(frame.closure.upvalues[curBytes[frame.ip++] & 0xff].get());
                 }
                 case BIG_LOAD_UPVALUE -> {
-                    //cost++;
                     push(frame.closure.upvalues[(((curBytes[frame.ip++] << 8) & 0xffff) | (curBytes[frame.ip++] & 0xff)) & 0xffff].get());
                 }
                 case CLOSE_UPVALUE -> {
@@ -299,7 +304,6 @@ public class Interpreter {
                         }
                         break;
                     }
-                    cost++;
                     getMethod = langClass.getMethod("__get");
                     if (getMethod != null) {
                         if (makeCall(getMethod, 2, false, true)) {
@@ -357,6 +361,21 @@ public class Interpreter {
                     }
                 }
             }
+        }
+    }
+
+    private void penalizeCost(long count) {
+        cost += count;
+        if (cost > maxCost) {
+            onHitMaxCost.run();
+            cost = 0;
+        }
+    }
+
+    private void incCost() {
+        if (cost++ > maxCost) {
+            onHitMaxCost.run();
+            cost = 0;
         }
     }
 
@@ -589,7 +608,7 @@ public class Interpreter {
             }
             try {
                 if (jFunction.costPenalizer != null)
-                    cost += jFunction.costPenalizer.applyAsInt(this);
+                    penalizeCost(jFunction.costPenalizer.applyAsInt(this));
                 Object result;
                 if (jFunction.needsNumberConversion()) {
                     result = switch (argCount) {
@@ -638,7 +657,7 @@ public class Interpreter {
                 int numToPop = isInvocation ? argCount : argCount + 1;
                 for (int i = 0; i < numToPop; i++)
                     pop();
-                cost += argCount;
+                penalizeCost(argCount);
                 push(result);
             } catch (PetPetException e) {
 //                e.printStackTrace();
@@ -711,7 +730,7 @@ public class Interpreter {
     }
 
     private Upvalue captureUpvalue(int index) {
-        cost++; //cost for capturing an upvalue
+        incCost(); //cost for capturing an upvalue
         //Search if an open upvalue already exists for this local
         Upvalue prev = null;
         Upvalue cur = upvalueList;

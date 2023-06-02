@@ -9,19 +9,19 @@ public class Test {
         PetPetInstance instance = new PetPetInstance();
 
         String code = """
-                tab = $[]
-                tab.x = fn() print("cutie")
-                
-                print(tab["x"])
-                {tab["x"]}();
-                (tab["x"])()
-                tab["x"]()
-                """;
+            y = 0
+            x = "a"
+            while (y = y + 1) <= 1000 {
+                print(x)
+                x = x + x
+            }
+        """;
 
         instance.debugBytecode = true;
+        instance.interpreter.maxCost = 10000;
+        instance.debugCost = true;
+
         instance.runScript("code", code);
-
-
     }
 
     private static void testHelloWorld() throws Exception {
