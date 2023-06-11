@@ -115,14 +115,16 @@ public class PetPetList<T> extends ArrayList<T> {
     public PetPetList<T> each(PetPetCallable func) {
         checkFunc(func, 1, "each");
         for (Object o : this)
-            func.call(o);
+            if (func.call(o) instanceof Boolean b && b)
+                break;
         return this;
     }
     @PetPetWhitelist
     public PetPetList<T> eachI(PetPetCallable func) {
         checkFunc(func, 2, "eachI");
         for (int i = 0; i < size(); i++)
-            func.call((double) i, get(i));
+            if (func.call((double) i, get(i)) instanceof Boolean b && b)
+                break;
         return this;
     }
     @PetPetWhitelist

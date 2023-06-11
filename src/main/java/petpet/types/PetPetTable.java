@@ -85,7 +85,8 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
     public PetPetTable<K, V> each(PetPetCallable func) {
         checkFunc(func, 2, "each");
         for (Map.Entry<K, V> entry : entrySet())
-            func.call(entry.getKey(), entry.getValue());
+            if (func.call(entry.getKey(), entry.getValue()) instanceof Boolean b && b)
+                break;
         return this;
     }
 
@@ -93,7 +94,8 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
     public PetPetTable<K, V> eachK(PetPetCallable func) {
         checkFunc(func, 1, "eachK");
         for (Object key : keySet())
-            func.call(key);
+            if (func.call(key) instanceof Boolean b && b)
+                break;
         return this;
     }
 
@@ -101,7 +103,8 @@ public class PetPetTable<K, V> extends HashMap<K, V> {
     public PetPetTable<K, V> eachV(PetPetCallable func) {
         checkFunc(func, 1, "eachV");
         for (Object value : values())
-            func.call(value);
+            if (func.call(value) instanceof Boolean b && b)
+                break;
         return this;
     }
 

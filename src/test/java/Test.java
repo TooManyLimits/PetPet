@@ -9,12 +9,13 @@ public class Test {
         PetPetInstance instance = new PetPetInstance();
 
         String code = """
-            y = 0
-            x = "a"
-            while (y = y + 1) <= 1000 {
-                print(x)
-                x = x + x
-            }
+            X = class("Cutie", $[__init = fn() {this.thingy = 5 this}])
+            x = X()
+            eachK = $[].class().methods().eachK
+            eachK(x, print) //works
+            
+            y = fn(a) {this print(a)}
+            print(y.paramCount())
         """;
 
         instance.debugBytecode = true;
