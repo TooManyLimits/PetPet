@@ -24,7 +24,7 @@ public abstract class Expression {
     }
 
     //Scans for local declarations or upvalues and emits bytecode to push null if it finds any, and register in compiler
-    public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
+    public abstract void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException;
 
     public static class BlockExpression extends Expression {
         public final List<Expression> exprs;
@@ -49,6 +49,9 @@ public abstract class Expression {
             }
             compiler.endScope();
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
     }
 
     //No idea if this will work...
@@ -176,6 +179,9 @@ public abstract class Expression {
                 compiler.bytecodeWithShortArg(Bytecode.BIG_CONSTANT, (short) loc);
             }
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
     }
 
     public static class Null extends Expression {
@@ -188,6 +194,9 @@ public abstract class Expression {
             super.compile(compiler);
             compiler.bytecode(Bytecode.PUSH_NULL);
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
     }
 
     public static class ListConstructor extends Expression {
@@ -205,6 +214,12 @@ public abstract class Expression {
                 elem.compile(compiler);
                 compiler.bytecode(Bytecode.LIST_ADD);
             }
+        }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            for (Expression elem : elems)
+                elem.scanForDeclarations(compiler);
         }
     }
 
@@ -225,6 +240,12 @@ public abstract class Expression {
                 keysValues.get(i).compile(compiler);
                 compiler.bytecode(Bytecode.TABLE_SET);
             }
+        }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {
+            for (Expression expr : keysValues)
+                expr.scanForDeclarations(compiler);
         }
     }
 
@@ -259,6 +280,9 @@ public abstract class Expression {
             compiler.bytecodeWithByteArg(Bytecode.CONSTANT, (byte) idx);
             compiler.emitClosure(thisCompiler); //emit closure instruction
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
     }
 
     public static class Name extends Expression {
@@ -296,6 +320,9 @@ public abstract class Expression {
                 }
             }
         }
+
+        @Override
+        public void scanForDeclarations(Compiler compiler) throws Compiler.CompilationException {}
     }
 
     public static class This extends Name {
